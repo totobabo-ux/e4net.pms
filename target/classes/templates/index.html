@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>e4net PMS - 로그인</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        /* ── index.html 전용 스타일 (로그인) ── */
+        body {
+            background: #2c3e50;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .login-header {
+            background: #c0392b;
+            padding: 0 30px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+        }
+        .login-header span {
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .login-body {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        .login-card {
+            background: white;
+            border-radius: 4px;
+            width: 400px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+        .login-card-header {
+            background: #c0392b;
+            padding: 24px 32px;
+            text-align: center;
+        }
+        .login-card-header h1 {
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        .login-card-header p {
+            color: rgba(255,255,255,0.8);
+            font-size: 12px;
+            margin-top: 4px;
+            letter-spacing: 1px;
+        }
+        .login-card-body {
+            padding: 32px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            border-color: #c0392b;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: #c0392b;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+            letter-spacing: 1px;
+            transition: background 0.2s;
+        }
+        .btn-login:hover { background: #a93226; }
+        .error-msg {
+            background: #fdf2f2;
+            border: 1px solid #e9c0c0;
+            color: #c0392b;
+            padding: 10px 14px;
+            border-radius: 3px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .login-footer {
+            text-align: center;
+            padding: 16px 32px;
+            border-top: 1px solid #f0f0f0;
+            font-size: 11px;
+            color: #999;
+        }
+        .footer-bar {
+            background: #1a252f;
+            padding: 12px 30px;
+            text-align: center;
+            color: #666;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-header">
+        <span>e4net PMS</span>
+    </div>
+
+    <div class="login-body">
+        <div class="login-card">
+            <div class="login-card-header">
+                <h1>e4net PMS</h1>
+                <p>Project Management System</p>
+            </div>
+            <div class="login-card-body">
+                <div th:if="${errorMessage}" class="error-msg" th:text="${errorMessage}"></div>
+                <div th:if="${param.error}" class="error-msg">아이디 또는 비밀번호가 올바르지 않습니다.</div>
+
+                <form th:action="@{/home}" method="get">
+                    <div class="form-group">
+                        <label for="username">아이디</label>
+                        <input type="text" id="username" name="username" placeholder="아이디를 입력하세요" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">비밀번호</label>
+                        <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요">
+                    </div>
+                    <button type="submit" class="btn-login">로그인</button>
+                </form>
+            </div>
+            <div class="login-footer">
+                시스템 관련 문의: 관리자에게 연락하세요
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-bar">
+        Copyright &copy; 2024 e4net Co., Ltd. All Rights Reserved.
+    </div>
+</body>
+</html>

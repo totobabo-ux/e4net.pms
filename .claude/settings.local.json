@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./mvnw compile:*)",
+      "Bash(curl -s http://localhost:8080/home)",
+      "Bash(curl -s -o /dev/null -w \"home: %{http_code}\\\\n\" http://localhost:8080/home)",
+      "Bash(curl -s -o /dev/null -w \"projects: %{http_code}\\\\n\" http://localhost:8080/projects)",
+      "Bash(curl -s -o /dev/null -w \"manpower: %{http_code}\\\\n\" http://localhost:8080/manpower)"
+    ]
+  }
+}

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<body>
+<nav th:fragment="sidebar(activePage)" class="sidebar">
+    <div class="sidebar-logo">
+        <a th:href="@{/home}">e4net PMS</a>
+    </div>
+    <ul class="menu-list">
+
+        <!-- 사업 Home -->
+        <li class="menu-item" th:classappend="${activePage == 'home'} ? 'active'">
+            <a th:href="@{/home}">
+                <span class="menu-icon">&#9632;</span> 사업 Home
+            </a>
+        </li>
+
+        <!-- 사업 계획 -->
+        <li class="menu-group" th:classappend="${activePage != null and activePage.startsWith('plan')} ? 'open'">
+            <div class="menu-group-header">
+                <span class="menu-icon">&#9632;</span> 사업 계획
+                <span class="arrow">&#9660;</span>
+            </div>
+            <ul class="submenu">
+                <li th:classappend="${activePage == 'plan-info'} ? 'active'">
+                    <a th:href="@{/projects}">사업정보 관리</a>
+                </li>
+                <li th:classappend="${activePage == 'plan-manpower'} ? 'active'">
+                    <a th:href="@{/manpower}">인력계획</a>
+                </li>
+                <li th:classappend="${activePage == 'plan-schedule'} ? 'active'">
+                    <a href="#">일정계획 (WBS)</a>
+                </li>
+                <li th:classappend="${activePage == 'plan-input'} ? 'active'">
+                    <a href="#">인력투입계획</a>
+                </li>
+                <li th:classappend="${activePage == 'plan-docs'} ? 'active'">
+                    <a href="#">산출문서계획</a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- 사업 수행 -->
+        <li class="menu-group" th:classappend="${activePage != null and activePage.startsWith('exec')} ? 'open'">
+            <div class="menu-group-header">
+                <span class="menu-icon">&#9632;</span> 사업 수행
+                <span class="arrow">&#9660;</span>
+            </div>
+            <ul class="submenu">
+                <li th:classappend="${activePage == 'exec-todo'} ? 'active'">
+                    <a href="#">나의할일 (PM)</a>
+                </li>
+                <li th:classappend="${activePage == 'exec-progress'} ? 'active'">
+                    <a href="#">진도관리</a>
+                </li>
+                <li th:classappend="${activePage == 'exec-manpower'} ? 'active'">
+                    <a href="#">인력투입실적</a>
+                </li>
+                <li th:classappend="${activePage == 'exec-docs'} ? 'active'">
+                    <a href="#">산출문서관리</a>
+                </li>
+                <li th:classappend="${activePage == 'exec-report-main'} ? 'active'">
+                    <a href="#">주요보고관리</a>
+                </li>
+                <li th:classappend="${activePage == 'exec-report-weekly'} ? 'active'">
+                    <a href="#">주간보고관리</a>
+                </li>
+                <li th:classappend="${activePage == 'exec-report-monthly'} ? 'active'">
+                    <a href="#">월간보고관리</a>
+                </li>
+                <li th:classappend="${activePage == 'exec-meeting'} ? 'active'">
+                    <a href="#">회의록관리</a>
+                </li>
+                <li th:classappend="${activePage == 'exec-subcontract'} ? 'active'">
+                    <a href="#">하도급관리</a>
+                </li>
+                <li th:classappend="${activePage == 'exec-issue'} ? 'active'">
+                    <a href="#">이슈관리</a>
+                </li>
+                <li th:classappend="${activePage == 'exec-risk'} ? 'active'">
+                    <a href="#">위험관리</a>
+                </li>
+                <li th:classappend="${activePage == 'exec-requirement'} ? 'active'">
+                    <a href="#">요구사항관리</a>
+                </li>
+                <li th:classappend="${activePage == 'exec-security'} ? 'active'">
+                    <a href="#">정보보안</a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- 사업 현황 -->
+        <li class="menu-group" th:classappend="${activePage != null and activePage.startsWith('status')} ? 'open'">
+            <div class="menu-group-header">
+                <span class="menu-icon">&#9632;</span> 사업 현황
+                <span class="arrow">&#9660;</span>
+            </div>
+            <ul class="submenu">
+                <li th:classappend="${activePage == 'status-weekly'} ? 'active'">
+                    <a href="#">주간진도현황</a>
+                </li>
+                <li th:classappend="${activePage == 'status-monthly'} ? 'active'">
+                    <a href="#">월간진도현황</a>
+                </li>
+                <li th:classappend="${activePage == 'status-issue'} ? 'active'">
+                    <a href="#">이슈현황</a>
+                </li>
+                <li th:classappend="${activePage == 'status-risk'} ? 'active'">
+                    <a href="#">위험현황</a>
+                </li>
+                <li th:classappend="${activePage == 'status-manpower'} ? 'active'">
+                    <a href="#">인력투입현황</a>
+                </li>
+                <li th:classappend="${activePage == 'status-history'} ? 'active'">
+                    <a href="#">변경이력현황</a>
+                </li>
+            </ul>
+        </li>
+
+    </ul>
+</nav>
+
+<style>
+    .sidebar {
+        width: 200px;
+        min-width: 200px;
+        background: #2c3e50;
+        color: #ccc;
+        height: 100%;
+        overflow-y: auto;
+        flex-shrink: 0;
+    }
+    .sidebar-logo {
+        background: #1a252f;
+        padding: 14px 16px;
+        border-bottom: 1px solid #1a252f;
+    }
+    .sidebar-logo a {
+        color: white;
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+    .menu-list {
+        list-style: none;
+        padding: 8px 0;
+    }
+    .menu-item > a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        color: #bdc3c7;
+        text-decoration: none;
+        font-size: 13px;
+        transition: background 0.15s;
+    }
+    .menu-item > a:hover, .menu-item.active > a {
+        background: #c0392b;
+        color: white;
+    }
+    .menu-icon { font-size: 7px; color: #7f8c8d; }
+    .menu-item.active .menu-icon { color: white; }
+    .menu-group { }
+    .menu-group-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        color: #bdc3c7;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 0.15s;
+        user-select: none;
+    }
+    .menu-group-header:hover { background: #34495e; }
+    .arrow {
+        margin-left: auto;
+        font-size: 10px;
+        transition: transform 0.2s;
+    }
+    .menu-group.open .arrow { transform: rotate(180deg); }
+    .submenu {
+        display: none;
+        list-style: none;
+        background: #1e2d3d;
+    }
+    .menu-group.open .submenu { display: block; }
+    .submenu li a {
+        display: block;
+        padding: 8px 16px 8px 36px;
+        color: #95a5a6;
+        text-decoration: none;
+        font-size: 12px;
+        transition: background 0.15s, color 0.15s;
+    }
+    .submenu li a:hover, .submenu li.active a {
+        background: #c0392b;
+        color: white;
+    }
+</style>
+
+<script th:inline="javascript">
+    document.querySelectorAll('.menu-group-header').forEach(function(header) {
+        header.addEventListener('click', function() {
+            var group = this.closest('.menu-group');
+            group.classList.toggle('open');
+        });
+    });
+</script>
+</body>
+</html>

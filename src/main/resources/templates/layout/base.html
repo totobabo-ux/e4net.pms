@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title layout:title-pattern="$CONTENT_TITLE - e4net PMS">e4net PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <th:block layout:fragment="extra-styles"></th:block>
+</head>
+<body>
+
+<!-- 상단 헤더 -->
+<header class="header">
+    <button class="header-hamburger">&#9776;</button>
+    <div class="header-logo">e4net PMS</div>
+    <div class="header-right">
+        <div class="user-info">Welcome <span>관리자</span></div>
+        <a class="btn-logout" href="/">로그아웃</a>
+    </div>
+</header>
+
+<div class="body-wrap">
+
+    <!-- 좌측 사이드바 -->
+    <aside class="sidebar">
+        <div class="sidebar-logo"><a href="/home">e4net PMS</a></div>
+        <ul class="menu-list">
+
+            <!-- 사업 Home -->
+            <li class="menu-item" th:classappend="${activePage == 'home'} ? 'active'">
+                <a href="/home"><span class="menu-icon">&#9632;</span> 사업 Home</a>
+            </li>
+
+            <!-- 사업 계획 -->
+            <li class="menu-group"
+                th:classappend="${activePage != null and (activePage == 'plan-info' or activePage == 'plan-manpower' or activePage == 'plan-schedule')} ? 'open'">
+                <div class="menu-group-header">
+                    <span class="menu-icon">&#9632;</span> 사업 계획 <span class="arrow">&#9660;</span>
+                </div>
+                <ul class="submenu">
+                    <li th:classappend="${activePage == 'plan-info'} ? 'active'">
+                        <a href="/projects">사업정보 관리</a>
+                    </li>
+                    <li th:classappend="${activePage == 'plan-manpower'} ? 'active'">
+                        <a href="/manpower">인력계획</a>
+                    </li>
+                    <li th:classappend="${activePage == 'plan-schedule'} ? 'active'">
+                        <a href="#">일정계획 (WBS)</a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- 사업 수행 -->
+            <li class="menu-group"
+                th:classappend="${activePage != null and (activePage == 'exec-manpower' or activePage == 'exec-issue' or activePage == 'exec-risk')} ? 'open'">
+                <div class="menu-group-header">
+                    <span class="menu-icon">&#9632;</span> 사업 수행 <span class="arrow">&#9660;</span>
+                </div>
+                <ul class="submenu">
+                    <li><a href="#">나의할일 (PM)</a></li>
+                    <li><a href="#">진도관리</a></li>
+                    <li th:classappend="${activePage == 'exec-manpower'} ? 'active'">
+                        <a href="#">인력투입실적</a>
+                    </li>
+                    <li><a href="#">산출문서관리</a></li>
+                    <li><a href="#">주요보고관리</a></li>
+                    <li><a href="#">주간보고관리</a></li>
+                    <li><a href="#">월간보고관리</a></li>
+                    <li><a href="#">회의록관리</a></li>
+                    <li><a href="#">하도급관리</a></li>
+                    <li th:classappend="${activePage == 'exec-issue'} ? 'active'">
+                        <a href="#">이슈관리</a>
+                    </li>
+                    <li th:classappend="${activePage == 'exec-risk'} ? 'active'">
+                        <a href="#">위험관리</a>
+                    </li>
+                    <li><a href="#">요구사항관리</a></li>
+                    <li><a href="#">정보보안</a></li>
+                </ul>
+            </li>
+
+            <!-- 사업 현황 -->
+            <li class="menu-group">
+                <div class="menu-group-header">
+                    <span class="menu-icon">&#9632;</span> 사업 현황 <span class="arrow">&#9660;</span>
+                </div>
+                <ul class="submenu">
+                    <li><a href="#">주간진도현황</a></li>
+                    <li><a href="#">월간진도현황</a></li>
+                    <li><a href="#">이슈현황</a></li>
+                    <li><a href="#">위험현황</a></li>
+                    <li><a href="#">인력투입현황</a></li>
+                    <li><a href="#">변경이력현황</a></li>
+                </ul>
+            </li>
+
+        </ul>
+    </aside>
+
+    <!-- 메인 콘텐츠 영역 -->
+    <div class="main">
+        <th:block layout:fragment="content">
+            <!-- 각 페이지의 콘텐츠가 여기에 삽입됨 -->
+        </th:block>
+    </div>
+
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<th:block layout:fragment="extra-scripts"></th:block>
+
+</body>
+</html>

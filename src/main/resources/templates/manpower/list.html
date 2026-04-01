@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인력계획 - e4net PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        /* ── manpower/list.html 전용 스타일 ── */
+        .btn-detail {
+            background: none;
+            border: 1px solid #2980b9;
+            color: #2980b9;
+            cursor: pointer;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 3px;
+        }
+        .btn-detail:hover { background: #2980b9; color: #fff; }
+    </style>
+</head>
+<body>
+
+<!-- 상단 헤더 -->
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+
+    <!-- 좌측 사이드바 -->
+    <aside th:replace="~{layout/fragments :: sidebar('plan-manpower')}"></aside>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업 계획</span>
+            <span class="sep">/</span><span class="current">인력계획</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">사업 인력 관리</div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="location.href='/manpower/new'">&#43; 인력 등록</button>
+                </div>
+            </div>
+
+            <!-- 성공 메시지 -->
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+            <!-- 검색 폼 -->
+            <form th:action="@{/manpower}" method="get">
+                <div class="search-box">
+                    <div class="search-row">
+                        <span class="search-label">사업명</span>
+                        <input type="text" name="projectName" class="search-input w-lg"
+                               th:value="${search.projectName}" placeholder="사업명 검색">
+                        <div class="divider"></div>
+                        <span class="search-label">참여자명</span>
+                        <input type="text" name="userName" class="search-input w-md"
+                               th:value="${search.userName}" placeholder="참여자명">
+                        <div class="divider"></div>
+                        <span class="search-label">소속회사</span>
+                        <input type="text" name="company" class="search-input w-md"
+                               th:value="${search.company}" placeholder="소속회사">
+                        <div class="divider"></div>
+                        <span class="search-label">상태</span>
+                        <select name="status" class="search-select w-md">
+                            <option value="">전체</option>
+                            <option value="투입중"   th:selected="${search.status == '투입중'}">투입중</option>
+                            <option value="대기"     th:selected="${search.status == '대기'}">대기</option>
+                            <option value="투입종료" th:selected="${search.status == '투입종료'}">투입종료</option>
+                        </select>
+                        <button type="submit" class="btn-search">&#128269; 검색</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- 목록 테이블 -->
+            <div class="table-card">
+                <div class="table-card-header">
+                    <span class="table-card-title">인력 목록</span>
+                    <span class="table-count">총 <span th:text="${page.totalElements}">0</span>명</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>NO.</th>
+                                <th style="min-width:200px;">사업명</th>
+                                <th>참여자</th>
+                                <th>소속회사</th>
+                                <th>역할</th>
+                                <th>급수</th>
+                                <th>투입구분</th>
+                                <th>투입기간</th>
+                                <th>투입MM</th>
+                                <th>상태</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="empty-row" th:if="${page.content.isEmpty()}">
+                                <td colspan="11">등록된 인력 정보가 없습니다.</td>
+                            </tr>
+                            <tr th:each="m, stat : ${page.content}">
+                                <td th:text="${page.number * page.size + stat.count}"></td>
+                                <td class="td-left" th:text="${m.projectName}"></td>
+                                <td th:text="${m.userName}"></td>
+                                <td th:text="${m.company ?: '-'}"></td>
+                                <td th:text="${m.role}"></td>
+                                <td th:text="${m.gradeCode}"></td>
+                                <td th:text="${m.inputTypeCode}"></td>
+                                <td th:text="${m.inputStartDate != null ? #temporals.format(m.inputStartDate,'yy/MM/dd') : ''} + ' ~ ' + ${m.inputEndDate != null ? #temporals.format(m.inputEndDate,'yy/MM/dd') : ''}"></td>
+                                <td th:text="${m.inputMm != null ? m.inputMm + 'M' : '-'}"></td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="'badge-' + ${m.status}"
+                                          th:text="${m.status}"></span>
+                                </td>
+                                <td>
+                                    <button class="btn-detail"
+                                            th:onclick="|location.href='@{/manpower/{id}(id=${m.id})}'|">상세</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 페이지네이션 -->
+            <div class="pagination" th:if="${page.totalPages > 1}">
+                <a th:if="${!page.first}"
+                   th:href="@{/manpower(page=${page.number - 1}, projectName=${search.projectName}, userName=${search.userName}, company=${search.company}, status=${search.status})}">&laquo;</a>
+                <th:block th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}">
+                    <span th:if="${i == page.number}" class="active" th:text="${i + 1}"></span>
+                    <a th:unless="${i == page.number}"
+                       th:href="@{/manpower(page=${i}, projectName=${search.projectName}, userName=${search.userName}, company=${search.company}, status=${search.status})}"
+                       th:text="${i + 1}"></a>
+                </th:block>
+                <a th:if="${!page.last}"
+                   th:href="@{/manpower(page=${page.number + 1}, projectName=${search.projectName}, userName=${search.userName}, company=${search.company}, status=${search.status})}">&raquo;</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+</body>
+</html>
