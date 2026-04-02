@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사업일정(WBS) - e4net PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        /* ── WBS 레이아웃 ── */
+        .wbs-page     { display:flex; flex-direction:column; height:calc(100vh - 50px); overflow:hidden; }
+        .wbs-toolbar  { flex-shrink:0; padding:8px 16px; background:#2c3e50; border-bottom:1px solid #1a252f; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .wbs-op-bar   { flex-shrink:0; padding:5px 16px; background:#f7f8fa; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:6px; }
+        .wbs-msg      { padding:5px 14px; border-radius:4px; font-size:12px; display:none; flex-shrink:0; }
+        .wbs-msg.success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
+        .wbs-msg.error   { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
+        .page-title   { font-size:13px; font-weight:bold; color:#ecf0f1; margin:0; white-space:nowrap; }
+        .project-badge{ font-size:13px; color:#fff; font-weight:bold; white-space:nowrap; overflow:visible; text-overflow:clip; }
+        .save-hint    { font-size:11px; color:#a0aec0; }
+        .save-hint.dirty { color:#f39c12; font-weight:bold; }
+        .zoom-btn { border:1px solid #4a6a8a; background:#3d566e; color:#ecf0f1; border-radius:3px; padding:2px 7px; font-size:12px; cursor:pointer; }
+        .zoom-btn:hover { background:#2980b9; }
+
+        /* ── 조작 버튼 ── */
+        .op-btn { border:1px solid #cbd5e0; background:#fff; border-radius:4px; padding:4px 10px; font-size:11px; cursor:pointer; color:#4a5568; white-space:nowrap; }
+        .op-btn:hover:not(:disabled) { background:#edf2f7; border-color:#a0aec0; }
+        .op-btn:disabled { opacity:0.38; cursor:not-allowed; }
+        .op-btn.danger { border-color:#fed7d7; color:#e53e3e; }
+        .op-btn.danger:hover:not(:disabled) { background:#fff5f5; }
+        .op-sep { width:1px; height:18px; background:#e2e8f0; margin:0 2px; }
+
+        /* ── 분할 컨테이너 ── */
+        .wbs-container { display:flex; flex:1; overflow:hidden; }
+
+        /* ── 좌측 그리드 ── */
+        .wbs-left         { display:flex; flex-direction:column; width:58%; min-width:260px; overflow:hidden; border-right:3px solid #2980b9; }
+        .wbs-left-header  { flex-shrink:0; overflow:hidden; }
+        .wbs-left-body    { flex:1; overflow:auto; }
+
+        /* ── 드래그 리사이저 ── */
+        .wbs-resizer { width:5px; background:#2980b9; cursor:col-resize; flex-shrink:0; }
+        .wbs-resizer:hover { background:#1a6a9a; }
+
+        /* ── 우측 간트 ── */
+        .wbs-right       { display:flex; flex-direction:column; flex:1; min-width:100px; overflow:hidden; }
+        .gantt-header    { flex-shrink:0; overflow:hidden; }
+        .gantt-body-wrap { flex:1; overflow:auto; }
+
+        /* ── 좌측 테이블 ── */
+        .wbs-tbl { border-collapse:collapse; table-layout:fixed; width:max-content; }
+        .wbs-tbl th {
+            background:#2c3e50; color:#ecf0f1; font-size:11px; font-weight:bold;
+            padding:0 3px; height:27px; line-height:27px; text-align:center; white-space:nowrap;
+            border:1px solid #3d5166; box-sizing:border-box;
+        }
+        .wbs-tbl td { border:1px solid #dde3ea; padding:0; height:34px; line-height:34px; vertical-align:middle; background:#fff; box-sizing:border-box; }
+        .wbs-tbl tr:hover td { background:#f0f7ff; }
+        .wbs-tbl tr.selected td { background:#bee3f8 !important; }
+        .wbs-tbl tr.selected:hover td { background:#90cdf4 !important; }
+        .wbs-tbl tr.new-row td { background:#fffde7; }
+        .wbs-tbl td input[type="text"],
+        .wbs-tbl td input[type="number"] {
+            width:100%; height:100%; border:none; background:transparent;
+            padding:2px 4px; font-size:11px; box-sizing:border-box; color:#2d3748;
+        }
+        .wbs-tbl td input[type="date"] {
+            width:100%; height:100%; border:none; background:transparent;
+            padding:2px 2px; font-size:10px; box-sizing:border-box; color:#2d3748;
+        }
+        .wbs-tbl td select {
+            width:100%; height:100%; border:none; background:transparent;
+            padding:2px 2px; font-size:10px; box-sizing:border-box; color:#2d3748;
+        }
+        .wbs-tbl td input:focus,
+        .wbs-tbl td select:focus { background:#ebf5ff !important; outline:1px solid #2980b9; z-index:1; position:relative; }
+        .wbs-tbl td.td-num input { text-align:right; }
+        .wbs-tbl td.td-center { text-align:center; }
+        .wbs-tbl td.td-id input { background:#f7f8fa; color:#4a5568; font-size:10px; }
+        .wbs-tbl td.td-ro input { background:#f7f8fa; color:#718096; }
+
+        /* ── 간트차트 ── */
+        .gantt-hdr-tbl { border-collapse:collapse; table-layout:fixed; width:max-content; }
+        .gantt-hdr-tbl th {
+            background:#2c3e50; color:#ecf0f1; font-size:10px; font-weight:bold;
+            text-align:center; white-space:nowrap; border:1px solid #3d5166;
+            height:27px; line-height:27px; padding:0 2px; overflow:hidden; box-sizing:border-box;
+        }
+        .gantt-hdr-tbl th.weekend  { background:#364f65; }
+        .gantt-hdr-tbl th.today-col { background:#e74c3c !important; }
+
+        .gantt-body        { position:relative; width:max-content; }
+        .gantt-row         { height:34px; position:relative; border-bottom:1px solid #e8ecf0; box-sizing:border-box; overflow:hidden; }
+        .gantt-row:hover   { background:#f0f7ff; }
+        .gantt-row.selected { background:#bee3f8 !important; }
+        .gantt-row.new-row  { background:#fffde7; }
+
+        .gantt-grid-line    { position:absolute; top:0; bottom:0; width:1px; background:#eef0f3; pointer-events:none; }
+        .gantt-grid-weekend { position:absolute; top:0; bottom:0; background:rgba(0,0,0,0.04); pointer-events:none; }
+        .gantt-today-line   { position:absolute; top:0; bottom:0; width:2px; background:#e74c3c; opacity:.7; z-index:5; pointer-events:none; }
+
+        .gantt-bar         { position:absolute; border-radius:3px; overflow:hidden; z-index:2; }
+        .gantt-bar.plan    { background:#3498db; height:13px; top:5px; opacity:.88; }
+        .gantt-bar.actual  { background:#27ae60; height:10px; top:20px; opacity:.88; }
+        .gantt-bar-label   { position:absolute; right:4px; top:0; height:100%; display:flex; align-items:center; font-size:9px; color:#fff; white-space:nowrap; overflow:hidden; }
+
+        .gantt-empty { padding:40px; text-align:center; color:#a0aec0; font-size:12px; }
+    </style>
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap" style="overflow:hidden; height:calc(100vh - 50px);">
+
+    <aside th:replace="~{layout/fragments :: sidebar('biz-scope-wbs')}"></aside>
+
+    <div class="main" style="overflow:hidden; padding:0; display:flex; flex-direction:column;">
+
+        <!-- 브레드크럼 -->
+        <div class="breadcrumb" style="flex-shrink:0; padding:7px 16px; border-bottom:1px solid #e2e8f0;">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업관리</span>
+            <span class="sep">/</span><span>범위관리</span>
+            <span class="sep">/</span><span class="current">사업일정(WBS)</span>
+        </div>
+
+        <!-- 알림 -->
+        <div id="wbsMsg" class="wbs-msg"></div>
+
+        <!-- 메인 툴바 -->
+        <div class="wbs-toolbar">
+            <!-- 좌측: 프로젝트명 강조 -->
+            <span class="project-badge" th:if="${selectedProject != null}"
+                  th:text="${selectedProject.projectName}"></span>
+            <span class="page-title" style="color:#a0aec0; font-size:11px; margin-left:4px;">/ 사업일정(WBS)</span>
+            <!-- 우측: 조작 버튼 -->
+            <div style="margin-left:auto; display:flex; align-items:center; gap:6px;">
+                <span style="font-size:11px; color:#a0aec0;">줌:</span>
+                <button class="zoom-btn" onclick="changeZoom(-2)">－</button>
+                <button class="zoom-btn" onclick="changeZoom(2)">＋</button>
+                <button class="btn btn-primary" style="padding:5px 12px; font-size:12px;" onclick="saveAll()">&#10003; 저장</button>
+                <span id="saveHint" class="save-hint"></span>
+            </div>
+        </div>
+
+        <!-- 조작 툴바 -->
+        <div class="wbs-op-bar">
+            <button id="btnMoveUp"    class="op-btn" onclick="moveRowUp()"    disabled>&#9650; 위로 이동</button>
+            <button id="btnMoveDown"  class="op-btn" onclick="moveRowDown()"  disabled>&#9660; 아래로 이동</button>
+            <div class="op-sep"></div>
+            <button id="btnLevelUp"   class="op-btn" onclick="levelUp()"      disabled>&#8676; 한수준 올리기</button>
+            <button id="btnLevelDown" class="op-btn" onclick="levelDown()"    disabled>&#8677; 한수준 내리기</button>
+            <div class="op-sep"></div>
+            <button class="op-btn" onclick="addRow()">&#43; 행추가</button>
+            <button id="btnDelRow" class="op-btn danger" onclick="deleteSelectedRow()" disabled>&#10005; 행삭제</button>
+            <span style="font-size:11px; color:#a0aec0; margin-left:8px;" id="selInfo"></span>
+        </div>
+
+        <!-- WBS 분할 컨테이너 -->
+        <div class="wbs-container" id="wbsContainer">
+
+            <!-- 좌측: 편집 그리드 -->
+            <div class="wbs-left" id="wbsLeft">
+                <div class="wbs-left-header" id="wbsLeftHeader"></div>
+                <div class="wbs-left-body"   id="wbsLeftBody"></div>
+            </div>
+
+            <!-- 드래그 구분선 -->
+            <div class="wbs-resizer" id="wbsResizer"></div>
+
+            <!-- 우측: 간트차트 -->
+            <div class="wbs-right" id="wbsRight">
+                <div class="gantt-header"    id="ganttHeader"></div>
+                <div class="gantt-body-wrap" id="ganttBodyWrap">
+                    <div class="gantt-body"  id="ganttBody"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script th:inline="javascript">
+/*<![CDATA[*/
+const INITIAL_DATA = /*[[${wbsList}]]*/ [];
+const PROJECT_ID   = /*[[${selectedProject != null ? selectedProject.id : 0}]]*/ 0;
+const CSRF_TOKEN   = '';
+const CSRF_HEADER  = 'X-CSRF-TOKEN';
+
+/* ── 상태 ── */
+let rows        = [];
+let selectedRow = null;
+let isDirty     = false;
+let DAY_W       = 6;
+let ganttStart  = null;
+let ganttDays   = 0;
+
+/* ── 컬럼 정의 ── */
+const COLS = [
+    { key:'taskId',         label:'TASK ID',   w:70,  type:'taskid' },
+    { key:'taskName',       label:'TASK명',     w:150, type:'taskname'},
+    { key:'deliverable',    label:'산출물',     w:96,  type:'text'   },
+    { key:'assignee',       label:'담당자',     w:68,  type:'text'   },
+    { key:'planProgress',   label:'계획%',      w:48,  type:'num'    },
+    { key:'actualProgress', label:'실적%',      w:48,  type:'num'    },
+    { key:'planStartDate',  label:'계획시작일',  w:96,  type:'date_g' },
+    { key:'planEndDate',    label:'계획종료일',  w:96,  type:'date_g' },
+    { key:'planDuration',   label:'계획기간',   w:53,  type:'num_ro' },
+    { key:'planRate',        label:'계획진척률',  w:58,  type:'num_ro' },
+    { key:'actualStartDate', label:'실제시작일',  w:96,  type:'date'   },
+    { key:'actualEndDate',   label:'실제종료일',  w:96,  type:'date'   },
+    { key:'actualDuration',  label:'실제기간',    w:53,  type:'num_ro' },
+    { key:'actualRate',      label:'실제진척율',  w:58,  type:'num_ro' },
+    { key:'status',         label:'상태',       w:73,  type:'status' },
+];
+const STATUS_OPTS = ['미착수','착수','수행','테스트','PL확인','PM확인','완료'];
+const TABLE_W = COLS.reduce((s,c) => s+c.w, 0);
+
+/* ══════════════════════════════════════════
+   초기화
+══════════════════════════════════════════ */
+function init(data) {
+    rows = (data || []).map(r => ({
+        ...r,
+        _level: levelFromTaskId(r.taskId)
+    }));
+    selectedRow = null;
+    renderAll();
+    setupScrollSync();
+    setupResizer();
+}
+
+function renderAll() {
+    calcAllDerived();
+    renderHeader();
+    renderBody();
+    calcGanttRange();
+    renderGanttHeader();
+    renderGanttBody();
+    updateOpButtons();
+}
+
+/* ══════════════════════════════════════════
+   TASK ID / 레벨 유틸
+══════════════════════════════════════════ */
+function levelFromTaskId(tid) {
+    if (!tid || tid.trim() === '') return 1;
+    return tid.trim().split('.').length;
+}
+
+function recalcTaskIds() {
+    const path = [0, 0, 0, 0, 0];
+    let prevLvl = -1;
+
+    rows.forEach(row => {
+        const lvl = Math.max(0, (row._level || 1) - 1);  // 0-indexed
+
+        if (lvl < prevLvl) {
+            // 수준 올라감 → 하위 카운터 초기화
+            for (let i = lvl + 1; i < path.length; i++) path[i] = 0;
+        }
+        path[lvl]++;
+
+        row.taskId = path.slice(0, lvl + 1).join('.');
+        prevLvl = lvl;
+    });
+}
+
+/* ══════════════════════════════════════════
+   파생값 자동 계산 (전체)
+══════════════════════════════════════════ */
+const STATUS_RATE = {
+    '미착수':0, '착수':20, '수행':50, '테스트':70,
+    'PL확인':80, 'PM확인':90, '완료':100
+};
+
+function hasChildren(i) {
+    if (i >= rows.length - 1) return false;
+    return (rows[i + 1]._level || 1) > (rows[i]._level || 1);
+}
+
+function getDescendants(i) {
+    const lvl = rows[i]._level || 1;
+    const result = [];
+    let j = i + 1;
+    while (j < rows.length && (rows[j]._level || 1) > lvl) {
+        result.push({ row: rows[j], absIdx: j });
+        j++;
+    }
+    return result;
+}
+
+/* 현재일 기준 계획진척률 계산 */
+function calcPlanRate(startStr, endStr) {
+    if (!startStr || !endStr) return null;
+    const s = new Date(startStr), e = new Date(endStr);
+    if (e <= s) return null;
+    const today = new Date();
+    const total   = daysBetween(s, e);
+    const elapsed = daysBetween(s, today);
+    if (elapsed <= 0)       return 0;
+    if (elapsed >= total)   return 100;
+    return Math.round(elapsed / total * 100);
+}
+
+/* 단일 행 파생값 계산 (dates → duration/rate) */
+function calcRowDerived(i) {
+    const row = rows[i];
+    /* 계획기간 */
+    if (row.planStartDate && row.planEndDate) {
+        const s = new Date(row.planStartDate), e = new Date(row.planEndDate);
+        row.planDuration = e >= s ? daysBetween(s, e) + 1 : null;
+    } else { row.planDuration = null; }
+    /* 계획진척률 (현재일 기준) */
+    row.planRate = calcPlanRate(row.planStartDate, row.planEndDate);
+    /* 실제기간 */
+    if (row.actualStartDate && row.actualEndDate) {
+        const s = new Date(row.actualStartDate), e = new Date(row.actualEndDate);
+        row.actualDuration = e >= s ? daysBetween(s, e) + 1 : null;
+    } else { row.actualDuration = null; }
+    /* 실제진척율 (상태 기준) */
+    if (row.status && STATUS_RATE[row.status] !== undefined) {
+        row.actualRate = STATUS_RATE[row.status];
+    }
+}
+
+/* 전체 파생값 계산:
+   1) 리프 행 파생값 계산
+   2) 부모 행: 하위 리프의 날짜 min/max → 날짜 설정 → 파생값 계산 */
+function calcAllDerived() {
+    /* Step 1: 리프 행 */
+    rows.forEach((_, i) => { if (!hasChildren(i)) calcRowDerived(i); });
+
+    /* Step 2: 부모 행 (위→아래 순서, 모든 레벨) */
+    rows.forEach((row, i) => {
+        if (!hasChildren(i)) return;
+
+        const descs = getDescendants(i);
+        const leaves = descs.filter(d => !hasChildren(d.absIdx));
+        const src = (leaves.length ? leaves : descs).map(d => d.row);
+
+        const ps = src.map(c => c.planStartDate).filter(Boolean).sort();
+        const pe = src.map(c => c.planEndDate).filter(Boolean).sort();
+        const as = src.map(c => c.actualStartDate).filter(Boolean).sort();
+        const ae = src.map(c => c.actualEndDate).filter(Boolean).sort();
+
+        row.planStartDate   = ps.length ? ps[0]             : null;
+        row.planEndDate     = pe.length ? pe[pe.length - 1] : null;
+        row.actualStartDate = as.length ? as[0]             : null;
+        row.actualEndDate   = ae.length ? ae[ae.length - 1] : null;
+
+        calcRowDerived(i);
+    });
+}
+
+/* 계산된 readonly 필드 DOM 갱신 (전체 재렌더 없이) */
+function updateAllComputedInDom() {
+    const FIELDS = ['planStartDate','planEndDate','actualStartDate','actualEndDate',
+                    'planDuration','planRate','actualDuration','actualRate'];
+    rows.forEach((row, i) => {
+        const tr = document.querySelector(`#wbsLeftBody tr[data-row="${i}"]`);
+        if (!tr) return;
+        FIELDS.forEach(f => {
+            const el = tr.querySelector(`[data-field="${f}"]`);
+            if (el && el.readOnly) el.value = row[f] != null ? row[f] : '';
+        });
+    });
+}
+
+/* ══════════════════════════════════════════
+   좌측 헤더
+══════════════════════════════════════════ */
+function renderHeader() {
+    const cg = COLS.map(c => `<col style="width:${c.w}px">`).join('');
+
+    /* 그룹 헤더 (1행): 간트의 월 행과 높이 맞춤 */
+    const GROUPS = [
+        { label:'TASK 정보', span:4 },   // taskId, taskName, deliverable, assignee
+        { label:'진척율',    span:2 },   // planProgress, actualProgress
+        { label:'계획',      span:4 },   // planStartDate, planEndDate, planDuration, planRate
+        { label:'실적',      span:4 },   // actualStartDate, actualEndDate, actualDuration, actualRate
+        { label:'상태',      span:1 },   // status
+    ];
+    const groupHtml = GROUPS.map(g =>
+        `<th colspan="${g.span}">${g.label}</th>`
+    ).join('');
+
+    /* 컬럼 헤더 (2행) */
+    const ths = COLS.map(c => `<th style="width:${c.w}px">${c.label}</th>`).join('');
+
+    document.getElementById('wbsLeftHeader').innerHTML =
+        `<table class="wbs-tbl"><colgroup>${cg}</colgroup>` +
+        `<thead><tr>${groupHtml}</tr><tr>${ths}</tr></thead></table>`;
+}
+
+/* ══════════════════════════════════════════
+   좌측 바디
+══════════════════════════════════════════ */
+function renderBody() {
+    const bodyEl  = document.getElementById('wbsLeftBody');
+    const scrollT = bodyEl.scrollTop;
+    const scrollL = bodyEl.scrollLeft;
+
+    if (rows.length === 0) {
+        bodyEl.innerHTML = '<div style="padding:32px; text-align:center; color:#a0aec0; font-size:13px;">&#43; 행 추가 버튼으로 일정을 등록하세요.</div>';
+        bodyEl.onscroll = null;
+        return;
+    }
+
+    const cg = COLS.map(c => `<col style="width:${c.w}px">`).join('');
+    const tbodyHtml = rows.map((row, i) => buildRowHtml(row, i)).join('');
+    bodyEl.innerHTML = `<table class="wbs-tbl"><colgroup>${cg}</colgroup><tbody>${tbodyHtml}</tbody></table>`;
+
+    bodyEl.scrollTop  = scrollT;
+    bodyEl.scrollLeft = scrollL;
+
+    bodyEl.onscroll = function() {
+        const hdr = document.querySelector('#wbsLeftHeader table');
+        if (hdr) hdr.style.marginLeft = -this.scrollLeft + 'px';
+        if (!syncingRight) {
+            syncingLeft = true;
+            document.getElementById('ganttBodyWrap').scrollTop = this.scrollTop;
+            syncingLeft = false;
+        }
+    };
+}
+
+function buildRowHtml(row, i) {
+    const isSel = i === selectedRow ? ' selected' : '';
+    const isNew = !row.id        ? ' new-row'  : '';
+    const cells = COLS.map(c => buildCell(c, row, i)).join('');
+    return `<tr data-row="${i}" class="${isSel}${isNew}" onclick="selectRow(${i})">${cells}</tr>`;
+}
+
+function buildCell(col, row, i) {
+    const raw  = row[col.key];
+    const v    = raw != null ? raw : '';
+    const safe = escHtml(String(v));
+
+    if (col.type === 'taskid') {
+        return `<td class="td-id"><input type="text" value="${safe}" data-field="${col.key}" data-row="${i}" readonly tabindex="-1"></td>`;
+    }
+    if (col.type === 'taskname') {
+        const indent = ((row._level || 1) - 1) * 14;
+        return `<td><input type="text" value="${safe}" data-field="${col.key}" data-row="${i}" oninput="onInput(this)" style="padding-left:${4+indent}px;"></td>`;
+    }
+    if (col.type === 'text') {
+        return `<td><input type="text" value="${safe}" data-field="${col.key}" data-row="${i}" oninput="onInput(this)"></td>`;
+    }
+    if (col.type === 'num') {
+        return `<td class="td-num"><input type="number" min="0" max="100" value="${safe}" data-field="${col.key}" data-row="${i}" oninput="onInput(this)"></td>`;
+    }
+    if (col.type === 'num_ro') {
+        return `<td class="td-num td-ro"><input type="number" value="${safe}" data-field="${col.key}" data-row="${i}" readonly tabindex="-1"></td>`;
+    }
+    if (col.type === 'date_g') {
+        if (hasChildren(i)) {
+            return `<td class="td-ro"><input type="date" value="${safe}" data-field="${col.key}" data-row="${i}" readonly tabindex="-1" title="하위 일정의 최소/최대일로 자동 계산됩니다"></td>`;
+        }
+        return `<td><input type="date" value="${safe}" data-field="${col.key}" data-row="${i}" oninput="onDateChange(this,${i})"></td>`;
+    }
+    if (col.type === 'date') {
+        if (hasChildren(i)) {
+            return `<td class="td-ro"><input type="date" value="${safe}" data-field="${col.key}" data-row="${i}" readonly tabindex="-1" title="하위 일정의 최소/최대일로 자동 계산됩니다"></td>`;
+        }
+        return `<td><input type="date" value="${safe}" data-field="${col.key}" data-row="${i}" oninput="onDateChange(this,${i})"></td>`;
+    }
+    if (col.type === 'status') {
+        const opts = STATUS_OPTS.map(s =>
+            `<option value="${s}" ${row.status === s ? 'selected' : ''}>${s}</option>`
+        ).join('');
+        return `<td><select data-field="status" data-row="${i}" onchange="onStatusChange(this,${i})"><option value="">-</option>${opts}</select></td>`;
+    }
+    return `<td></td>`;
+}
+
+/* ══════════════════════════════════════════
+   행 선택
+══════════════════════════════════════════ */
+function selectRow(i) {
+    selectedRow = i;
+    /* 테이블 하이라이트 */
+    document.querySelectorAll('#wbsLeftBody tr[data-row]').forEach(tr => {
+        tr.classList.toggle('selected', parseInt(tr.dataset.row) === i);
+    });
+    /* 간트 하이라이트 */
+    document.querySelectorAll('#ganttBody .gantt-row').forEach((div, idx) => {
+        div.classList.toggle('selected', idx === i);
+    });
+    updateOpButtons();
+}
+
+/* ══════════════════════════════════════════
+   조작 버튼 상태 갱신
+══════════════════════════════════════════ */
+function updateOpButtons() {
+    const has   = selectedRow !== null;
+    const lvl   = has ? (rows[selectedRow]._level || 1) : 1;
+    const canUp    = has && selectedRow > 0;
+    const canDown  = has && selectedRow < rows.length - 1;
+    const canLvlUp = has && lvl > 1;
+    const canLvlDn = has && selectedRow > 0 && lvl < 5;
+
+    setBtn('btnMoveUp',    !canUp);
+    setBtn('btnMoveDown',  !canDown);
+    setBtn('btnLevelUp',   !canLvlUp);
+    setBtn('btnLevelDown', !canLvlDn);
+    setBtn('btnDelRow',    !has);
+
+    const info = document.getElementById('selInfo');
+    if (has) {
+        info.textContent = `선택: ${rows[selectedRow].taskId || '?'} (Lv.${lvl})`;
+    } else {
+        info.textContent = '행을 클릭하여 선택하세요';
+    }
+}
+function setBtn(id, disabled) {
+    document.getElementById(id).disabled = disabled;
+}
+
+/* ══════════════════════════════════════════
+   행 이동 / 수준 변경 / 삭제
+══════════════════════════════════════════ */
+function moveRowUp() {
+    if (selectedRow === null || selectedRow === 0) return;
+    syncRowsFromDom();
+    swap(rows, selectedRow - 1, selectedRow);
+    selectedRow--;
+    recalcTaskIds();
+    renderAll();
+    markDirty();
+}
+
+function moveRowDown() {
+    if (selectedRow === null || selectedRow >= rows.length - 1) return;
+    syncRowsFromDom();
+    swap(rows, selectedRow, selectedRow + 1);
+    selectedRow++;
+    recalcTaskIds();
+    renderAll();
+    markDirty();
+}
+
+function levelUp() {
+    if (selectedRow === null) return;
+    const lvl = rows[selectedRow]._level || 1;
+    if (lvl <= 1) return;
+    syncRowsFromDom();
+    rows[selectedRow]._level = lvl - 1;
+    recalcTaskIds();
+    renderAll();
+    markDirty();
+}
+
+function levelDown() {
+    if (selectedRow === null || selectedRow === 0) return;
+    const lvl = rows[selectedRow]._level || 1;
+    if (lvl >= 5) return;
+    syncRowsFromDom();
+    rows[selectedRow]._level = lvl + 1;
+    recalcTaskIds();
+    renderAll();
+    markDirty();
+}
+
+function deleteSelectedRow() {
+    if (selectedRow === null) return;
+    deleteRow(selectedRow);
+}
+
+function deleteRow(rowIdx) {
+    const row = rows[rowIdx];
+    if (row.id) {
+        if (!confirm('이 항목을 삭제하시겠습니까?')) return;
+        fetch(`/wbs/${row.id}/delete`, {
+            method: 'POST',
+            headers: { [CSRF_HEADER]: CSRF_TOKEN }
+        })
+        .then(r => {
+            if (r.ok) {
+                afterSplice(rowIdx);
+                showMsg('삭제되었습니다.', 'success');
+            } else {
+                showMsg('삭제에 실패했습니다.', 'error');
+            }
+        })
+        .catch(() => showMsg('오류가 발생했습니다.', 'error'));
+    } else {
+        afterSplice(rowIdx);
+    }
+}
+
+function afterSplice(idx) {
+    rows.splice(idx, 1);
+    if (selectedRow === idx)        selectedRow = null;
+    else if (selectedRow > idx)     selectedRow--;
+    recalcTaskIds();
+    renderAll();
+}
+
+function swap(arr, a, b) { [arr[a], arr[b]] = [arr[b], arr[a]]; }
+
+/* ══════════════════════════════════════════
+   행 추가
+══════════════════════════════════════════ */
+function addRow() {
+    syncRowsFromDom();
+    rows.push({
+        id:null, projectId:PROJECT_ID,
+        taskId:null, _level:1,
+        taskName:null, deliverable:null, assignee:null,
+        planProgress:null, actualProgress:null,
+        planStartDate:null, planEndDate:null,
+        planDuration:null, planRate:null,
+        actualStartDate:null, actualEndDate:null,
+        actualRate:null, status:'미착수', sortOrder:rows.length + 1
+    });
+    recalcTaskIds();
+    renderAll();
+    markDirty();
+    const body = document.getElementById('wbsLeftBody');
+    setTimeout(() => { body.scrollTop = body.scrollHeight; }, 50);
+}
+
+/* ══════════════════════════════════════════
+   입력 이벤트
+══════════════════════════════════════════ */
+function onInput(el) {
+    const i = parseInt(el.dataset.row);
+    const f = el.dataset.field;
+    if (rows[i] !== undefined) rows[i][f] = el.value || null;
+    markDirty();
+}
+
+function onDateChange(el, i) {
+    onInput(el);
+    /* 계획기간 자동계산 */
+    const tr = document.querySelector(`tr[data-row="${i}"]`);
+    if (!tr) return;
+    const sEl = tr.querySelector('[data-field="planStartDate"]');
+    const eEl = tr.querySelector('[data-field="planEndDate"]');
+    const dEl = tr.querySelector('[data-field="planDuration"]');
+    if (sEl && eEl && dEl && sEl.value && eEl.value) {
+        const s = new Date(sEl.value), e = new Date(eEl.value);
+        if (e >= s) { const d = daysBetween(s, e) + 1; dEl.value = d; rows[i].planDuration = d; }
+    }
+    /* 전체 파생값 재계산 후 DOM 갱신 */
+    syncRowsFromDom();
+    calcAllDerived();
+    updateAllComputedInDom();
+    /* 간트 즉시 갱신 */
+    calcGanttRange();
+    renderGanttHeader();
+    renderGanttBody();
+    /* 선택 복원 */
+    if (selectedRow !== null) {
+        document.querySelectorAll('#ganttBody .gantt-row').forEach((div, idx) => {
+            div.classList.toggle('selected', idx === selectedRow);
+        });
+    }
+}
+
+/* 상태 변경 → 실제진척율 자동 계산 */
+function onStatusChange(el, i) {
+    onInput(el);
+    calcRowDerived(i);
+    const tr = document.querySelector(`#wbsLeftBody tr[data-row="${i}"]`);
+    if (tr) {
+        const rateEl = tr.querySelector('[data-field="actualRate"]');
+        if (rateEl) rateEl.value = rows[i].actualRate != null ? rows[i].actualRate : '';
+    }
+}
+
+function syncRowsFromDom() {
+    document.querySelectorAll('#wbsLeftBody tr[data-row]').forEach(tr => {
+        const i = parseInt(tr.dataset.row);
+        if (!rows[i]) return;
+        tr.querySelectorAll('[data-field]').forEach(el => {
+            const f = el.dataset.field;
+            if (f !== 'taskId') rows[i][f] = el.value || null;
+        });
+    });
+}
+
+/* ══════════════════════════════════════════
+   저장
+══════════════════════════════════════════ */
+function saveAll() {
+    syncRowsFromDom();
+    const payload = rows.map((r, i) => ({
+        id: r.id || null,
+        projectId: PROJECT_ID,
+        taskId: r.taskId,
+        taskName: r.taskName,
+        deliverable: r.deliverable,
+        assignee: r.assignee,
+        planProgress: r.planProgress,
+        actualProgress: r.actualProgress,
+        planStartDate: r.planStartDate,
+        planEndDate: r.planEndDate,
+        planDuration: r.planDuration,
+        planRate: r.planRate,
+        actualStartDate: r.actualStartDate,
+        actualEndDate: r.actualEndDate,
+        actualRate: r.actualRate,
+        status: r.status,
+        sortOrder: i + 1
+    }));
+
+    fetch('/wbs/batch-save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', [CSRF_HEADER]: CSRF_TOKEN },
+        body: JSON.stringify(payload)
+    })
+    .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+    .then(updated => {
+        const sel = selectedRow;
+        rows = updated.map(r => ({ ...r, _level: levelFromTaskId(r.taskId) }));
+        selectedRow = (sel !== null && sel < rows.length) ? sel : null;
+        renderAll();
+        clearDirty();
+        showMsg('저장되었습니다.', 'success');
+    })
+    .catch(() => showMsg('저장 중 오류가 발생했습니다.', 'error'));
+}
+
+/* ══════════════════════════════════════════
+   간트 범위 계산
+══════════════════════════════════════════ */
+function calcGanttRange() {
+    let minD = null, maxD = null;
+    rows.forEach(r => {
+        if (r.planStartDate) { const d = new Date(r.planStartDate); if (!minD || d < minD) minD = new Date(d); }
+        if (r.planEndDate)   { const d = new Date(r.planEndDate);   if (!maxD || d > maxD) maxD = new Date(d); }
+    });
+    if (!minD) { const now = new Date(); minD = new Date(now.getFullYear(), now.getMonth(), 1); }
+    if (!maxD) { maxD = new Date(minD.getFullYear(), minD.getMonth() + 3, 0); }
+
+    minD = new Date(minD.getFullYear(), minD.getMonth() - 1, 1);
+    maxD = new Date(maxD.getFullYear(), maxD.getMonth() + 2, 0);
+
+    ganttStart = minD;
+    ganttDays  = daysBetween(minD, maxD) + 1;
+}
+
+/* ══════════════════════════════════════════
+   간트 헤더
+══════════════════════════════════════════ */
+function renderGanttHeader() {
+    const today = new Date();
+    let monthHtml = '', dayHtml = '';
+
+    let cur = new Date(ganttStart);
+    const ganttEnd = addDays(ganttStart, ganttDays - 1);
+    while (cur <= ganttEnd) {
+        const yr = cur.getFullYear(), mo = cur.getMonth();
+        const mStart = new Date(yr, mo, 1);
+        const mEnd   = new Date(yr, mo + 1, 0);
+        const cS = mStart < ganttStart ? ganttStart : mStart;
+        const cE = mEnd   > ganttEnd   ? ganttEnd   : mEnd;
+        const days = daysBetween(cS, cE) + 1;
+        const wPx  = days * DAY_W;
+        monthHtml += `<th style="width:${wPx}px;min-width:${wPx}px;">${yr}.${pad2(mo+1)}</th>`;
+        cur = new Date(yr, mo + 1, 1);
+    }
+
+    for (let i = 0; i < ganttDays; i++) {
+        const d   = addDays(ganttStart, i);
+        const dow = d.getDay();
+        const isWeekend = dow === 0 || dow === 6;
+        const isToday   = d.toDateString() === today.toDateString();
+        const cls = isToday ? 'today-col' : (isWeekend ? 'weekend' : '');
+        dayHtml += `<th class="${cls}" style="width:${DAY_W}px;min-width:${DAY_W}px;">${d.getDate()}</th>`;
+    }
+
+    const totalW = ganttDays * DAY_W;
+    document.getElementById('ganttHeader').innerHTML =
+        `<table class="gantt-hdr-tbl" style="width:${totalW}px;">
+           <thead><tr>${monthHtml}</tr><tr>${dayHtml}</tr></thead>
+         </table>`;
+}
+
+/* ══════════════════════════════════════════
+   간트 바디
+══════════════════════════════════════════ */
+function renderGanttBody() {
+    const totalW  = ganttDays * DAY_W;
+    const today   = new Date();
+    const todayOff = daysBetween(ganttStart, today) * DAY_W;
+    const bodyEl  = document.getElementById('ganttBodyWrap');
+    const scrollT = bodyEl.scrollTop;
+    const scrollL = bodyEl.scrollLeft;
+
+    let html = `<div style="width:${totalW}px;position:relative;">`;
+
+    if (todayOff >= 0 && todayOff <= totalW) {
+        html += `<div class="gantt-today-line" style="left:${todayOff}px;height:${Math.max(rows.length,1)*34}px;"></div>`;
+    }
+
+    if (rows.length === 0) {
+        html += `<div class="gantt-empty">일정 데이터를 입력하면 간트차트가 표시됩니다.</div>`;
+    } else {
+        rows.forEach((row, i) => {
+            const isSel = i === selectedRow ? ' selected' : '';
+            const isNew = !row.id           ? ' new-row'  : '';
+            html += `<div class="gantt-row${isSel}${isNew}" onclick="selectRow(${i})">`;
+
+            for (let d = 0; d < ganttDays; d++) {
+                const dt = addDays(ganttStart, d);
+                const dow = dt.getDay();
+                if (dow === 0 || dow === 6) {
+                    html += `<div class="gantt-grid-weekend" style="left:${d*DAY_W}px;width:${DAY_W}px;"></div>`;
+                } else {
+                    html += `<div class="gantt-grid-line" style="left:${(d+1)*DAY_W}px;"></div>`;
+                }
+            }
+
+            /* 계획 바 */
+            if (row.planStartDate && row.planEndDate) {
+                const s = new Date(row.planStartDate), e = new Date(row.planEndDate);
+                if (e >= s) {
+                    const left = daysBetween(ganttStart, s) * DAY_W;
+                    const w    = (daysBetween(s, e) + 1) * DAY_W;
+                    const lc   = Math.max(0, left);
+                    const wc   = Math.min(w + Math.min(0, left), totalW - lc);
+                    if (wc > 0) {
+                        const pct = row.planRate != null ? row.planRate + '%' : '';
+                        html += `<div class="gantt-bar plan" style="left:${lc}px;width:${Math.max(wc,3)}px;" title="계획: ${row.planStartDate} ~ ${row.planEndDate}">`;
+                        if (wc > 28) html += `<span class="gantt-bar-label">${pct}</span>`;
+                        html += `</div>`;
+                    }
+                }
+            }
+
+            /* 실제 바 */
+            if (row.actualStartDate && row.actualEndDate) {
+                const s = new Date(row.actualStartDate), e = new Date(row.actualEndDate);
+                if (e >= s) {
+                    const left = daysBetween(ganttStart, s) * DAY_W;
+                    const w    = (daysBetween(s, e) + 1) * DAY_W;
+                    const lc   = Math.max(0, left);
+                    const wc   = Math.min(w + Math.min(0, left), totalW - lc);
+                    if (wc > 0) {
+                        const pct = row.actualRate != null ? row.actualRate + '%' : '';
+                        html += `<div class="gantt-bar actual" style="left:${lc}px;width:${Math.max(wc,3)}px;" title="실제: ${row.actualStartDate} ~ ${row.actualEndDate}">`;
+                        if (wc > 28) html += `<span class="gantt-bar-label">${pct}</span>`;
+                        html += `</div>`;
+                    }
+                }
+            }
+
+            html += `</div>`;
+        });
+    }
+
+    html += `</div>`;
+    document.getElementById('ganttBody').innerHTML = html;
+    bodyEl.scrollTop  = scrollT;
+    bodyEl.scrollLeft = scrollL;
+}
+
+/* ══════════════════════════════════════════
+   줌
+══════════════════════════════════════════ */
+function changeZoom(delta) {
+    DAY_W = Math.max(6, Math.min(30, DAY_W + delta));
+    renderGanttHeader();
+    renderGanttBody();
+}
+
+/* ══════════════════════════════════════════
+   스크롤 동기화
+══════════════════════════════════════════ */
+let syncingLeft = false, syncingRight = false;
+
+function setupScrollSync() {
+    const leftBody  = document.getElementById('wbsLeftBody');
+    const ganttWrap = document.getElementById('ganttBodyWrap');
+    const ganttHdr  = document.getElementById('ganttHeader');
+
+    ganttWrap.addEventListener('scroll', () => {
+        if (!syncingLeft) {
+            syncingRight = true;
+            leftBody.scrollTop = ganttWrap.scrollTop;
+            const hdrTbl = ganttHdr.querySelector('table');
+            if (hdrTbl) hdrTbl.style.marginLeft = -ganttWrap.scrollLeft + 'px';
+            syncingRight = false;
+        }
+    });
+}
+
+/* ══════════════════════════════════════════
+   드래그 리사이저
+══════════════════════════════════════════ */
+function setupResizer() {
+    const resizer   = document.getElementById('wbsResizer');
+    const container = document.getElementById('wbsContainer');
+    const leftPanel = document.getElementById('wbsLeft');
+    let isResizing = false, startX = 0, startW = 0;
+
+    resizer.addEventListener('mousedown', e => {
+        isResizing = true; startX = e.clientX; startW = leftPanel.offsetWidth;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+    });
+    document.addEventListener('mousemove', e => {
+        if (!isResizing) return;
+        const nw = Math.max(260, Math.min(container.offsetWidth - 120, startW + (e.clientX - startX)));
+        leftPanel.style.width = nw + 'px';
+        leftPanel.style.flex  = 'none';
+    });
+    document.addEventListener('mouseup', () => {
+        if (isResizing) { isResizing = false; document.body.style.cursor = ''; document.body.style.userSelect = ''; }
+    });
+}
+
+/* ══════════════════════════════════════════
+   유틸
+══════════════════════════════════════════ */
+function daysBetween(d1, d2) {
+    const t1 = new Date(d1).setHours(0,0,0,0);
+    const t2 = new Date(d2).setHours(0,0,0,0);
+    return Math.round((t2 - t1) / 86400000);
+}
+function addDays(d, n) { return new Date(new Date(d).getTime() + n * 86400000); }
+function pad2(n) { return String(n).padStart(2,'0'); }
+function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function markDirty() {
+    isDirty = true;
+    const h = document.getElementById('saveHint');
+    h.textContent = '* 미저장 변경사항 있음'; h.className = 'save-hint dirty';
+}
+function clearDirty() {
+    isDirty = false;
+    const h = document.getElementById('saveHint');
+    h.textContent = ''; h.className = 'save-hint';
+}
+function showMsg(msg, type) {
+    const el = document.getElementById('wbsMsg');
+    el.textContent = msg; el.className = 'wbs-msg ' + type; el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+window.addEventListener('DOMContentLoaded', () => init(INITIAL_DATA));
+/*]]>*/
+</script>
+
+</body>
+</html>

@@ -17,14 +17,19 @@ public class ManpowerSpec {
             List<Predicate> predicates = new ArrayList<>();
 
             // count 쿼리가 아닐 때만 fetch join (N+1 방지)
-            if (!Long.class.equals(query.getResultType())) {
+            if (query != null && !Long.class.equals(query.getResultType())) {
                 root.fetch("project", JoinType.LEFT);
                 root.fetch("user", JoinType.LEFT);
                 query.distinct(true);
             }
 
-            // 사업명 검색
-            if (hasText(dto.getProjectName())) {
+            // 선택된 사업 ID (세션 기반 자동 필터, 우선 적용)
+            if (dto.getProjectId() != null) {
+                Join<Object, Object> project = root.join("project", JoinType.LEFT);
+                predicates.add(cb.equal(project.get("id"), dto.getProjectId()));
+            }
+            // 사업명 검색 (projectId 미지정 시에만 적용)
+            else if (hasText(dto.getProjectName())) {
                 Join<Object, Object> project = root.join("project", JoinType.LEFT);
                 predicates.add(cb.like(project.get("projectName"), "%" + dto.getProjectName() + "%"));
             }

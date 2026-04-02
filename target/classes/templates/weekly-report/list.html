@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주간보고 관리 - e4net PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+
+    <aside th:replace="~{layout/fragments :: sidebar('biz-report-weekly')}"></aside>
+
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업관리</span>
+            <span class="sep">/</span><span>보고관리</span>
+            <span class="sep">/</span><span class="current">주간보고</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">
+                    주간보고 관리
+                    <span th:if="${selectedProject != null}"
+                          style="font-size:13px;font-weight:normal;color:#2980b9;margin-left:10px;"
+                          th:text="'[ ' + ${selectedProject.projectName} + ' ]'"></span>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="location.href='/weekly-report/new'">&#43; 주간보고 등록</button>
+                </div>
+            </div>
+
+            <!-- 성공/오류 메시지 -->
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="alert alert-danger"  th:if="${errorMessage}"   th:text="${errorMessage}"></div>
+
+            <!-- 검색 폼 -->
+            <form th:action="@{/weekly-report}" method="get">
+                <div class="search-box">
+                    <div class="search-row">
+                        <span class="search-label">보고서명</span>
+                        <input type="text" name="reportName" class="search-input w-lg"
+                               th:value="${search.reportName}" placeholder="보고서명 검색">
+                        <div class="divider"></div>
+                        <span class="search-label">작성자</span>
+                        <input type="text" name="writer" class="search-input w-md"
+                               th:value="${search.writer}" placeholder="작성자 검색">
+                        <button type="submit" class="btn-search">&#128269; 검색</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- 목록 테이블 -->
+            <div class="table-card">
+                <div class="table-card-header">
+                    <span class="table-card-title">주간보고 목록</span>
+                    <span class="table-count">총 <span th:text="${page.totalElements}">0</span>건</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>NO.</th>
+                                <th style="min-width:280px;">보고서명</th>
+                                <th>보고일자</th>
+                                <th>작성자</th>
+                                <th>첨부파일</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="empty-row" th:if="${page.content.isEmpty()}">
+                                <td colspan="6">등록된 주간보고가 없습니다.</td>
+                            </tr>
+                            <tr th:each="r, stat : ${page.content}">
+                                <td th:text="${page.number * page.size + stat.count}"></td>
+                                <td class="td-left">
+                                    <a class="td-link"
+                                       th:href="@{/weekly-report/{id}(id=${r.id})}"
+                                       th:text="${r.reportName ?: '-'}"></a>
+                                </td>
+                                <td th:text="${r.reportDate ?: '-'}"></td>
+                                <td th:text="${r.writer ?: '-'}"></td>
+                                <td>
+                                    <a th:if="${r.attachFileName != null}"
+                                       th:href="@{/weekly-report/{id}/download(id=${r.id})}"
+                                       class="td-link" style="font-size:12px;">
+                                        &#128206; <span th:text="${r.attachFileName}"></span>
+                                    </a>
+                                    <span th:unless="${r.attachFileName != null}" style="color:#a0aec0;">-</span>
+                                </td>
+                                <td>
+                                    <button class="btn-sm-edit"
+                                            th:data-href="@{/weekly-report/{id}/edit(id=${r.id})}"
+                                            onclick="location.href=this.dataset.href">수정</button>
+                                    <button class="btn-sm-del"
+                                            th:data-id="${r.id}"
+                                            th:data-name="${r.reportName}"
+                                            onclick="openDeleteModal(this.dataset.id, this.dataset.name)">삭제</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 페이지네이션 -->
+            <div class="pagination" th:if="${page.totalPages > 1}">
+                <a th:if="${!page.first}"
+                   th:href="@{/weekly-report(page=${page.number - 1}, reportName=${search.reportName}, writer=${search.writer})}">&laquo;</a>
+                <th:block th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}">
+                    <span th:if="${i == page.number}" class="active" th:text="${i + 1}"></span>
+                    <a th:unless="${i == page.number}"
+                       th:href="@{/weekly-report(page=${i}, reportName=${search.reportName}, writer=${search.writer})}"
+                       th:text="${i + 1}"></a>
+                </th:block>
+                <a th:if="${!page.last}"
+                   th:href="@{/weekly-report(page=${page.number + 1}, reportName=${search.reportName}, writer=${search.writer})}">&raquo;</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header red">
+            <span class="modal-title">&#128465; 삭제 확인</span>
+            <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><strong id="deleteTargetName"></strong> 을(를) 삭제하시겠습니까?</p>
+            <p style="margin-top:8px;color:#718096;font-size:12px;">삭제된 데이터는 복구할 수 없습니다.</p>
+        </div>
+        <div class="modal-footer">
+            <form id="deleteForm" method="post">
+                <button type="submit" class="btn btn-delete">삭제</button>
+            </form>
+            <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">취소</button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    function openDeleteModal(id, name) {
+        document.getElementById('deleteTargetName').textContent = name || '선택한 항목';
+        document.getElementById('deleteForm').action = '/weekly-report/' + id + '/delete';
+        document.getElementById('deleteModal').classList.add('open');
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('open');
+    }
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+</script>
+</body>
+</html>

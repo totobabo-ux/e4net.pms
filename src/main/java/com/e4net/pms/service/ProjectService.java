@@ -6,6 +6,7 @@ import com.e4net.pms.entity.Project;
 import com.e4net.pms.repository.ProjectRepository;
 import com.e4net.pms.repository.ProjectSpec;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +31,8 @@ public class ProjectService {
     }
 
     /** ID로 단건 조회 */
-    public Project findById(Long id) {
+    @SuppressWarnings("null")
+    public @NonNull Project findById(@NonNull Long id) {
         return projectRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("프로젝트를 찾을 수 없습니다. id=" + id));
     }
@@ -45,7 +47,7 @@ public class ProjectService {
 
     /** 수정 */
     @Transactional
-    public Project update(Long id, ProjectDto dto) {
+    public Project update(@NonNull Long id, ProjectDto dto) {
         Project project = findById(id);
         mapDtoToEntity(dto, project);
         return projectRepository.save(project);
@@ -53,50 +55,36 @@ public class ProjectService {
 
     /** 삭제 */
     @Transactional
-    public void delete(Long id) {
+    public void delete(@NonNull Long id) {
         projectRepository.deleteById(id);
     }
 
     /** DTO → Entity 매핑 */
     private void mapDtoToEntity(ProjectDto dto, Project project) {
-        project.setProjectCode(dto.getProjectCode());
         project.setProjectName(dto.getProjectName());
         project.setCategory(dto.getCategory());
-        project.setSubCategory(dto.getSubCategory());
         project.setCompany(dto.getCompany());
-        project.setIsPublic(dto.getIsPublic() != null ? dto.getIsPublic() : true);
         project.setOrderer(dto.getOrderer());
         project.setContractor(dto.getContractor());
         project.setContractStart(dto.getContractStart());
         project.setContractEnd(dto.getContractEnd());
         project.setPm(dto.getPm());
         project.setContractAmount(dto.getContractAmount());
-        project.setPreInputMm(dto.getPreInputMm());
-        project.setTotalMm(dto.getTotalMm());
-        project.setHeadcount(dto.getHeadcount());
-        project.setStatus(dto.getStatus());
     }
 
     /** Entity → DTO 변환 */
     public ProjectDto toDto(Project project) {
         ProjectDto dto = new ProjectDto();
         dto.setId(project.getId());
-        dto.setProjectCode(project.getProjectCode());
         dto.setProjectName(project.getProjectName());
         dto.setCategory(project.getCategory());
-        dto.setSubCategory(project.getSubCategory());
         dto.setCompany(project.getCompany());
-        dto.setIsPublic(project.getIsPublic());
         dto.setOrderer(project.getOrderer());
         dto.setContractor(project.getContractor());
         dto.setContractStart(project.getContractStart());
         dto.setContractEnd(project.getContractEnd());
         dto.setPm(project.getPm());
         dto.setContractAmount(project.getContractAmount());
-        dto.setPreInputMm(project.getPreInputMm());
-        dto.setTotalMm(project.getTotalMm());
-        dto.setHeadcount(project.getHeadcount());
-        dto.setStatus(project.getStatus());
         return dto;
     }
 }

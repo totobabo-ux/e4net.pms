@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${mode == 'create'} ? '주간보고 등록 - e4net PMS' : '주간보고 수정 - e4net PMS'">주간보고 폼</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+    <aside th:replace="~{layout/fragments :: sidebar('biz-report-weekly')}"></aside>
+
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업관리</span>
+            <span class="sep">/</span><span>보고관리</span>
+            <span class="sep">/</span><a href="/weekly-report">주간보고</a>
+            <span class="sep">/</span>
+            <span class="current" th:text="${mode == 'create'} ? '주간보고 등록' : '주간보고 수정'">등록</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title" th:text="${mode == 'create'} ? '주간보고 등록' : '주간보고 수정'">주간보고 등록</div>
+                <div class="btn-group">
+                    <button type="submit" form="reportForm" class="btn btn-primary">
+                        &#10003; <span th:text="${mode == 'create'} ? '등록' : '저장'">등록</span>
+                    </button>
+                    <button type="button" class="btn btn-cancel" onclick="location.href='/weekly-report'">&#10005; 취소</button>
+                </div>
+            </div>
+
+            <form id="reportForm"
+                  th:action="${mode == 'create'} ? @{/weekly-report} : @{/weekly-report/{id}/edit(id=${report.id})}"
+                  method="post"
+                  enctype="multipart/form-data"
+                  th:object="${report}">
+
+                <input type="hidden" th:field="*{reportType}">
+
+                <div class="form-card">
+                    <div class="form-card-header">&#128196; 주간보고 정보</div>
+                    <div class="form-card-body">
+                        <div class="form-grid-2col">
+
+                            <!-- 사업명 / 보고구분 -->
+                            <div class="form-cell">
+                                <label class="form-label">사업명</label>
+                                <input type="hidden" th:field="*{projectId}">
+                                <span th:text="${session.selectedProject != null ? session.selectedProject.projectName : ''}"
+                                      style="font-weight:bold; color:#2c3e50;"></span>
+                            </div>
+                            <div class="form-cell">
+                                <label class="form-label">보고구분</label>
+                                <span style="font-weight:bold; color:#2980b9;">주간보고</span>
+                            </div>
+
+                            <!-- 보고서명 (전체 너비) -->
+                            <div class="form-cell" style="grid-column: 1 / -1;">
+                                <label class="form-label">보고서명<span class="req">※</span></label>
+                                <input type="text" class="form-control" th:field="*{reportName}"
+                                       placeholder="보고서명을 입력하세요">
+                            </div>
+
+                            <!-- 보고일자 / 작성자 -->
+                            <div class="form-cell">
+                                <label class="form-label">보고일자</label>
+                                <input type="date" class="form-control" th:field="*{reportDate}">
+                            </div>
+                            <div class="form-cell">
+                                <label class="form-label">작성자</label>
+                                <input type="text" class="form-control" th:field="*{writer}" placeholder="작성자명">
+                            </div>
+
+                            <!-- 보고내용 (전체 너비) -->
+                            <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                                <label class="form-label">보고내용</label>
+                                <textarea class="form-control" th:field="*{reportContent}"
+                                          rows="10" placeholder="주간보고 내용을 입력하세요"
+                                          style="resize:vertical;"></textarea>
+                            </div>
+
+                            <!-- 첨부파일 -->
+                            <div class="form-cell" style="grid-column: 1 / -1;">
+                                <label class="form-label">첨부파일</label>
+                                <div style="display:flex; align-items:center; gap:10px; flex:1;">
+                                    <input type="file" name="attachFile" class="form-control" style="padding:4px; flex:1;">
+                                    <span th:if="${report.attachFileName != null}"
+                                          style="font-size:12px; color:#2980b9; white-space:nowrap;">
+                                        현재: &#128206; <span th:text="${report.attachFileName}"></span>
+                                        <span style="color:#718096;">(새 파일 선택 시 교체됩니다)</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+</body>
+</html>

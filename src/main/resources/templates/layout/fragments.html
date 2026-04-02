@@ -3,25 +3,42 @@
 
 <!-- ============================================================
      e4net PMS - 공통 레이아웃 프래그먼트
-     사용법:
-       헤더: <header th:replace="~{layout/fragments :: header}"></header>
-       사이드바: <aside th:replace="~{layout/fragments :: sidebar('home')}"></aside>
-         activePage 값 목록:
-           home, plan-info, plan-manpower, plan-schedule,
-           exec-manpower, exec-issue, exec-risk
+     activePage 값 목록:
+       home
+       biz-standard-output
+       biz-manpower-input
+       biz-scope-requirement, biz-scope-wbs
+       biz-report-regular, biz-report-weekly, biz-report-monthly, biz-report-meeting
+       biz-risk-risk, biz-risk-issue
+       exec-analysis-flow, exec-analysis-menu
+       exec-design-interface, exec-design-screen, exec-design-program
+       exec-impl-unit
+       exec-test-integration
+       community-notice-list
+       community-archive-list
+       admin-project-list
+       admin-user-list
+       admin-role-list
      ============================================================ -->
 
 <!-- 상단 헤더 프래그먼트 -->
 <header th:fragment="header" class="header">
     <button class="header-hamburger">&#9776;</button>
-    <div class="header-logo">e4net PMS</div>
+    <div class="header-logo"><a href="/home">e4net PMS</a></div>
     <div class="header-right">
-        <div class="user-info">Welcome <span>관리자</span></div>
-        <a class="btn-logout" href="/">로그아웃</a>
+        <!-- 선택된 사업명 표시 -->
+        <div class="selected-project" th:if="${session.selectedProject != null}">
+            <span class="project-badge" th:text="${session.selectedProject.projectName}"></span>
+            <a href="/project-select" class="btn-change-project">프로젝트 변경</a>
+        </div>
+        <div class="user-info">Welcome
+            <span th:text="${session.loginUser != null ? session.loginUser.name : ''}"></span>
+        </div>
+        <a class="btn-logout" th:href="@{/logout}">로그아웃</a>
     </div>
 </header>
 
-<!-- 좌측 사이드바 프래그먼트 (activePage 파라미터로 현재 메뉴 강조) -->
+<!-- 좌측 사이드바 프래그먼트 -->
 <aside th:fragment="sidebar(activePage)" class="sidebar">
     <div class="sidebar-logo"><a href="/home">e4net PMS</a></div>
     <ul class="menu-list">
@@ -31,72 +48,200 @@
             <a href="/home"><span class="menu-icon">&#9632;</span> 사업 Home</a>
         </li>
 
-        <!-- 사업 계획 -->
-        <li class="menu-group"
-            th:classappend="${activePage == 'plan-info' or activePage == 'plan-manpower' or activePage == 'plan-schedule'} ? 'open'">
-            <div class="menu-group-header">
-                <span class="menu-icon">&#9632;</span> 사업 계획 <span class="arrow">&#9660;</span>
+        <!-- ── 사업관리 ─────────────────────────────── -->
+        <li class="menu-section"
+            th:classappend="${activePage != null and activePage.startsWith('biz-')} ? 'open'">
+            <div class="menu-section-header">
+                <span class="menu-icon">&#9632;</span> 사업관리
+                <span class="arrow">&#9660;</span>
             </div>
-            <ul class="submenu">
-                <li th:classappend="${activePage == 'plan-info'} ? 'active'">
-                    <a href="/projects">사업정보 관리</a>
+            <ul class="section-body">
+
+                <!-- 표준관리 -->
+                <li class="menu-group"
+                    th:classappend="${activePage != null and activePage.startsWith('biz-standard')} ? 'open'">
+                    <div class="menu-group-header">표준관리<span class="arrow-sm">&#9660;</span></div>
+                    <ul class="submenu">
+                        <li th:classappend="${activePage == 'biz-standard-output'} ? 'active'">
+                            <a href="/deliverable">산출물 관리</a>
+                        </li>
+                    </ul>
                 </li>
-                <li th:classappend="${activePage == 'plan-manpower'} ? 'active'">
-                    <a href="/manpower">인력계획</a>
+
+                <!-- 인력관리 -->
+                <li class="menu-group"
+                    th:classappend="${activePage != null and activePage.startsWith('biz-manpower')} ? 'open'">
+                    <div class="menu-group-header">인력관리<span class="arrow-sm">&#9660;</span></div>
+                    <ul class="submenu">
+                        <li th:classappend="${activePage == 'biz-manpower-input'} ? 'active'">
+                            <a href="/manpower">투입인력 관리</a>
+                        </li>
+                    </ul>
                 </li>
-                <li th:classappend="${activePage == 'plan-schedule'} ? 'active'">
-                    <a href="#">일정계획 (WBS)</a>
+
+                <!-- 범위관리 -->
+                <li class="menu-group"
+                    th:classappend="${activePage != null and activePage.startsWith('biz-scope')} ? 'open'">
+                    <div class="menu-group-header">범위관리<span class="arrow-sm">&#9660;</span></div>
+                    <ul class="submenu">
+                        <li th:classappend="${activePage == 'biz-scope-requirement'} ? 'active'">
+                            <a href="/requirement">요구사항 관리</a>
+                        </li>
+                        <li th:classappend="${activePage == 'biz-scope-wbs'} ? 'active'">
+                            <a href="/wbs">사업일정(WBS)</a>
+                        </li>
+                    </ul>
                 </li>
-                <li><a href="#">인력투입계획</a></li>
-                <li><a href="#">산출문서계획</a></li>
+
+                <!-- 보고관리 -->
+                <li class="menu-group"
+                    th:classappend="${activePage != null and activePage.startsWith('biz-report')} ? 'open'">
+                    <div class="menu-group-header">보고관리<span class="arrow-sm">&#9660;</span></div>
+                    <ul class="submenu">
+                        <li th:classappend="${activePage == 'biz-report-regular'} ? 'active'"><a href="/regular-report">정기보고</a></li>
+                        <li th:classappend="${activePage == 'biz-report-weekly'} ? 'active'"><a href="/weekly-report">주간보고</a></li>
+                        <li th:classappend="${activePage == 'biz-report-monthly'} ? 'active'"><a href="/monthly-report">월간보고</a></li>
+                        <li th:classappend="${activePage == 'biz-report-meeting'} ? 'active'"><a href="#">회의록</a></li>
+                    </ul>
+                </li>
+
+                <!-- 위험관리 -->
+                <li class="menu-group"
+                    th:classappend="${activePage != null and activePage.startsWith('biz-risk')} ? 'open'">
+                    <div class="menu-group-header">위험관리<span class="arrow-sm">&#9660;</span></div>
+                    <ul class="submenu">
+                        <li th:classappend="${activePage == 'biz-risk-risk'} ? 'active'"><a href="#">위험관리</a></li>
+                        <li th:classappend="${activePage == 'biz-risk-issue'} ? 'active'"><a href="#">이슈관리</a></li>
+                    </ul>
+                </li>
+
             </ul>
         </li>
 
-        <!-- 사업 수행 -->
-        <li class="menu-group"
-            th:classappend="${activePage == 'exec-manpower' or activePage == 'exec-issue' or activePage == 'exec-risk'} ? 'open'">
-            <div class="menu-group-header">
-                <span class="menu-icon">&#9632;</span> 사업 수행 <span class="arrow">&#9660;</span>
+        <!-- ── 사업수행 ─────────────────────────────── -->
+        <li class="menu-section"
+            th:classappend="${activePage != null and activePage.startsWith('exec-')} ? 'open'">
+            <div class="menu-section-header">
+                <span class="menu-icon">&#9632;</span> 사업수행
+                <span class="arrow">&#9660;</span>
             </div>
-            <ul class="submenu">
-                <li><a href="#">나의할일 (PM)</a></li>
-                <li><a href="#">진도관리</a></li>
-                <li th:classappend="${activePage == 'exec-manpower'} ? 'active'">
-                    <a href="#">인력투입실적</a>
+            <ul class="section-body">
+
+                <!-- 분석 -->
+                <li class="menu-group"
+                    th:classappend="${activePage != null and activePage.startsWith('exec-analysis')} ? 'open'">
+                    <div class="menu-group-header">분석<span class="arrow-sm">&#9660;</span></div>
+                    <ul class="submenu">
+                        <li th:classappend="${activePage == 'exec-analysis-flow'} ? 'active'"><a href="#">업무흐름</a></li>
+                        <li th:classappend="${activePage == 'exec-analysis-menu'} ? 'active'"><a href="#">메뉴구조</a></li>
+                    </ul>
                 </li>
-                <li><a href="#">산출문서관리</a></li>
-                <li><a href="#">주요보고관리</a></li>
-                <li><a href="#">주간보고관리</a></li>
-                <li><a href="#">월간보고관리</a></li>
-                <li><a href="#">회의록관리</a></li>
-                <li><a href="#">하도급관리</a></li>
-                <li th:classappend="${activePage == 'exec-issue'} ? 'active'">
-                    <a href="#">이슈관리</a>
+
+                <!-- 설계 -->
+                <li class="menu-group"
+                    th:classappend="${activePage != null and activePage.startsWith('exec-design')} ? 'open'">
+                    <div class="menu-group-header">설계<span class="arrow-sm">&#9660;</span></div>
+                    <ul class="submenu">
+                        <li th:classappend="${activePage == 'exec-design-interface'} ? 'active'"><a href="#">인터페이스 목록</a></li>
+                        <li th:classappend="${activePage == 'exec-design-screen'} ? 'active'"><a href="#">화면목록</a></li>
+                        <li th:classappend="${activePage == 'exec-design-program'} ? 'active'"><a href="#">프로그램목록</a></li>
+                    </ul>
                 </li>
-                <li th:classappend="${activePage == 'exec-risk'} ? 'active'">
-                    <a href="#">위험관리</a>
+
+                <!-- 구현 -->
+                <li class="menu-group"
+                    th:classappend="${activePage != null and activePage.startsWith('exec-impl')} ? 'open'">
+                    <div class="menu-group-header">구현<span class="arrow-sm">&#9660;</span></div>
+                    <ul class="submenu">
+                        <li th:classappend="${activePage == 'exec-impl-unit'} ? 'active'"><a href="#">단위테스트 목록</a></li>
+                    </ul>
                 </li>
-                <li><a href="#">요구사항관리</a></li>
-                <li><a href="#">정보보안</a></li>
+
+                <!-- 시험 -->
+                <li class="menu-group"
+                    th:classappend="${activePage != null and activePage.startsWith('exec-test')} ? 'open'">
+                    <div class="menu-group-header">시험<span class="arrow-sm">&#9660;</span></div>
+                    <ul class="submenu">
+                        <li th:classappend="${activePage == 'exec-test-integration'} ? 'active'"><a href="#">통합테스트 목록</a></li>
+                    </ul>
+                </li>
+
             </ul>
         </li>
 
-        <!-- 사업 현황 -->
-        <li class="menu-group">
-            <div class="menu-group-header">
-                <span class="menu-icon">&#9632;</span> 사업 현황 <span class="arrow">&#9660;</span>
+        <!-- ── 커뮤니티 ─────────────────────────────── -->
+        <li class="menu-section"
+            th:classappend="${activePage != null and activePage.startsWith('community-')} ? 'open'">
+            <div class="menu-section-header">
+                <span class="menu-icon">&#9632;</span> 커뮤니티
+                <span class="arrow">&#9660;</span>
             </div>
-            <ul class="submenu">
-                <li><a href="#">주간진도현황</a></li>
-                <li><a href="#">월간진도현황</a></li>
-                <li><a href="#">이슈현황</a></li>
-                <li><a href="#">위험현황</a></li>
-                <li><a href="#">인력투입현황</a></li>
-                <li><a href="#">변경이력현황</a></li>
+            <ul class="section-body">
+
+                <!-- 공지사항 -->
+                <li class="menu-group"
+                    th:classappend="${activePage != null and activePage.startsWith('community-notice')} ? 'open'">
+                    <div class="menu-group-header">공지사항<span class="arrow-sm">&#9660;</span></div>
+                    <ul class="submenu">
+                        <li th:classappend="${activePage == 'community-notice-list'} ? 'active'"><a href="#">공지사항 목록</a></li>
+                    </ul>
+                </li>
+
+                <!-- 자료실 -->
+                <li class="menu-group"
+                    th:classappend="${activePage != null and activePage.startsWith('community-archive')} ? 'open'">
+                    <div class="menu-group-header">자료실<span class="arrow-sm">&#9660;</span></div>
+                    <ul class="submenu">
+                        <li th:classappend="${activePage == 'community-archive-list'} ? 'active'"><a href="#">자료실 목록</a></li>
+                    </ul>
+                </li>
+
+            </ul>
+        </li>
+
+        <!-- ── 관리자 ─────────────────────────────── -->
+        <li class="menu-section"
+            th:classappend="${activePage != null and activePage.startsWith('admin-')} ? 'open'">
+            <div class="menu-section-header">
+                <span class="menu-icon">&#9632;</span> 관리자
+                <span class="arrow">&#9660;</span>
+            </div>
+            <ul class="section-body">
+
+                <!-- 사업 관리 -->
+                <li class="menu-group"
+                    th:classappend="${activePage != null and activePage.startsWith('admin-project')} ? 'open'">
+                    <div class="menu-group-header">사업 관리<span class="arrow-sm">&#9660;</span></div>
+                    <ul class="submenu">
+                        <li th:classappend="${activePage == 'admin-project-list'} ? 'active'">
+                            <a href="/projects">사업 목록</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- 사용자 관리 -->
+                <li class="menu-group"
+                    th:classappend="${activePage != null and activePage.startsWith('admin-user')} ? 'open'">
+                    <div class="menu-group-header">사용자 관리<span class="arrow-sm">&#9660;</span></div>
+                    <ul class="submenu">
+                        <li th:classappend="${activePage == 'admin-user-list'} ? 'active'"><a href="/admin/users">사용자 목록</a></li>
+                    </ul>
+                </li>
+
+                <!-- 권한 관리 -->
+                <li class="menu-group"
+                    th:classappend="${activePage != null and activePage.startsWith('admin-role')} ? 'open'">
+                    <div class="menu-group-header">권한 관리<span class="arrow-sm">&#9660;</span></div>
+                    <ul class="submenu">
+                        <li th:classappend="${activePage == 'admin-role-list'} ? 'active'"><a href="#">권한 목록</a></li>
+                    </ul>
+                </li>
+
             </ul>
         </li>
 
     </ul>
+
 </aside>
 
 </html>

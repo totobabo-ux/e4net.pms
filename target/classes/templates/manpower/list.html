@@ -5,19 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>인력계획 - e4net PMS</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
-    <style>
-        /* ── manpower/list.html 전용 스타일 ── */
-        .btn-detail {
-            background: none;
-            border: 1px solid #2980b9;
-            color: #2980b9;
-            cursor: pointer;
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 3px;
-        }
-        .btn-detail:hover { background: #2980b9; color: #fff; }
-    </style>
 </head>
 <body>
 
@@ -27,7 +14,7 @@
 <div class="body-wrap">
 
     <!-- 좌측 사이드바 -->
-    <aside th:replace="~{layout/fragments :: sidebar('plan-manpower')}"></aside>
+    <aside th:replace="~{layout/fragments :: sidebar('biz-manpower-input')}"></aside>
 
     <!-- 메인 콘텐츠 -->
     <div class="main">
@@ -39,7 +26,12 @@
 
         <div class="content">
             <div class="page-header">
-                <div class="page-title">사업 인력 관리</div>
+                <div class="page-title">
+                    사업 인력 관리
+                    <span th:if="${selectedProject != null}"
+                          style="font-size:13px;font-weight:normal;color:#2980b9;margin-left:10px;"
+                          th:text="'[ ' + ${selectedProject.projectName} + ' ]'"></span>
+                </div>
                 <div class="btn-group">
                     <button class="btn btn-primary" onclick="location.href='/manpower/new'">&#43; 인력 등록</button>
                 </div>
@@ -52,10 +44,6 @@
             <form th:action="@{/manpower}" method="get">
                 <div class="search-box">
                     <div class="search-row">
-                        <span class="search-label">사업명</span>
-                        <input type="text" name="projectName" class="search-input w-lg"
-                               th:value="${search.projectName}" placeholder="사업명 검색">
-                        <div class="divider"></div>
                         <span class="search-label">참여자명</span>
                         <input type="text" name="userName" class="search-input w-md"
                                th:value="${search.userName}" placeholder="참여자명">
@@ -87,7 +75,6 @@
                         <thead>
                             <tr>
                                 <th>NO.</th>
-                                <th style="min-width:200px;">사업명</th>
                                 <th>참여자</th>
                                 <th>소속회사</th>
                                 <th>역할</th>
@@ -101,11 +88,10 @@
                         </thead>
                         <tbody>
                             <tr class="empty-row" th:if="${page.content.isEmpty()}">
-                                <td colspan="11">등록된 인력 정보가 없습니다.</td>
+                                <td colspan="10">등록된 인력 정보가 없습니다.</td>
                             </tr>
                             <tr th:each="m, stat : ${page.content}">
                                 <td th:text="${page.number * page.size + stat.count}"></td>
-                                <td class="td-left" th:text="${m.projectName}"></td>
                                 <td th:text="${m.userName}"></td>
                                 <td th:text="${m.company ?: '-'}"></td>
                                 <td th:text="${m.role}"></td>
@@ -119,8 +105,13 @@
                                           th:text="${m.status}"></span>
                                 </td>
                                 <td>
-                                    <button class="btn-detail"
-                                            th:onclick="|location.href='@{/manpower/{id}(id=${m.id})}'|">상세</button>
+                                    <button class="btn-sm-edit"
+                                            th:data-href="@{/manpower/{id}/edit(id=${m.id})}"
+                                            onclick="location.href=this.dataset.href">수정</button>
+                                    <button class="btn-sm-del"
+                                            th:data-id="${m.id}"
+                                            th:data-name="${m.userName}"
+                                            onclick="openDeleteModal(this.dataset.id, this.dataset.name)">삭제</button>
                                 </td>
                             </tr>
                         </tbody>
@@ -131,21 +122,54 @@
             <!-- 페이지네이션 -->
             <div class="pagination" th:if="${page.totalPages > 1}">
                 <a th:if="${!page.first}"
-                   th:href="@{/manpower(page=${page.number - 1}, projectName=${search.projectName}, userName=${search.userName}, company=${search.company}, status=${search.status})}">&laquo;</a>
+                   th:href="@{/manpower(page=${page.number - 1}, userName=${search.userName}, company=${search.company}, status=${search.status})}">&laquo;</a>
                 <th:block th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}">
                     <span th:if="${i == page.number}" class="active" th:text="${i + 1}"></span>
                     <a th:unless="${i == page.number}"
-                       th:href="@{/manpower(page=${i}, projectName=${search.projectName}, userName=${search.userName}, company=${search.company}, status=${search.status})}"
+                       th:href="@{/manpower(page=${i}, userName=${search.userName}, company=${search.company}, status=${search.status})}"
                        th:text="${i + 1}"></a>
                 </th:block>
                 <a th:if="${!page.last}"
-                   th:href="@{/manpower(page=${page.number + 1}, projectName=${search.projectName}, userName=${search.userName}, company=${search.company}, status=${search.status})}">&raquo;</a>
+                   th:href="@{/manpower(page=${page.number + 1}, userName=${search.userName}, company=${search.company}, status=${search.status})}">&raquo;</a>
             </div>
 
         </div>
     </div>
 </div>
 
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header red">
+            <span class="modal-title">&#128465; 삭제 확인</span>
+            <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><strong id="deleteTargetName"></strong> 님의 인력 정보를 삭제하시겠습니까?</p>
+            <p style="margin-top:8px;color:#718096;font-size:12px;">삭제된 데이터는 복구할 수 없습니다.</p>
+        </div>
+        <div class="modal-footer">
+            <form id="deleteForm" method="post">
+                <button type="submit" class="btn btn-delete">삭제</button>
+            </form>
+            <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">취소</button>
+        </div>
+    </div>
+</div>
+
 <script th:src="@{/js/common.js}"></script>
+<script>
+    function openDeleteModal(id, name) {
+        document.getElementById('deleteTargetName').textContent = name;
+        document.getElementById('deleteForm').action = '/manpower/' + id + '/delete';
+        document.getElementById('deleteModal').classList.add('open');
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('open');
+    }
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+</script>
 </body>
 </html>

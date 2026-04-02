@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>요구사항 상세 - e4net PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        /* 조회/수정 모드 전환 */
+        #editSection { display: none; }
+        #viewSection { display: block; }
+    </style>
+</head>
+<body>
+
+<!-- 상단 헤더 -->
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+
+    <!-- 좌측 사이드바 -->
+    <aside th:replace="~{layout/fragments :: sidebar('biz-scope-requirement')}"></aside>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업 수행</span>
+            <span class="sep">/</span><a href="/requirement">요구사항관리</a>
+            <span class="sep">/</span><span class="current">요구사항 상세</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">요구사항 상세</div>
+                <!-- 조회 모드 버튼 -->
+                <div class="btn-group" id="viewButtons">
+                    <button type="button" class="btn btn-edit" onclick="switchToEdit()">&#9998; 수정</button>
+                    <button type="button" class="btn btn-delete" onclick="openDeleteModal()">&#128465; 삭제</button>
+                    <a class="btn btn-list" href="/requirement">&#9776; 목록</a>
+                </div>
+                <!-- 수정 모드 버튼 -->
+                <div class="btn-group" id="editButtons" style="display:none;">
+                    <button type="submit" form="requirementEditForm" class="btn btn-primary">&#10003; 저장</button>
+                    <button type="button" class="btn btn-cancel" onclick="switchToView()">&#10005; 취소</button>
+                </div>
+            </div>
+
+            <!-- 성공 메시지 -->
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+            <!-- ───────────── 조회 섹션 ───────────── -->
+            <div id="viewSection">
+                <div class="detail-card">
+                    <div class="detail-card-header">&#128196; 요구사항 정보</div>
+                    <div class="detail-grid">
+
+                        <div class="detail-cell">
+                            <span class="detail-label">사업명</span>
+                            <span class="detail-value" th:text="${requirement.projectName}">-</span>
+                        </div>
+                        <div class="detail-cell">
+                            <span class="detail-label">요구사항ID</span>
+                            <span class="detail-value" th:text="${requirement.reqCode ?: '-'}">-</span>
+                        </div>
+
+                        <div class="detail-cell" style="grid-column: 1 / -1;">
+                            <span class="detail-label">제목</span>
+                            <span class="detail-value" th:text="${requirement.title}">-</span>
+                        </div>
+
+                        <div class="detail-cell" style="grid-column: 1 / -1;">
+                            <span class="detail-label">요구사항 출처</span>
+                            <span class="detail-value">
+                                <span th:text="${requirement.sourceType ?: '-'}"></span>
+                                <span th:if="${requirement.sourceContent != null and !requirement.sourceContent.isEmpty()}"
+                                      th:text="' — ' + ${requirement.sourceContent}"></span>
+                            </span>
+                        </div>
+
+                        <div class="detail-cell">
+                            <span class="detail-label">분류</span>
+                            <span class="detail-value" th:text="${requirement.category ?: '-'}">-</span>
+                        </div>
+                        <div class="detail-cell">
+                            <span class="detail-label">우선순위</span>
+                            <span class="detail-value" th:text="${requirement.priority}">-</span>
+                        </div>
+
+                        <div class="detail-cell">
+                            <span class="detail-label">상태</span>
+                            <span class="badge" th:classappend="'badge-' + ${requirement.status}"
+                                  th:text="${requirement.status}">-</span>
+                        </div>
+                        <div class="detail-cell">
+                            <span class="detail-label">수용여부</span>
+                            <span class="detail-value" th:text="${requirement.acceptance ?: '-'}">-</span>
+                        </div>
+
+                        <div class="detail-cell">
+                            <span class="detail-label">요청자</span>
+                            <span class="detail-value" th:text="${requirement.requestor ?: '-'}">-</span>
+                        </div>
+                        <div class="detail-cell"></div>
+
+                        <div class="detail-cell" style="grid-column: 1 / -1; align-items: flex-start;">
+                            <span class="detail-label" style="padding-top:4px;">내용</span>
+                            <span class="detail-value" style="white-space:pre-wrap;"
+                                  th:text="${requirement.description ?: '-'}">-</span>
+                        </div>
+
+                        <div class="detail-cell" style="grid-column: 1 / -1; align-items: flex-start;">
+                            <span class="detail-label" style="padding-top:4px;">비고</span>
+                            <span class="detail-value" style="white-space:pre-wrap;"
+                                  th:text="${requirement.note ?: '-'}">-</span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- ───────────── 수정 섹션 ───────────── -->
+            <div id="editSection">
+                <form id="requirementEditForm"
+                      th:action="@{/requirement/{id}/edit(id=${requirement.id})}"
+                      method="post"
+                      th:object="${requirement}">
+
+                    <div class="form-card">
+                        <div class="form-card-header">&#128196; 요구사항 정보 수정</div>
+                        <div class="form-card-body">
+                            <div class="form-grid-2col">
+
+                                <!-- 사업명 / 요구사항ID -->
+                                <div class="form-cell">
+                                    <label class="form-label">사업명</label>
+                                    <input type="hidden" th:field="*{projectId}">
+                                    <span th:text="${session.selectedProject != null ? session.selectedProject.projectName : requirement.projectName}"
+                                          style="font-weight:bold; color:#2c3e50;"></span>
+                                </div>
+                                <div class="form-cell">
+                                    <label class="form-label">요구사항ID</label>
+                                    <input type="text" class="form-control" th:field="*{reqCode}" placeholder="예: REQ-001">
+                                </div>
+
+                                <!-- 제목 -->
+                                <div class="form-cell" style="grid-column: 1 / -1;">
+                                    <label class="form-label">제목<span class="req">※</span></label>
+                                    <div style="flex:1;">
+                                        <input type="text" class="form-control" th:field="*{title}"
+                                               th:classappend="${#fields.hasErrors('title')} ? 'is-invalid'"
+                                               placeholder="요구사항 제목을 입력하세요">
+                                        <span class="field-error" th:if="${#fields.hasErrors('title')}"
+                                              th:errors="*{title}"></span>
+                                    </div>
+                                </div>
+
+                                <!-- 요구사항 출처 -->
+                                <div class="form-cell" style="grid-column: 1 / -1;">
+                                    <label class="form-label">요구사항 출처</label>
+                                    <div style="display:flex; gap:8px; flex:1;">
+                                        <select class="form-control" th:field="*{sourceType}" style="flex:0 0 140px;">
+                                            <option value="">-- 출처 선택 --</option>
+                                            <option value="제안요청서">제안요청서</option>
+                                            <option value="회의록">회의록</option>
+                                            <option value="기타">기타</option>
+                                        </select>
+                                        <input type="text" class="form-control" th:field="*{sourceContent}" placeholder="출처 내용을 입력하세요">
+                                    </div>
+                                </div>
+
+                                <!-- 분류 / 우선순위 -->
+                                <div class="form-cell">
+                                    <label class="form-label">분류</label>
+                                    <select class="form-control" th:field="*{category}">
+                                        <option value="">-- 분류 선택 --</option>
+                                        <option value="기능">기능</option>
+                                        <option value="비기능">비기능</option>
+                                    </select>
+                                </div>
+                                <div class="form-cell">
+                                    <label class="form-label">우선순위</label>
+                                    <select class="form-control" th:field="*{priority}">
+                                        <option value="상">상</option>
+                                        <option value="중">중</option>
+                                        <option value="하">하</option>
+                                    </select>
+                                </div>
+
+                                <!-- 상태 / 요청자 -->
+                                <div class="form-cell">
+                                    <label class="form-label">상태</label>
+                                    <select class="form-control" th:field="*{status}">
+                                        <option value="등록">등록</option>
+                                        <option value="분석중">분석중</option>
+                                        <option value="개발중">개발중</option>
+                                        <option value="완료">완료</option>
+                                        <option value="보류">보류</option>
+                                    </select>
+                                </div>
+                                <div class="form-cell">
+                                    <label class="form-label">요청자</label>
+                                    <input type="text" class="form-control" th:field="*{requestor}" placeholder="요청자명">
+                                </div>
+
+                                <!-- 수용여부 -->
+                                <div class="form-cell">
+                                    <label class="form-label">수용여부</label>
+                                    <select class="form-control" th:field="*{acceptance}">
+                                        <option value="협의중">협의중</option>
+                                        <option value="수용">수용</option>
+                                        <option value="제외">제외</option>
+                                    </select>
+                                </div>
+                                <div class="form-cell"></div>
+
+                                <!-- 내용 -->
+                                <div class="form-cell" style="grid-column: 1 / -1; align-items: flex-start;">
+                                    <label class="form-label" >내용</label>
+                                    <textarea class="form-control" th:field="*{description}"
+                                              rows="6" placeholder="요구사항 상세 내용을 입력하세요"
+                                              style="resize:vertical;"></textarea>
+                                </div>
+
+                                <!-- 비고 -->
+                                <div class="form-cell" style="grid-column: 1 / -1; align-items: flex-start;">
+                                    <label class="form-label" >비고</label>
+                                    <textarea class="form-control" th:field="*{note}"
+                                              rows="3" placeholder="비고 사항을 입력하세요"
+                                              style="resize:vertical;"></textarea>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header red">
+            <span class="modal-title">&#128465; 삭제 확인</span>
+            <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><strong th:text="${requirement.title}">요구사항</strong> 을(를) 삭제하시겠습니까?</p>
+            <p style="margin-top:8px;color:#718096;font-size:12px;">삭제된 데이터는 복구할 수 없습니다.</p>
+        </div>
+        <div class="modal-footer">
+            <form th:action="@{/requirement/{id}/delete(id=${requirement.id})}" method="post">
+                <button type="submit" class="btn btn-delete">삭제</button>
+            </form>
+            <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">취소</button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    /* 수정 모드 전환 */
+    function switchToEdit() {
+        document.getElementById('viewSection').style.display = 'none';
+        document.getElementById('editSection').style.display = 'block';
+        document.getElementById('viewButtons').style.display = 'none';
+        document.getElementById('editButtons').style.display = 'flex';
+    }
+
+    /* 조회 모드 전환 */
+    function switchToView() {
+        document.getElementById('viewSection').style.display = 'block';
+        document.getElementById('editSection').style.display = 'none';
+        document.getElementById('viewButtons').style.display = 'flex';
+        document.getElementById('editButtons').style.display = 'none';
+    }
+
+    /* 삭제 모달 */
+    function openDeleteModal()  { document.getElementById('deleteModal').classList.add('open'); }
+    function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('open'); }
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+
+    /* 유효성 오류 시 수정 모드 자동 진입 (컨트롤러에서 editMode=true 전달) */
+    (function() {
+        var editMode = /*[[${editMode != null && editMode}]]*/ false;
+        if (editMode) switchToEdit();
+    })();
+</script>
+</body>
+</html>

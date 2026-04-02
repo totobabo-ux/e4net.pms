@@ -20,8 +20,11 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "employee_no", length = 50)
-    private String employeeNo;          // 사번
+    @Column(name = "employee_no", nullable = false, unique = true, length = 50)
+    private String employeeNo;          // 사번 (회원 ID, 유니크)
+
+    @Column(name = "password", nullable = false, length = 255)
+    private String password;            // 비밀번호 (BCrypt 해시)
 
     @Column(name = "name", nullable = false, length = 50)
     private String name;                // 이름

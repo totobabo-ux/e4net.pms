@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>요구사항관리 - e4net PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<!-- 상단 헤더 -->
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+
+    <!-- 좌측 사이드바 -->
+    <aside th:replace="~{layout/fragments :: sidebar('biz-scope-requirement')}"></aside>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업 수행</span>
+            <span class="sep">/</span><span class="current">요구사항관리</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">
+                    요구사항 관리
+                    <span th:if="${selectedProject != null}"
+                          style="font-size:13px;font-weight:normal;color:#2980b9;margin-left:10px;"
+                          th:text="'[ ' + ${selectedProject.projectName} + ' ]'"></span>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="location.href='/requirement/new'">&#43; 요구사항 등록</button>
+                </div>
+            </div>
+
+            <!-- 성공 메시지 -->
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+            <!-- 검색 폼 (사업명 제거 — 세션 사업 자동 필터) -->
+            <form th:action="@{/requirement}" method="get">
+                <div class="search-box">
+                    <div class="search-row">
+                        <span class="search-label">제목</span>
+                        <input type="text" name="title" class="search-input w-lg"
+                               th:value="${search.title}" placeholder="제목 검색">
+                        <div class="divider"></div>
+                        <span class="search-label">분류</span>
+                        <select name="category" class="search-select w-md">
+                            <option value="">전체</option>
+                            <option value="기능"   th:selected="${search.category == '기능'}">기능</option>
+                            <option value="비기능" th:selected="${search.category == '비기능'}">비기능</option>
+                        </select>
+                        <div class="divider"></div>
+                        <span class="search-label">상태</span>
+                        <select name="status" class="search-select w-md">
+                            <option value="">전체</option>
+                            <option value="등록"   th:selected="${search.status == '등록'}">등록</option>
+                            <option value="분석중" th:selected="${search.status == '분석중'}">분석중</option>
+                            <option value="개발중" th:selected="${search.status == '개발중'}">개발중</option>
+                            <option value="완료"   th:selected="${search.status == '완료'}">완료</option>
+                            <option value="보류"   th:selected="${search.status == '보류'}">보류</option>
+                        </select>
+                        <button type="submit" class="btn-search">&#128269; 검색</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- 목록 테이블 -->
+            <div class="table-card">
+                <div class="table-card-header">
+                    <span class="table-card-title">요구사항 목록</span>
+                    <span class="table-count">총 <span th:text="${page.totalElements}">0</span>건</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>NO.</th>
+                                <th>요구사항코드</th>
+                                <th style="min-width:280px;">제목</th>
+                                <th>분류</th>
+                                <th>우선순위</th>
+                                <th>요청자</th>
+                                <th>상태</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="empty-row" th:if="${page.content.isEmpty()}">
+                                <td colspan="8">등록된 요구사항이 없습니다.</td>
+                            </tr>
+                            <tr th:each="r, stat : ${page.content}">
+                                <td th:text="${page.number * page.size + stat.count}"></td>
+                                <td th:text="${r.reqCode ?: '-'}"></td>
+                                <td class="td-left">
+                                    <a class="td-link" th:href="@{/requirement/{id}(id=${r.id})}" th:text="${r.title}"></a>
+                                </td>
+                                <td th:text="${r.category ?: '-'}"></td>
+                                <td th:text="${r.priority}"></td>
+                                <td th:text="${r.requestor ?: '-'}"></td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="'badge-' + ${r.status}"
+                                          th:text="${r.status}"></span>
+                                </td>
+                                <td>
+                                    <button class="btn-sm-edit"
+                                            th:data-href="@{/requirement/{id}/edit(id=${r.id})}"
+                                            onclick="location.href=this.dataset.href">수정</button>
+                                    <button class="btn-sm-del"
+                                            th:data-id="${r.id}"
+                                            th:data-name="${r.title}"
+                                            onclick="openDeleteModal(this.dataset.id, this.dataset.name)">삭제</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 페이지네이션 -->
+            <div class="pagination" th:if="${page.totalPages > 1}">
+                <a th:if="${!page.first}"
+                   th:href="@{/requirement(page=${page.number - 1}, title=${search.title}, category=${search.category}, status=${search.status})}">&laquo;</a>
+                <th:block th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}">
+                    <span th:if="${i == page.number}" class="active" th:text="${i + 1}"></span>
+                    <a th:unless="${i == page.number}"
+                       th:href="@{/requirement(page=${i}, title=${search.title}, category=${search.category}, status=${search.status})}"
+                       th:text="${i + 1}"></a>
+                </th:block>
+                <a th:if="${!page.last}"
+                   th:href="@{/requirement(page=${page.number + 1}, title=${search.title}, category=${search.category}, status=${search.status})}">&raquo;</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header red">
+            <span class="modal-title">&#128465; 삭제 확인</span>
+            <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><strong id="deleteTargetName"></strong> 을(를) 삭제하시겠습니까?</p>
+            <p style="margin-top:8px;color:#718096;font-size:12px;">삭제된 데이터는 복구할 수 없습니다.</p>
+        </div>
+        <div class="modal-footer">
+            <form id="deleteForm" method="post">
+                <button type="submit" class="btn btn-delete">삭제</button>
+            </form>
+            <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">취소</button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    function openDeleteModal(id, name) {
+        document.getElementById('deleteTargetName').textContent = name;
+        document.getElementById('deleteForm').action = '/requirement/' + id + '/delete';
+        document.getElementById('deleteModal').classList.add('open');
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('open');
+    }
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+</script>
+</body>
+</html>

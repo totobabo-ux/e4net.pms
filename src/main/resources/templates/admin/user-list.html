@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사용자 목록 - e4net PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<!-- 상단 헤더 -->
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+
+    <!-- 좌측 사이드바 -->
+    <aside th:replace="~{layout/fragments :: sidebar('admin-user-list')}"></aside>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>관리자</span>
+            <span class="sep">/</span><span>사용자 관리</span>
+            <span class="sep">/</span><span class="current">사용자 목록</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">사용자 목록</div>
+            </div>
+
+            <!-- 성공 메시지 -->
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+            <!-- 검색 폼 -->
+            <form th:action="@{/admin/users}" method="get">
+                <div class="search-box">
+                    <div class="search-row">
+                        <span class="search-label">사번</span>
+                        <input type="text" name="employeeNo" class="search-input w-md"
+                               th:value="${search.employeeNo}" placeholder="사번 검색">
+                        <div class="divider"></div>
+                        <span class="search-label">이름</span>
+                        <input type="text" name="name" class="search-input w-md"
+                               th:value="${search.name}" placeholder="이름 검색">
+                        <div class="divider"></div>
+                        <span class="search-label">소속회사</span>
+                        <input type="text" name="company" class="search-input w-md"
+                               th:value="${search.company}" placeholder="소속회사">
+                        <button type="submit" class="btn-search">&#128269; 검색</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- 목록 테이블 -->
+            <div class="table-card">
+                <div class="table-card-header">
+                    <span class="table-card-title">사용자 목록</span>
+                    <span class="table-count">총 <span th:text="${page.totalElements}">0</span>명</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>NO.</th>
+                                <th>사번</th>
+                                <th>이름</th>
+                                <th>소속회사</th>
+                                <th>소속부서</th>
+                                <th>직위</th>
+                                <th>연락처</th>
+                                <th>이메일</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="empty-row" th:if="${page.content.isEmpty()}">
+                                <td colspan="9">등록된 사용자가 없습니다.</td>
+                            </tr>
+                            <tr th:each="u, stat : ${page.content}">
+                                <td th:text="${page.number * page.size + stat.count}"></td>
+                                <td th:text="${u.employeeNo}"></td>
+                                <td th:text="${u.name}"></td>
+                                <td th:text="${u.company ?: '-'}"></td>
+                                <td th:text="${u.department ?: '-'}"></td>
+                                <td th:text="${u.position ?: '-'}"></td>
+                                <td th:text="${u.phone ?: '-'}"></td>
+                                <td th:text="${u.email ?: '-'}"></td>
+                                <td>
+                                    <button class="btn-sm-edit"
+                                            th:data-href="@{/admin/users/{id}/edit(id=${u.id})}"
+                                            onclick="location.href=this.dataset.href">수정</button>
+                                    <button class="btn-sm-del"
+                                            th:data-id="${u.id}"
+                                            th:data-name="${u.name}"
+                                            onclick="openDeleteModal(this.dataset.id, this.dataset.name)">삭제</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 페이지네이션 -->
+            <div class="pagination" th:if="${page.totalPages > 1}">
+                <a th:if="${!page.first}"
+                   th:href="@{/admin/users(page=${page.number - 1}, employeeNo=${search.employeeNo}, name=${search.name}, company=${search.company})}">&laquo;</a>
+                <th:block th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}">
+                    <span th:if="${i == page.number}" class="active" th:text="${i + 1}"></span>
+                    <a th:unless="${i == page.number}"
+                       th:href="@{/admin/users(page=${i}, employeeNo=${search.employeeNo}, name=${search.name}, company=${search.company})}"
+                       th:text="${i + 1}"></a>
+                </th:block>
+                <a th:if="${!page.last}"
+                   th:href="@{/admin/users(page=${page.number + 1}, employeeNo=${search.employeeNo}, name=${search.name}, company=${search.company})}">&raquo;</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header red">
+            <span class="modal-title">&#128465; 삭제 확인</span>
+            <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><strong id="deleteTargetName"></strong> 사용자를 삭제하시겠습니까?</p>
+            <p style="margin-top:8px;color:#718096;font-size:12px;">삭제된 데이터는 복구할 수 없습니다.</p>
+        </div>
+        <div class="modal-footer">
+            <form id="deleteForm" method="post">
+                <button type="submit" class="btn btn-delete">삭제</button>
+            </form>
+            <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">취소</button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    function openDeleteModal(id, name) {
+        document.getElementById('deleteTargetName').textContent = name;
+        document.getElementById('deleteForm').action = '/admin/users/' + id + '/delete';
+        document.getElementById('deleteModal').classList.add('open');
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('open');
+    }
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+</script>
+</body>
+</html>

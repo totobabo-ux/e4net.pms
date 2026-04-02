@@ -14,6 +14,7 @@ import com.e4net.pms.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,12 +31,13 @@ public class ManpowerService {
     private final CommonCodeRepository commonCodeRepository;
 
     /** 목록 조회 (페이징) */
-    public Page<ProjectManpower> search(ManpowerSearchDto dto, Pageable pageable) {
+    public Page<ProjectManpower> search(ManpowerSearchDto dto, @NonNull Pageable pageable) {
         return manpowerRepository.findAll(ManpowerSpec.search(dto), pageable);
     }
 
     /** 단건 조회 */
-    public ProjectManpower findById(Long id) {
+    @SuppressWarnings("null")
+    public @NonNull ProjectManpower findById(@NonNull Long id) {
         return manpowerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("인력 정보를 찾을 수 없습니다. id=" + id));
     }
@@ -50,7 +52,7 @@ public class ManpowerService {
 
     /** 수정 */
     @Transactional
-    public ProjectManpower update(Long id, ManpowerDto dto) {
+    public ProjectManpower update(@NonNull Long id, ManpowerDto dto) {
         ProjectManpower entity = findById(id);
         mapDtoToEntity(dto, entity);
         return manpowerRepository.save(entity);
@@ -58,7 +60,7 @@ public class ManpowerService {
 
     /** 삭제 */
     @Transactional
-    public void delete(Long id) {
+    public void delete(@NonNull Long id) {
         manpowerRepository.deleteById(id);
     }
 
@@ -96,6 +98,7 @@ public class ManpowerService {
     }
 
     /** DTO → Entity */
+    @SuppressWarnings("null")
     private void mapDtoToEntity(ManpowerDto dto, ProjectManpower entity) {
         Project project = projectRepository.findById(dto.getProjectId())
                 .orElseThrow(() -> new IllegalArgumentException("사업을 찾을 수 없습니다."));

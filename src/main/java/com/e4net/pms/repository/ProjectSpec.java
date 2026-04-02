@@ -14,13 +14,9 @@ public class ProjectSpec {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // 프로젝트명 / 코드 검색
+            // 프로젝트명 검색
             if (dto.getKeyword() != null && !dto.getKeyword().isBlank()) {
-                String like = "%" + dto.getKeyword() + "%";
-                predicates.add(cb.or(
-                        cb.like(root.get("projectName"), like),
-                        cb.like(root.get("projectCode"), like)
-                ));
+                predicates.add(cb.like(root.get("projectName"), "%" + dto.getKeyword() + "%"));
             }
 
             // 구분
@@ -30,12 +26,7 @@ public class ProjectSpec {
 
             // 회사
             if (dto.getCompany() != null && !dto.getCompany().isBlank()) {
-                predicates.add(cb.equal(root.get("company"), dto.getCompany()));
-            }
-
-            // 공개여부
-            if (dto.getIsPublicStr() != null && !dto.getIsPublicStr().isBlank()) {
-                predicates.add(cb.equal(root.get("isPublic"), Boolean.valueOf(dto.getIsPublicStr())));
+                predicates.add(cb.like(root.get("company"), "%" + dto.getCompany() + "%"));
             }
 
             // 발주처
@@ -61,12 +52,7 @@ public class ProjectSpec {
                 predicates.add(cb.lessThanOrEqualTo(root.get("contractStart"), dto.getContractStartTo()));
             }
 
-            // 진행상태 (복수)
-            if (dto.getStatusList() != null && !dto.getStatusList().isEmpty()) {
-                predicates.add(root.get("status").in(dto.getStatusList()));
-            }
-
-            query.orderBy(cb.desc(root.get("id")));
+            if (query != null) query.orderBy(cb.desc(root.get("id")));
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }

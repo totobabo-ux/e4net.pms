@@ -21,23 +21,14 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "project_code", length = 50)
-    private String projectCode;
-
     @Column(name = "project_name", nullable = false, length = 200)
     private String projectName;
 
     @Column(name = "category", length = 20)
     private String category;        // SL / SM / 서비스
 
-    @Column(name = "sub_category", length = 20)
-    private String subCategory;     // ITS 등
-
     @Column(name = "company", length = 100)
-    private String company;         // 회사
-
-    @Column(name = "is_public")
-    private Boolean isPublic = true;    // 공개여부
+    private String company;         // 회사 (직접 입력)
 
     @Column(name = "orderer", length = 100)
     private String orderer;         // 발주처
@@ -56,18 +47,6 @@ public class Project {
 
     @Column(name = "contract_amount")
     private Long contractAmount;    // 계약금액
-
-    @Column(name = "pre_input_mm")
-    private Double preInputMm;      // 사전투입 MM
-
-    @Column(name = "total_mm")
-    private Double totalMm;         // MM
-
-    @Column(name = "headcount")
-    private Integer headcount;      // 인원수
-
-    @Column(name = "status", length = 20)
-    private String status;          // 영업 / 진행 / 완료 / 종료 / 수주못함
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)

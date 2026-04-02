@@ -59,18 +59,6 @@
                     <div class="stat-num" th:text="${totalProjects != null ? totalProjects : 0}">0</div>
                     <div class="stat-label">전체 사업</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-num" th:text="${inProgressProjects != null ? inProgressProjects : 0}">0</div>
-                    <div class="stat-label">진행 중</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-num" th:text="${completedProjects != null ? completedProjects : 0}">0</div>
-                    <div class="stat-label">완료</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-num" th:text="${salesProjects != null ? salesProjects : 0}">0</div>
-                    <div class="stat-label">영업</div>
-                </div>
             </div>
 
             <div class="dashboard-grid">
@@ -80,21 +68,15 @@
                     </div>
                     <div class="card-body">
                         <table class="mini-table">
-                            <thead><tr><th>사업명</th><th>PM</th><th>종료일</th><th>상태</th></tr></thead>
+                            <thead><tr><th>사업명</th><th>PM</th><th>계약종료일</th></tr></thead>
                             <tbody>
                                 <tr th:if="${recentProjects == null or recentProjects.isEmpty()}">
-                                    <td colspan="4" style="text-align:center;color:#999;padding:16px;">등록된 사업이 없습니다.</td>
+                                    <td colspan="3" style="text-align:center;color:#999;padding:16px;">등록된 사업이 없습니다.</td>
                                 </tr>
                                 <tr th:each="p : ${recentProjects}">
                                     <td th:text="${p.projectName}"></td>
                                     <td style="text-align:center" th:text="${p.pm}"></td>
                                     <td style="text-align:center" th:text="${p.contractEnd}"></td>
-                                    <td style="text-align:center">
-                                        <span th:if="${p.status == '진행'}" class="badge badge-blue" th:text="${p.status}"></span>
-                                        <span th:if="${p.status == '완료'}" class="badge badge-green" th:text="${p.status}"></span>
-                                        <span th:if="${p.status == '영업'}" class="badge badge-orange" th:text="${p.status}"></span>
-                                        <span th:if="${p.status == '종료'}" class="badge badge-gray" th:text="${p.status}"></span>
-                                    </td>
                                 </tr>
                             </tbody>
                         </table>

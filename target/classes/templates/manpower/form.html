@@ -19,7 +19,7 @@
 <div class="body-wrap">
 
     <!-- 좌측 사이드바 -->
-    <aside th:replace="~{layout/fragments :: sidebar('plan-manpower')}"></aside>
+    <aside th:replace="~{layout/fragments :: sidebar('biz-manpower-input')}"></aside>
 
     <!-- 메인 콘텐츠 -->
     <div class="main">
@@ -55,18 +55,10 @@
 
                             <!-- Row 1: 사업명 / 참여자 -->
                             <div class="form-cell">
-                                <label class="form-label">사업명<span class="req">※</span></label>
-                                <div style="flex:1;">
-                                    <select class="form-control" th:field="*{projectId}"
-                                            th:classappend="${#fields.hasErrors('projectId')} ? 'is-invalid'">
-                                        <option value="">-- 사업 선택 --</option>
-                                        <option th:each="p : ${projects}"
-                                                th:value="${p.id}"
-                                                th:text="${p.projectName}"></option>
-                                    </select>
-                                    <span class="field-error" th:if="${#fields.hasErrors('projectId')}"
-                                          th:errors="*{projectId}"></span>
-                                </div>
+                                <label class="form-label">사업명</label>
+                                <input type="hidden" th:field="*{projectId}">
+                                <span th:text="${session.selectedProject != null ? session.selectedProject.projectName : ''}"
+                                      style="font-weight:bold; color:#2c3e50;"></span>
                             </div>
                             <div class="form-cell">
                                 <label class="form-label">참여자<span class="req">※</span></label>
@@ -276,8 +268,7 @@
             if (!el || !el.value.trim()) { alert(msg); if(el) el.focus(); return false; }
             return true;
         }
-        return check('projectId','사업을 선택해주세요.')
-            && check('userId','참여자를 선택해주세요.')
+        return check('userId','참여자를 선택해주세요.')
             && check('role','역할을 입력해주세요.')
             && check('gradeCode','급수를 선택해주세요.')
             && check('inputTypeCode','투입구분을 선택해주세요.')
