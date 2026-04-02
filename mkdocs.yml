@@ -1,0 +1,24 @@
+site_name: e4net PMS Documentation
+site_url: https://example.com
+repo_url: https://github.com/your-org/e4net.pms
+repo_name: e4net.pms
+nav:
+  - Home: index.md
+  - Preamble: 00-preamble.md
+  - 기본 원칙: 02-1.md
+  - Tech Stack: 03-2-tech-stack.md
+  - UI/UX: 04-3-uiux.md
+  - DB/Schema: 14-13-db.md
+  - Spring Boot: 16-15-spring-boot.md
+  - AttachFile: 17-16-attach_file.md
+  - ExcelUtil: 18-17-excelutil.md
+  - Curl/Integration: 19-18-curl.md
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - admonition
+  - codehilite
+
+plugins:
+  - search
