@@ -29,20 +29,17 @@
         <div class="content">
             <div class="page-header">
                 <div class="page-title">주간보고 상세</div>
-                <!-- 조회 모드 버튼 -->
                 <div class="btn-group" id="viewButtons">
                     <button type="button" class="btn btn-edit" onclick="switchToEdit()">&#9998; 수정</button>
                     <button type="button" class="btn btn-delete" onclick="openDeleteModal()">&#128465; 삭제</button>
                     <a class="btn btn-list" href="/weekly-report">&#9776; 목록</a>
                 </div>
-                <!-- 수정 모드 버튼 -->
                 <div class="btn-group" id="editButtons" style="display:none;">
                     <button type="submit" form="reportEditForm" class="btn btn-primary">&#10003; 저장</button>
                     <button type="button" class="btn btn-cancel" onclick="switchToView()">&#10005; 취소</button>
                 </div>
             </div>
 
-            <!-- 성공 메시지 -->
             <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
 
             <!-- ───────── 조회 섹션 ───────── -->
@@ -80,16 +77,19 @@
                                   th:text="${report.reportContent ?: '-'}">-</span>
                         </div>
 
-                        <div class="detail-cell" style="grid-column: 1 / -1;">
-                            <span class="detail-label">첨부파일</span>
-                            <span class="detail-value">
-                                <a th:if="${report.attachFileName != null}"
-                                   th:href="@{/weekly-report/{id}/download(id=${report.id})}"
-                                   class="td-link">
-                                    &#128206; <span th:text="${report.attachFileName}"></span>
-                                </a>
-                                <span th:unless="${report.attachFileName != null}" style="color:#a0aec0;">첨부파일 없음</span>
-                            </span>
+                        <!-- 첨부파일 목록 (조회) -->
+                        <div class="detail-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                            <span class="detail-label" style="padding-top:4px;">첨부파일</span>
+                            <div style="flex:1; min-width:0;">
+                                <div th:if="${#lists.isEmpty(report.attachments)}" class="attach-empty">첨부파일 없음</div>
+                                <div th:each="att : ${report.attachments}" class="attach-row attach-view">
+                                    <span class="attach-icon">&#128196;</span>
+                                    <a th:href="@{/weekly-report/{id}/attachment/{attId}/download(id=${report.id},attId=${att.id})}"
+                                       class="attach-name td-link" th:text="${att.fileName}"></a>
+                                    <span class="attach-size" th:text="${att.fileSizeDisplay}"></span>
+                                    <span style="font-size:12px; color:#2980b9;">&#11015; 다운로드</span>
+                                </div>
+                            </div>
                         </div>
 
                     </div>
@@ -144,15 +144,33 @@
                                               style="resize:vertical;"></textarea>
                                 </div>
 
-                                <div class="form-cell" style="grid-column: 1 / -1;">
+                                <!-- 첨부파일 (수정) -->
+                                <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
                                     <label class="form-label">첨부파일</label>
-                                    <div style="display:flex; align-items:center; gap:10px; flex:1;">
-                                        <input type="file" name="attachFile" class="form-control" style="padding:4px; flex:1;">
-                                        <span th:if="${report.attachFileName != null}"
-                                              style="font-size:12px; color:#2980b9; white-space:nowrap;">
-                                            현재: &#128206; <span th:text="${report.attachFileName}"></span>
-                                            <span style="color:#718096;">(새 파일 선택 시 교체)</span>
-                                        </span>
+                                    <div class="attach-zone">
+                                        <div th:if="${not #lists.isEmpty(report.attachments)}">
+                                            <div class="attach-section-label">기존 첨부파일</div>
+                                            <div th:each="att : ${report.attachments}" class="attach-row attach-existing">
+                                                <span class="attach-icon">&#128196;</span>
+                                                <span class="attach-name" th:text="${att.fileName}"></span>
+                                                <span class="attach-size" th:text="${att.fileSizeDisplay}"></span>
+                                                <form th:action="@{/weekly-report/{id}/attachment/{attId}/delete(id=${report.id},attId=${att.id})}"
+                                                      method="post" style="margin:0; flex-shrink:0;">
+                                                    <button type="submit" class="btn-sm-del"
+                                                            onclick="return confirm('이 첨부파일을 삭제하시겠습니까?')">삭제</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        <div id="editPendingList_label" class="attach-section-label" style="display:none; margin-top:8px;">추가할 파일</div>
+                                        <div id="editPendingList"></div>
+                                        <div class="attach-add-area">
+                                            <button type="button" class="btn-attach-add"
+                                                    onclick="document.getElementById('editFileInput').click()">
+                                                &#128206; 파일 추가
+                                            </button>
+                                            <span class="attach-hint">여러 파일 동시 선택 가능</span>
+                                        </div>
+                                        <input type="file" id="editFileInput" name="attachFiles" multiple style="display:none;">
                                     </div>
                                 </div>
 
@@ -206,6 +224,7 @@
     document.getElementById('deleteModal').addEventListener('click', function(e) {
         if (e.target === this) closeDeleteModal();
     });
+    initAttachUpload('editFileInput', 'editPendingList', 'reportEditForm');
 </script>
 </body>
 </html>

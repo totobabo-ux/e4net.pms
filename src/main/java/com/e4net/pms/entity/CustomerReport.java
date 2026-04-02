@@ -42,13 +42,6 @@ public class CustomerReport {
     @Column(name = "writer", length = 100)
     private String writer;               // 작성자
 
-    // ── 첨부파일 ───────────────────────────────────────────────────
-    @Column(name = "attach_file_name", length = 255)
-    private String attachFileName;       // 원본 파일명
-
-    @Column(name = "attach_file_path", length = 500)
-    private String attachFilePath;       // 저장 경로
-
     // ── 공통 감사 컬럼 ─────────────────────────────────────────────
     @CreatedDate
     @Column(name = "reg_dt", updatable = false)

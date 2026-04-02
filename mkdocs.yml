@@ -2,17 +2,28 @@ site_name: e4net PMS Documentation
 site_url: https://example.com
 repo_url: https://github.com/your-org/e4net.pms
 repo_name: e4net.pms
+
 nav:
   - Home: index.md
-  - Preamble: 00-preamble.md
-  - 기본 원칙: 02-1.md
-  - Tech Stack: 03-2-tech-stack.md
-  - UI/UX: 04-3-uiux.md
-  - DB/Schema: 14-13-db.md
-  - Spring Boot: 16-15-spring-boot.md
-  - AttachFile: 17-16-attach_file.md
-  - ExcelUtil: 18-17-excelutil.md
-  - Curl/Integration: 19-18-curl.md
+  - 소개: 00-introduction.md
+  - 기본 원칙: 01-basic-principles.md
+  - 기술 스택: 02-tech-stack.md
+  - UI/UX 가이드: 03-ui-ux-guidelines.md
+  - DB 컨벤션: 04-db-conventions.md
+  - 인증 및 세션: 05-authentication-session.md
+  - JPA Specification: 06-jpa-specification-pattern.md
+  - 프로젝트 구조: 07-project-structure.md
+  - ActivePage 메뉴: 08-activepage-sidebar.md
+  - 세션 사용자: 09-session-user-info.md
+  - 파일 업로드 (단일): 10-file-upload-single.md
+  - 공유 테이블: 11-shared-table-pattern.md
+  - 예외 처리: 12-exception-handling.md
+  - DB 변경: 13-database-changes.md
+  - 개발 체크리스트: 14-development-checklist.md
+  - Spring Boot: 15-spring-boot-startup.md
+  - AttachFile (다중): 16-attach_file-multi-upload.md
+  - ExcelUtil: 17-excel-utility.md
+  - Curl 테스트: 18-curl-integration-tests.md
 
 markdown_extensions:
   - toc:
@@ -22,3 +33,7 @@ markdown_extensions:
 
 plugins:
   - search
+
+theme:
+  name: material
+  language: ko

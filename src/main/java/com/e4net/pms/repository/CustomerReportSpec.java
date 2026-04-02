@@ -22,6 +22,11 @@ public class CustomerReportSpec {
             if (dto.getProjectId() != null) {
                 predicates.add(cb.equal(root.get("project").get("id"), dto.getProjectId()));
             }
+            // 허용 타입 목록 (IN) — 목록 화면의 보고구분 범위 강제 적용
+            if (dto.getAllowedTypes() != null && !dto.getAllowedTypes().isEmpty()) {
+                predicates.add(root.get("reportType").in(dto.getAllowedTypes()));
+            }
+            // 단일 보고구분 필터 (검색 조건)
             if (dto.getReportType() != null && !dto.getReportType().isBlank()) {
                 predicates.add(cb.equal(root.get("reportType"), dto.getReportType()));
             }

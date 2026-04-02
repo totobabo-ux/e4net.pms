@@ -1,9 +1,12 @@
 package com.e4net.pms.service;
 
+import com.e4net.pms.dto.AttachFileDto;
 import com.e4net.pms.dto.CustomerReportDto;
 import com.e4net.pms.dto.CustomerReportSearchDto;
+import com.e4net.pms.entity.AttachFile;
 import com.e4net.pms.entity.CustomerReport;
 import com.e4net.pms.entity.Project;
+import com.e4net.pms.repository.AttachFileRepository;
 import com.e4net.pms.repository.CustomerReportRepository;
 import com.e4net.pms.repository.CustomerReportSpec;
 import com.e4net.pms.repository.ProjectRepository;
@@ -21,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,7 +32,11 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class CustomerReportService {
 
+    // attach_file 테이블의 entity_type 값
+    private static final String ENTITY_TYPE = "CUSTOMER_REPORT";
+
     private final CustomerReportRepository customerReportRepository;
+    private final AttachFileRepository attachFileRepository;
     private final ProjectRepository projectRepository;
 
     @Value("${app.upload.dir:uploads}")
@@ -46,30 +54,53 @@ public class CustomerReportService {
                 .orElseThrow(() -> new IllegalArgumentException("보고서를 찾을 수 없습니다. id=" + id));
     }
 
+    /** 첨부파일 단건 조회 */
+    @SuppressWarnings("null")
+    public @NonNull AttachFile findAttachmentById(@NonNull Long attachmentId) {
+        return attachFileRepository.findById(attachmentId)
+                .orElseThrow(() -> new IllegalArgumentException("첨부파일을 찾을 수 없습니다. id=" + attachmentId));
+    }
+
     /** 등록 */
     @Transactional
-    public CustomerReport save(CustomerReportDto dto, MultipartFile file) throws IOException {
+    public CustomerReport save(CustomerReportDto dto, List<MultipartFile> files, String userId) throws IOException {
         CustomerReport entity = new CustomerReport();
         mapDtoToEntity(dto, entity);
-        handleFileUpload(entity, file, dto.getProjectId());
-        return customerReportRepository.save(entity);
+        entity.setRegId(userId);
+        entity.setUpdId(userId);
+        CustomerReport saved = customerReportRepository.save(entity);
+        addAttachments(saved, files, dto.getProjectId(), userId);
+        return saved;
     }
 
     /** 수정 */
     @Transactional
-    public CustomerReport update(@NonNull Long id, CustomerReportDto dto, MultipartFile file) throws IOException {
+    public CustomerReport update(@NonNull Long id, CustomerReportDto dto, List<MultipartFile> files, String userId) throws IOException {
         CustomerReport entity = findById(id);
         mapDtoToEntity(dto, entity);
-        handleFileUpload(entity, file, dto.getProjectId());
+        entity.setUpdId(userId);
+        addAttachments(entity, files, dto.getProjectId(), userId);
         return customerReportRepository.save(entity);
     }
 
     /** 삭제 */
     @Transactional
     public void delete(@NonNull Long id) {
-        CustomerReport entity = findById(id);
-        deleteAttachedFile(entity);
+        // 존재 여부 확인
+        findById(id);
+        // 물리 파일 전체 삭제 후 DB 레코드 삭제
+        List<AttachFile> attachments = attachFileRepository.findByEntityTypeAndEntityIdOrderByRegDtAsc(ENTITY_TYPE, id);
+        attachments.forEach(a -> deletePhysicalFile(a.getFilePath()));
+        attachFileRepository.deleteByEntityTypeAndEntityId(ENTITY_TYPE, id);
         customerReportRepository.deleteById(id);
+    }
+
+    /** 첨부파일 개별 삭제 */
+    @Transactional
+    public void deleteAttachment(@NonNull Long attachmentId) {
+        AttachFile attachment = findAttachmentById(attachmentId);
+        deletePhysicalFile(attachment.getFilePath());
+        attachFileRepository.deleteById(attachmentId);
     }
 
     /** Entity → DTO */
@@ -83,10 +114,38 @@ public class CustomerReportService {
         dto.setReportDate(entity.getReportDate() != null ? entity.getReportDate().toString() : null);
         dto.setReportContent(entity.getReportContent());
         dto.setWriter(entity.getWriter());
-        dto.setAttachFileName(entity.getAttachFileName());
-        dto.setAttachFilePath(entity.getAttachFilePath());
+
+        // 공통 첨부파일 테이블에서 조회
+        List<AttachFileDto> attachmentDtos = attachFileRepository
+                .findByEntityTypeAndEntityIdOrderByRegDtAsc(ENTITY_TYPE, entity.getId())
+                .stream()
+                .map(this::toAttachFileDto)
+                .toList();
+        dto.setAttachments(attachmentDtos);
+
         return dto;
     }
+
+    /** AttachFile Entity → DTO */
+    public AttachFileDto toAttachFileDto(AttachFile attachment) {
+        AttachFileDto dto = new AttachFileDto();
+        dto.setId(attachment.getId());
+        dto.setFileName(attachment.getFileName());
+        dto.setFileSize(attachment.getFileSize());
+        dto.setFileSizeDisplay(formatFileSize(attachment.getFileSize()));
+        return dto;
+    }
+
+    /** 다운로드용 파일 경로 조회 */
+    public Path getAttachmentFilePath(@NonNull Long attachmentId) {
+        AttachFile attachment = findAttachmentById(attachmentId);
+        if (attachment.getFilePath() == null) {
+            throw new IllegalStateException("첨부파일 경로가 없습니다.");
+        }
+        return Paths.get(attachment.getFilePath());
+    }
+
+    // ── private ───────────────────────────────────────────────────
 
     /** DTO → Entity */
     @SuppressWarnings("null")
@@ -102,44 +161,57 @@ public class CustomerReportService {
         entity.setWriter(dto.getWriter());
     }
 
-    /** 파일 업로드 처리 (새 파일이 있을 때만) */
-    private void handleFileUpload(CustomerReport entity, MultipartFile file, Long projectId) throws IOException {
-        if (file == null || file.isEmpty()) return;
+    /** 복수 파일 추가 업로드 (기존 파일 유지, 새 파일만 추가) */
+    private void addAttachments(CustomerReport entity, List<MultipartFile> files, Long projectId, String userId) throws IOException {
+        if (files == null || files.isEmpty()) return;
+        for (MultipartFile file : files) {
+            if (file == null || file.isEmpty()) continue;
 
-        // 기존 파일 삭제
-        deleteAttachedFile(entity);
+            String originalName = file.getOriginalFilename();
+            String ext = "";
+            if (originalName != null && originalName.contains(".")) {
+                ext = originalName.substring(originalName.lastIndexOf("."));
+            }
+            String storedName = UUID.randomUUID() + ext;
 
-        String originalName = file.getOriginalFilename();
-        String ext = "";
-        if (originalName != null && originalName.contains(".")) {
-            ext = originalName.substring(originalName.lastIndexOf("."));
+            Path dir = Paths.get(uploadDir, resolveUploadFolder(entity.getReportType()), String.valueOf(projectId));
+            Files.createDirectories(dir);
+            Path target = dir.resolve(storedName);
+            Files.copy(file.getInputStream(), target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+            AttachFile attachment = new AttachFile();
+            attachment.setEntityType(ENTITY_TYPE);
+            attachment.setEntityId(entity.getId());
+            attachment.setFileName(originalName);
+            attachment.setFilePath(target.toAbsolutePath().toString());
+            attachment.setFileSize(file.getSize());
+            attachment.setRegId(userId);
+            attachFileRepository.save(attachment);
         }
-        String storedName = UUID.randomUUID() + ext;
-
-        Path dir = Paths.get(uploadDir, "customer-report", String.valueOf(projectId));
-        Files.createDirectories(dir);
-        Path target = dir.resolve(storedName);
-        Files.copy(file.getInputStream(), target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-
-        entity.setAttachFileName(originalName);
-        entity.setAttachFilePath(target.toAbsolutePath().toString());
     }
 
-    /** 첨부파일 물리 삭제 */
-    private void deleteAttachedFile(CustomerReport entity) {
-        if (entity.getAttachFilePath() == null) return;
+    /** reportType → 업로드 하위 폴더명 매핑 */
+    private String resolveUploadFolder(String reportType) {
+        if ("주간보고".equals(reportType)) return "weekly-report";
+        if ("월간보고".equals(reportType)) return "monthly-report";
+        if ("회의록".equals(reportType))  return "meeting-report";
+        return "regular-report";
+    }
+
+    /** 물리 파일 삭제 */
+    private void deletePhysicalFile(String filePath) {
+        if (filePath == null) return;
         try {
-            Files.deleteIfExists(Paths.get(entity.getAttachFilePath()));
+            Files.deleteIfExists(Paths.get(filePath));
         } catch (IOException ignored) {
         }
     }
 
-    /** 다운로드용 파일 경로 조회 */
-    public Path getFilePath(@NonNull Long id) {
-        CustomerReport entity = findById(id);
-        if (entity.getAttachFilePath() == null) {
-            throw new IllegalStateException("첨부파일이 없습니다.");
-        }
-        return Paths.get(entity.getAttachFilePath());
+    /** 파일 크기 표시 변환 (bytes → KB/MB) */
+    private String formatFileSize(Long bytes) {
+        if (bytes == null || bytes == 0) return "0 B";
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
+        return String.format("%.1f MB", bytes / (1024.0 * 1024));
     }
 }

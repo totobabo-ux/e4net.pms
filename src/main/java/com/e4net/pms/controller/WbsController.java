@@ -2,6 +2,7 @@ package com.e4net.pms.controller;
 
 import com.e4net.pms.dto.WbsDto;
 import com.e4net.pms.entity.Project;
+import com.e4net.pms.entity.User;
 import com.e4net.pms.service.WbsService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,11 @@ public class WbsController {
         return (Project) session.getAttribute("selectedProject");
     }
 
+    private String getLoginUserId(HttpSession session) {
+        User user = (User) session.getAttribute("loginUser");
+        return user != null ? user.getEmployeeNo() : "";
+    }
+
     /** WBS 목록 화면 */
     @GetMapping
     public String list(HttpSession session, Model model) {
@@ -52,7 +58,7 @@ public class WbsController {
         if (isNotReady(session)) return ResponseEntity.status(403).build();
 
         Project selectedProject = getSelectedProject(session);
-        List<WbsDto> updated = wbsService.batchSave(selectedProject.getId(), dtos);
+        List<WbsDto> updated = wbsService.batchSave(selectedProject.getId(), dtos, getLoginUserId(session));
         return ResponseEntity.ok(updated);
     }
 

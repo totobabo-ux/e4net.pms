@@ -32,7 +32,7 @@ public class WbsService {
     /** 전체 저장 (생성/수정 일괄 처리) */
     @Transactional
     @SuppressWarnings("null")
-    public List<WbsDto> batchSave(Long projectId, List<WbsDto> dtos) {
+    public List<WbsDto> batchSave(Long projectId, List<WbsDto> dtos, String userId) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("사업을 찾을 수 없습니다."));
 
@@ -41,12 +41,17 @@ public class WbsService {
             dto.setSortOrder(i + 1);
 
             Wbs entity;
+            boolean isNew;
             if (dto.getId() != null) {
                 entity = wbsRepository.findById(dto.getId()).orElse(new Wbs());
+                isNew = entity.getId() == null;
             } else {
                 entity = new Wbs();
+                isNew = true;
             }
             mapDtoToEntity(dto, entity, project);
+            if (isNew) entity.setRegId(userId);
+            entity.setUpdId(userId);
             wbsRepository.save(entity);
         }
         return findByProjectId(projectId);

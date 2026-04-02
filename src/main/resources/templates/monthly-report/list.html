@@ -69,13 +69,12 @@
                                 <th style="min-width:280px;">보고서명</th>
                                 <th>보고일자</th>
                                 <th>작성자</th>
-                                <th>첨부파일</th>
                                 <th>관리</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr class="empty-row" th:if="${page.content.isEmpty()}">
-                                <td colspan="6">등록된 월간보고가 없습니다.</td>
+                                <td colspan="5">등록된 월간보고가 없습니다.</td>
                             </tr>
                             <tr th:each="r, stat : ${page.content}">
                                 <td th:text="${page.number * page.size + stat.count}"></td>
@@ -86,14 +85,6 @@
                                 </td>
                                 <td th:text="${r.reportDate ?: '-'}"></td>
                                 <td th:text="${r.writer ?: '-'}"></td>
-                                <td>
-                                    <a th:if="${r.attachFileName != null}"
-                                       th:href="@{/monthly-report/{id}/download(id=${r.id})}"
-                                       class="td-link" style="font-size:12px;">
-                                        &#128206; <span th:text="${r.attachFileName}"></span>
-                                    </a>
-                                    <span th:unless="${r.attachFileName != null}" style="color:#a0aec0;">-</span>
-                                </td>
                                 <td>
                                     <button class="btn-sm-edit"
                                             th:data-href="@{/monthly-report/{id}/edit(id=${r.id})}"

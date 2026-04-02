@@ -14,6 +14,8 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -36,17 +38,20 @@ public class RequirementService {
 
     /** 등록 */
     @Transactional
-    public Requirement save(RequirementDto dto) {
+    public Requirement save(RequirementDto dto, String userId) {
         Requirement entity = new Requirement();
         mapDtoToEntity(dto, entity);
+        entity.setRegId(userId);
+        entity.setUpdId(userId);
         return requirementRepository.save(entity);
     }
 
     /** 수정 */
     @Transactional
-    public Requirement update(@NonNull Long id, RequirementDto dto) {
+    public Requirement update(@NonNull Long id, RequirementDto dto, String userId) {
         Requirement entity = findById(id);
         mapDtoToEntity(dto, entity);
+        entity.setUpdId(userId);
         return requirementRepository.save(entity);
     }
 
@@ -74,6 +79,73 @@ public class RequirementService {
         dto.setSourceContent(entity.getSourceContent());
         dto.setAcceptance(entity.getAcceptance());
         return dto;
+    }
+
+    /** 사업 전체 요구사항 조회 (엑셀 다운로드용, 페이징 없음) */
+    public List<Requirement> findAllByProject(Long projectId) {
+        return requirementRepository.findAllByProject_IdOrderByIdAsc(projectId);
+    }
+
+    /**
+     * 엑셀 업로드 — upsert 처리
+     * 요구사항코드 기준으로 현재 사업 내 기존 데이터 수정, 없으면 신규 등록
+     * 컬럼 순서: 요구사항코드(0) 제목(1) 분류(2) 우선순위(3) 상태(4) 요청자(5) 수용여부(6) 출처유형(7) 출처내용(8) 설명(9) 비고(10)
+     *
+     * @return int[] { 신규등록 수, 수정 수, 건너뜀 수 }
+     */
+    @Transactional
+    public int[] upsertFromExcel(List<String[]> rows, Long projectId, String userId) {
+        int inserted = 0, updated = 0, skipped = 0;
+
+        for (String[] cells : rows) {
+            String reqCodeVal = getCell(cells, 0);
+            String titleVal   = getCell(cells, 1);
+            if (reqCodeVal.isBlank() || titleVal.isBlank()) {
+                skipped++;
+                continue;
+            }
+
+            Requirement entity;
+            boolean isNew;
+            var existing = requirementRepository.findByProject_IdAndReqCode(projectId, reqCodeVal);
+            if (existing.isPresent()) {
+                entity = existing.get();
+                isNew  = false;
+            } else {
+                entity = new Requirement();
+                @SuppressWarnings("null")
+                Project project = projectRepository.findById(projectId)
+                        .orElseThrow(() -> new IllegalArgumentException("사업을 찾을 수 없습니다."));
+                entity.setProject(project);
+                entity.setRegId(userId);
+                isNew = true;
+            }
+
+            entity.setReqCode(reqCodeVal);
+            entity.setTitle(titleVal);
+            entity.setCategory(getCell(cells, 2));
+            String priority = getCell(cells, 3);
+            entity.setPriority(priority.isBlank() ? "중" : priority);
+            String status = getCell(cells, 4);
+            entity.setStatus(status.isBlank() ? "등록" : status);
+            entity.setRequestor(getCell(cells, 5));
+            String acceptance = getCell(cells, 6);
+            entity.setAcceptance(acceptance.isBlank() ? "협의중" : acceptance);
+            entity.setSourceType(getCell(cells, 7));
+            entity.setSourceContent(getCell(cells, 8));
+            entity.setDescription(getCell(cells, 9));
+            entity.setNote(getCell(cells, 10));
+            entity.setUpdId(userId);
+
+            requirementRepository.save(entity);
+            if (isNew) inserted++; else updated++;
+        }
+        return new int[]{ inserted, updated, skipped };
+    }
+
+    /** 셀 값 안전 추출 */
+    private String getCell(String[] cells, int idx) {
+        return (cells != null && idx < cells.length && cells[idx] != null) ? cells[idx].trim() : "";
     }
 
     /** DTO → Entity */

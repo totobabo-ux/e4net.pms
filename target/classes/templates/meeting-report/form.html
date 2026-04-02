@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${mode == 'create'} ? '회의록 등록 - e4net PMS' : '회의록 수정 - e4net PMS'">회의록 폼</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+    <aside th:replace="~{layout/fragments :: sidebar('biz-report-meeting')}"></aside>
+
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업관리</span>
+            <span class="sep">/</span><span>보고관리</span>
+            <span class="sep">/</span><a href="/meeting-report">회의록</a>
+            <span class="sep">/</span>
+            <span class="current" th:text="${mode == 'create'} ? '회의록 등록' : '회의록 수정'">등록</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title" th:text="${mode == 'create'} ? '회의록 등록' : '회의록 수정'">회의록 등록</div>
+                <div class="btn-group">
+                    <button type="submit" form="reportForm" class="btn btn-primary">
+                        &#10003; <span th:text="${mode == 'create'} ? '등록' : '저장'">등록</span>
+                    </button>
+                    <button type="button" class="btn btn-cancel" onclick="location.href='/meeting-report'">&#10005; 취소</button>
+                </div>
+            </div>
+
+            <form id="reportForm"
+                  th:action="${mode == 'create'} ? @{/meeting-report} : @{/meeting-report/{id}/edit(id=${report.id})}"
+                  method="post"
+                  enctype="multipart/form-data"
+                  th:object="${report}">
+
+                <input type="hidden" th:field="*{reportType}">
+
+                <div class="form-card">
+                    <div class="form-card-header">&#128196; 회의록 정보</div>
+                    <div class="form-card-body">
+                        <div class="form-grid-2col">
+
+                            <div class="form-cell">
+                                <label class="form-label">사업명</label>
+                                <input type="hidden" th:field="*{projectId}">
+                                <span th:text="${session.selectedProject != null ? session.selectedProject.projectName : ''}"
+                                      style="font-weight:bold; color:#2c3e50;"></span>
+                            </div>
+                            <div class="form-cell">
+                                <label class="form-label">보고구분</label>
+                                <span style="font-weight:bold; color:#2980b9;">회의록</span>
+                            </div>
+
+                            <div class="form-cell" style="grid-column: 1 / -1;">
+                                <label class="form-label">회의록명<span class="req">※</span></label>
+                                <input type="text" class="form-control" th:field="*{reportName}"
+                                       placeholder="회의록명을 입력하세요">
+                            </div>
+
+                            <div class="form-cell">
+                                <label class="form-label">회의일자</label>
+                                <input type="date" class="form-control" th:field="*{reportDate}">
+                            </div>
+                            <div class="form-cell">
+                                <label class="form-label">작성자</label>
+                                <input type="text" class="form-control" th:field="*{writer}" placeholder="작성자명">
+                            </div>
+
+                            <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                                <label class="form-label">회의내용</label>
+                                <textarea class="form-control" th:field="*{reportContent}"
+                                          rows="10" placeholder="회의 내용을 입력하세요"
+                                          style="resize:vertical;"></textarea>
+                            </div>
+
+                            <!-- 첨부파일 -->
+                            <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                                <label class="form-label">첨부파일</label>
+                                <div class="attach-zone">
+                                    <div th:if="${not #lists.isEmpty(report.attachments)}">
+                                        <div class="attach-section-label">기존 첨부파일</div>
+                                        <div th:each="att : ${report.attachments}" class="attach-row attach-existing">
+                                            <span class="attach-icon">&#128196;</span>
+                                            <span class="attach-name" th:text="${att.fileName}"></span>
+                                            <span class="attach-size" th:text="${att.fileSizeDisplay}"></span>
+                                            <form th:action="@{/meeting-report/{id}/attachment/{attId}/delete(id=${report.id},attId=${att.id})}"
+                                                  method="post" style="margin:0; flex-shrink:0;">
+                                                <button type="submit" class="btn-sm-del"
+                                                        onclick="return confirm('이 첨부파일을 삭제하시겠습니까?')">삭제</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div id="pendingList_label" class="attach-section-label" style="display:none; margin-top:8px;">추가할 파일</div>
+                                    <div id="pendingList"></div>
+                                    <div class="attach-add-area">
+                                        <button type="button" class="btn-attach-add"
+                                                onclick="document.getElementById('attachFileInput').click()">
+                                            &#128206; 파일 추가
+                                        </button>
+                                        <span class="attach-hint">여러 파일 동시 선택 가능</span>
+                                    </div>
+                                    <input type="file" id="attachFileInput" name="attachFiles" multiple style="display:none;">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    initAttachUpload('attachFileInput', 'pendingList', 'reportForm');
+</script>
+</body>
+</html>

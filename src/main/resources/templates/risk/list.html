@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>위험관리 - e4net PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<!-- 상단 헤더 -->
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+
+    <!-- 좌측 사이드바 -->
+    <aside th:replace="~{layout/fragments :: sidebar('biz-risk-risk')}"></aside>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업관리</span>
+            <span class="sep">/</span><span>위험관리</span>
+            <span class="sep">/</span><span class="current">위험관리</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">
+                    위험 관리
+                    <span th:if="${selectedProject != null}"
+                          style="font-size:13px;font-weight:normal;color:#2980b9;margin-left:10px;"
+                          th:text="'[ ' + ${selectedProject.projectName} + ' ]'"></span>
+                </div>
+                <div class="btn-group">
+                    <a class="btn btn-secondary" th:href="@{/risk/excel/download}">&#11015; 엑셀 다운로드</a>
+                    <button type="button" class="btn btn-secondary" onclick="openUploadModal()">&#11014; 엑셀 업로드</button>
+                    <button class="btn btn-primary" onclick="location.href='/risk/new'">&#43; 위험 등록</button>
+                </div>
+            </div>
+
+            <!-- 메시지 -->
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="alert alert-danger"  th:if="${errorMessage}"   th:text="${errorMessage}"></div>
+
+            <!-- 검색 폼 -->
+            <form th:action="@{/risk}" method="get">
+                <div class="search-box">
+                    <div class="search-row">
+                        <span class="search-label">위험명</span>
+                        <input type="text" name="riskName" class="search-input w-lg"
+                               th:value="${search.riskName}" placeholder="위험명 검색">
+                        <div class="divider"></div>
+                        <span class="search-label">위험유형</span>
+                        <select name="riskType" class="search-select w-md">
+                            <option value="">전체</option>
+                            <option value="기술"   th:selected="${search.riskType == '기술'}">기술</option>
+                            <option value="일정"   th:selected="${search.riskType == '일정'}">일정</option>
+                            <option value="비용"   th:selected="${search.riskType == '비용'}">비용</option>
+                            <option value="인력"   th:selected="${search.riskType == '인력'}">인력</option>
+                            <option value="외부"   th:selected="${search.riskType == '외부'}">외부</option>
+                        </select>
+                        <div class="divider"></div>
+                        <span class="search-label">상태</span>
+                        <select name="status" class="search-select w-md">
+                            <option value="">전체</option>
+                            <option value="진행중" th:selected="${search.status == '진행중'}">진행중</option>
+                            <option value="해결"   th:selected="${search.status == '해결'}">해결</option>
+                            <option value="종료"   th:selected="${search.status == '종료'}">종료</option>
+                        </select>
+                        <button type="submit" class="btn-search">&#128269; 검색</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- 목록 테이블 -->
+            <div class="table-card">
+                <div class="table-card-header">
+                    <span class="table-card-title">위험 목록</span>
+                    <span class="table-count">총 <span th:text="${page.totalElements}">0</span>건</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>NO.</th>
+                                <th>위험코드</th>
+                                <th style="min-width:250px;">위험명</th>
+                                <th>위험유형</th>
+                                <th>발생가능성</th>
+                                <th>영향도</th>
+                                <th>위험등급</th>
+                                <th>담당자</th>
+                                <th>상태</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="empty-row" th:if="${page.content.isEmpty()}">
+                                <td colspan="10">등록된 위험이 없습니다.</td>
+                            </tr>
+                            <tr th:each="r, stat : ${page.content}">
+                                <td th:text="${page.number * page.size + stat.count}"></td>
+                                <td th:text="${r.riskCode ?: '-'}"></td>
+                                <td class="td-left">
+                                    <a class="td-link" th:href="@{/risk/{id}(id=${r.id})}" th:text="${r.riskName}"></a>
+                                </td>
+                                <td th:text="${r.riskType ?: '-'}"></td>
+                                <td th:text="${r.probability ?: '-'}"></td>
+                                <td th:text="${r.impact ?: '-'}"></td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="'badge-' + ${r.riskLevel}"
+                                          th:text="${r.riskLevel ?: '-'}"></span>
+                                </td>
+                                <td th:text="${r.owner ?: '-'}"></td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="'badge-' + ${r.status}"
+                                          th:text="${r.status}"></span>
+                                </td>
+                                <td>
+                                    <button class="btn-sm-del"
+                                            th:data-id="${r.id}"
+                                            th:data-name="${r.riskName}"
+                                            onclick="openDeleteModal(this.dataset.id, this.dataset.name)">삭제</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 페이지네이션 -->
+            <div class="pagination" th:if="${page.totalPages > 1}">
+                <a th:if="${!page.first}"
+                   th:href="@{/risk(page=${page.number - 1}, riskName=${search.riskName}, riskType=${search.riskType}, status=${search.status})}">&laquo;</a>
+                <th:block th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}">
+                    <span th:if="${i == page.number}" class="active" th:text="${i + 1}"></span>
+                    <a th:unless="${i == page.number}"
+                       th:href="@{/risk(page=${i}, riskName=${search.riskName}, riskType=${search.riskType}, status=${search.status})}"
+                       th:text="${i + 1}"></a>
+                </th:block>
+                <a th:if="${!page.last}"
+                   th:href="@{/risk(page=${page.number + 1}, riskName=${search.riskName}, riskType=${search.riskType}, status=${search.status})}">&raquo;</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header red">
+            <span class="modal-title">&#128465; 삭제 확인</span>
+            <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><strong id="deleteTargetName"></strong> 을(를) 삭제하시겠습니까?</p>
+            <p style="margin-top:8px;color:#718096;font-size:12px;">삭제된 데이터는 복구할 수 없습니다.</p>
+        </div>
+        <div class="modal-footer">
+            <form id="deleteForm" method="post">
+                <button type="submit" class="btn btn-delete">삭제</button>
+            </form>
+            <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">취소</button>
+        </div>
+    </div>
+</div>
+
+<!-- 엑셀 업로드 모달 -->
+<div id="uploadModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <span class="modal-title">&#11014; 엑셀 업로드</span>
+            <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom:12px; color:#4a5568; font-size:13px;">
+                다운로드한 엑셀 파일의 데이터를 수정 후 업로드하세요.<br>
+                <strong style="color:#2980b9;">위험코드</strong> 기준으로 기존 데이터는 수정, 신규 데이터는 등록됩니다.
+            </p>
+            <form id="uploadForm" th:action="@{/risk/excel/upload}" method="post" enctype="multipart/form-data">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="file" name="excelFile" accept=".xlsx,.xls"
+                           class="form-control" style="flex:1;">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" form="uploadForm" class="btn btn-primary">업로드</button>
+            <button type="button" class="btn btn-cancel" onclick="closeUploadModal()">취소</button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    function openDeleteModal(id, name) {
+        document.getElementById('deleteTargetName').textContent = name;
+        document.getElementById('deleteForm').action = '/risk/' + id + '/delete';
+        document.getElementById('deleteModal').classList.add('open');
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('open');
+    }
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+
+    function openUploadModal()  { document.getElementById('uploadModal').classList.add('open'); }
+    function closeUploadModal() { document.getElementById('uploadModal').classList.remove('open'); }
+    document.getElementById('uploadModal').addEventListener('click', function(e) {
+        if (e.target === this) closeUploadModal();
+    });
+</script>
+</body>
+</html>

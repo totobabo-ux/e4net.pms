@@ -5,11 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${mode == 'create'} ? '정기보고 등록 - e4net PMS' : '정기보고 수정 - e4net PMS'">정기보고 폼</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
-    <style>
-        .file-area { display:flex; align-items:center; gap:10px; flex:1; }
-        .file-info { font-size:12px; color:#2980b9; }
-        .file-input-wrap { flex:1; }
-    </style>
 </head>
 <body>
 
@@ -95,17 +90,38 @@
                             </div>
 
                             <!-- 첨부파일 -->
-                            <div class="form-cell" style="grid-column: 1 / -1;">
+                            <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
                                 <label class="form-label">첨부파일</label>
-                                <div class="file-area">
-                                    <div class="file-input-wrap">
-                                        <input type="file" name="attachFile" class="form-control"
-                                               style="padding:4px;">
+                                <div class="attach-zone">
+
+                                    <!-- 기존 첨부파일 목록 (수정 시) -->
+                                    <div th:if="${not #lists.isEmpty(report.attachments)}">
+                                        <div class="attach-section-label">기존 첨부파일</div>
+                                        <div th:each="att : ${report.attachments}" class="attach-row attach-existing">
+                                            <span class="attach-icon">&#128196;</span>
+                                            <span class="attach-name" th:text="${att.fileName}"></span>
+                                            <span class="attach-size" th:text="${att.fileSizeDisplay}"></span>
+                                            <form th:action="@{/regular-report/{id}/attachment/{attId}/delete(id=${report.id},attId=${att.id})}"
+                                                  method="post" style="margin:0; flex-shrink:0;">
+                                                <button type="submit" class="btn-sm-del"
+                                                        onclick="return confirm('이 첨부파일을 삭제하시겠습니까?')">삭제</button>
+                                            </form>
+                                        </div>
                                     </div>
-                                    <span th:if="${report.attachFileName != null}" class="file-info">
-                                        현재: &#128206; <span th:text="${report.attachFileName}"></span>
-                                        <span style="color:#718096;">(새 파일 선택 시 교체됩니다)</span>
-                                    </span>
+
+                                    <!-- 추가할 파일 목록 (JS 관리) -->
+                                    <div id="pendingList_label" class="attach-section-label" style="display:none; margin-top:8px;">추가할 파일</div>
+                                    <div id="pendingList"></div>
+
+                                    <!-- 파일 추가 버튼 -->
+                                    <div class="attach-add-area">
+                                        <button type="button" class="btn-attach-add"
+                                                onclick="document.getElementById('attachFileInput').click()">
+                                            &#128206; 파일 추가
+                                        </button>
+                                        <span class="attach-hint">여러 파일 동시 선택 가능</span>
+                                    </div>
+                                    <input type="file" id="attachFileInput" name="attachFiles" multiple style="display:none;">
                                 </div>
                             </div>
 
@@ -119,5 +135,8 @@
 </div>
 
 <script th:src="@{/js/common.js}"></script>
+<script>
+    initAttachUpload('attachFileInput', 'pendingList', 'reportForm');
+</script>
 </body>
 </html>

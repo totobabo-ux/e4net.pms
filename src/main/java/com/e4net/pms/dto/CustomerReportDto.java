@@ -4,6 +4,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter @Setter @NoArgsConstructor
 public class CustomerReportDto {
 
@@ -19,7 +22,6 @@ public class CustomerReportDto {
 
     private String writer;               // 작성자
 
-    // ── 첨부파일 ───────────────────────────────────────────────────
-    private String attachFileName;       // 원본 파일명 (조회용)
-    private String attachFilePath;       // 저장 경로 (읽기 전용)
+    // ── 첨부파일 목록 (공통 첨부파일 테이블 사용) ──────────────────
+    private List<AttachFileDto> attachments = new ArrayList<>();
 }

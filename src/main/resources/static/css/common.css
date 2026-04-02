@@ -1037,3 +1037,137 @@ textarea.form-control { height: auto; padding: 8px 10px; resize: vertical; }
    각 페이지 하단에 아래 스크립트를 포함하세요:
    <script src="/js/common.js"></script>
    ──────────────────────────────────────────────────────── */
+
+/* ── 19. 첨부파일 목록 컴포넌트 ─────────────────────────────── */
+.attach-zone {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #fafbfc;
+    padding: 10px 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.attach-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.attach-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 8px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+    font-size: 13px;
+}
+
+.attach-row.attach-existing {
+    background: #f0f4ff;
+    border: 1px solid #dce6fb;
+}
+
+.attach-row.attach-pending {
+    background: #fffdf0;
+    border: 1px solid #f0e6b0;
+}
+
+.attach-row.attach-view {
+    background: #f8f9ff;
+    border: 1px solid #e8ecfb;
+}
+
+.attach-row.attach-view:hover {
+    background: #eef2ff;
+}
+
+.attach-icon {
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.attach-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #2d3748;
+    min-width: 0;
+}
+
+.attach-name.td-link {
+    color: #2980b9;
+}
+
+.attach-size {
+    font-size: 11px;
+    color: #a0aec0;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.attach-empty {
+    color: #a0aec0;
+    font-size: 13px;
+    padding: 6px 0;
+}
+
+.attach-add-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.btn-attach-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #2980b9;
+    background: #fff;
+    border: 1px solid #2980b9;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+
+.btn-attach-add:hover {
+    background: #ebf4ff;
+}
+
+.attach-hint {
+    font-size: 12px;
+    color: #a0aec0;
+}
+
+/* 목록 첨부파일 건수 배지 */
+.attach-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    background: #ebf4ff;
+    color: #2980b9;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* 수정 섹션 내 attach-zone 간격 */
+.form-card .attach-zone {
+    background: #fff;
+}

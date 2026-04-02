@@ -101,7 +101,7 @@
                         <li th:classappend="${activePage == 'biz-report-regular'} ? 'active'"><a href="/regular-report">정기보고</a></li>
                         <li th:classappend="${activePage == 'biz-report-weekly'} ? 'active'"><a href="/weekly-report">주간보고</a></li>
                         <li th:classappend="${activePage == 'biz-report-monthly'} ? 'active'"><a href="/monthly-report">월간보고</a></li>
-                        <li th:classappend="${activePage == 'biz-report-meeting'} ? 'active'"><a href="#">회의록</a></li>
+                        <li th:classappend="${activePage == 'biz-report-meeting'} ? 'active'"><a href="/meeting-report">회의록</a></li>
                     </ul>
                 </li>
 
@@ -110,8 +110,8 @@
                     th:classappend="${activePage != null and activePage.startsWith('biz-risk')} ? 'open'">
                     <div class="menu-group-header">위험관리<span class="arrow-sm">&#9660;</span></div>
                     <ul class="submenu">
-                        <li th:classappend="${activePage == 'biz-risk-risk'} ? 'active'"><a href="#">위험관리</a></li>
-                        <li th:classappend="${activePage == 'biz-risk-issue'} ? 'active'"><a href="#">이슈관리</a></li>
+                        <li th:classappend="${activePage == 'biz-risk-risk'} ? 'active'"><a href="/risk">위험관리</a></li>
+                        <li th:classappend="${activePage == 'biz-risk-issue'} ? 'active'"><a href="/issue">이슈관리</a></li>
                     </ul>
                 </li>
 

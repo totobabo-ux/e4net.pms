@@ -4,10 +4,14 @@ import com.e4net.pms.dto.RequirementDto;
 import com.e4net.pms.dto.RequirementSearchDto;
 import com.e4net.pms.entity.Project;
 import com.e4net.pms.entity.Requirement;
+import com.e4net.pms.entity.User;
 import com.e4net.pms.service.RequirementService;
+import com.e4net.pms.util.ExcelUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,7 +20,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/requirement")
@@ -33,6 +43,11 @@ public class RequirementController {
 
     private Project getSelectedProject(HttpSession session) {
         return (Project) session.getAttribute("selectedProject");
+    }
+
+    private String getLoginUserId(HttpSession session) {
+        User user = (User) session.getAttribute("loginUser");
+        return user != null ? user.getEmployeeNo() : "";
     }
 
     /** 목록 — 선택된 사업으로 자동 필터 */
@@ -83,7 +98,7 @@ public class RequirementController {
             model.addAttribute("selectedProject", getSelectedProject(session));
             return "requirement/form";
         }
-        requirementService.save(dto);
+        requirementService.save(dto, getLoginUserId(session));
         redirectAttributes.addFlashAttribute("successMessage", "요구사항이 등록되었습니다.");
         return "redirect:/requirement";
     }
@@ -126,7 +141,7 @@ public class RequirementController {
             model.addAttribute("selectedProject", getSelectedProject(session));
             return "requirement/detail";
         }
-        requirementService.update(id, dto);
+        requirementService.update(id, dto, getLoginUserId(session));
         redirectAttributes.addFlashAttribute("successMessage", "요구사항이 수정되었습니다.");
         return "redirect:/requirement/" + id;
     }
@@ -138,6 +153,47 @@ public class RequirementController {
         if (isNotReady(session)) return "redirect:/project-select";
         requirementService.delete(id);
         redirectAttributes.addFlashAttribute("successMessage", "요구사항이 삭제되었습니다.");
+        return "redirect:/requirement";
+    }
+
+    /** 엑셀 다운로드 — 현재 사업의 요구사항 전체 */
+    @GetMapping("/excel/download")
+    public void excelDownload(HttpSession session, HttpServletResponse response) throws IOException {
+        if (isNotReady(session)) { response.sendRedirect("/project-select"); return; }
+
+        Project project = getSelectedProject(session);
+        List<Requirement> list = requirementService.findAllByProject(project.getId());
+
+        String[] headers = { "요구사항코드", "제목", "분류", "우선순위", "상태", "요청자", "수용여부", "출처유형", "출처내용", "설명", "비고" };
+        List<Object[]> rows = list.stream().map(r -> new Object[]{
+            r.getReqCode(), r.getTitle(), r.getCategory(), r.getPriority(), r.getStatus(),
+            r.getRequestor(), r.getAcceptance(), r.getSourceType(), r.getSourceContent(),
+            r.getDescription(), r.getNote()
+        }).collect(Collectors.toList());
+
+        XSSFWorkbook wb = ExcelUtil.createWorkbook("요구사항목록", headers, rows);
+        String fileName = project.getProjectName() + "_요구사항목록_" + LocalDate.now() + ".xlsx";
+        ExcelUtil.writeToResponse(wb, fileName, response);
+    }
+
+    /** 엑셀 업로드 — 요구사항코드 기준 upsert */
+    @PostMapping("/excel/upload")
+    public String excelUpload(@RequestParam("excelFile") MultipartFile file,
+                              HttpSession session,
+                              RedirectAttributes ra) throws IOException {
+        if (isNotReady(session)) return "redirect:/project-select";
+        if (file.isEmpty()) {
+            ra.addFlashAttribute("errorMessage", "업로드할 파일을 선택해주세요.");
+            return "redirect:/requirement";
+        }
+
+        List<String[]> rows = ExcelUtil.parseRows(file, 1);
+        Long projectId = getSelectedProject(session).getId();
+        int[] result = requirementService.upsertFromExcel(rows, projectId, getLoginUserId(session));
+
+        ra.addFlashAttribute("successMessage",
+            String.format("엑셀 업로드 완료 — 신규: %d건, 수정: %d건, 건너뜀: %d건",
+                result[0], result[1], result[2]));
         return "redirect:/requirement";
     }
 }

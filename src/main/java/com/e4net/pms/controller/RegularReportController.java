@@ -3,7 +3,9 @@ package com.e4net.pms.controller;
 import com.e4net.pms.dto.CustomerReportDto;
 import com.e4net.pms.dto.CustomerReportSearchDto;
 import com.e4net.pms.entity.CustomerReport;
+import com.e4net.pms.entity.AttachFile;
 import com.e4net.pms.entity.Project;
+import com.e4net.pms.entity.User;
 import com.e4net.pms.service.CustomerReportService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +37,6 @@ public class RegularReportController {
 
     private final CustomerReportService customerReportService;
 
-    // 정기보고 보고구분 목록
     private static final List<String> REGULAR_TYPES = List.of("착수보고", "중간보고", "완료보고", "기타보고");
 
     /** 세션 준비 여부 체크 */
@@ -48,6 +49,16 @@ public class RegularReportController {
         return (Project) session.getAttribute("selectedProject");
     }
 
+    private String getLoginUserName(HttpSession session) {
+        User user = (User) session.getAttribute("loginUser");
+        return user != null ? user.getName() : "";
+    }
+
+    private String getLoginUserId(HttpSession session) {
+        User user = (User) session.getAttribute("loginUser");
+        return user != null ? user.getEmployeeNo() : "";
+    }
+
     /** 목록 */
     @GetMapping
     public String list(@ModelAttribute("search") CustomerReportSearchDto search,
@@ -56,12 +67,10 @@ public class RegularReportController {
                        HttpSession session, Model model) {
         if (isNotReady(session)) return "redirect:/project-select";
         search.setProjectId(getSelectedProject(session).getId());
-
-        // reportType 이 정기보고 유형이 아니면 무시 (보안)
+        search.setAllowedTypes(REGULAR_TYPES);
         if (search.getReportType() != null && !REGULAR_TYPES.contains(search.getReportType())) {
             search.setReportType(null);
         }
-
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
         Page<CustomerReport> result = customerReportService.search(search, pageable);
         model.addAttribute("page", result);
@@ -78,6 +87,7 @@ public class RegularReportController {
         Project selectedProject = getSelectedProject(session);
         CustomerReportDto dto = new CustomerReportDto();
         dto.setProjectId(selectedProject.getId());
+        dto.setWriter(getLoginUserName(session));
         model.addAttribute("report", dto);
         model.addAttribute("mode", "create");
         model.addAttribute("selectedProject", selectedProject);
@@ -88,11 +98,11 @@ public class RegularReportController {
     /** 등록 처리 */
     @PostMapping
     public String create(@ModelAttribute("report") CustomerReportDto dto,
-                         @RequestParam(value = "attachFile", required = false) MultipartFile attachFile,
+                         @RequestParam(value = "attachFiles", required = false) List<MultipartFile> attachFiles,
                          HttpSession session, RedirectAttributes redirectAttributes) throws IOException {
         if (isNotReady(session)) return "redirect:/project-select";
         dto.setProjectId(getSelectedProject(session).getId());
-        customerReportService.save(dto, attachFile);
+        customerReportService.save(dto, attachFiles, getLoginUserId(session));
         redirectAttributes.addFlashAttribute("successMessage", "정기보고가 등록되었습니다.");
         return "redirect:/regular-report";
     }
@@ -127,11 +137,11 @@ public class RegularReportController {
     @PostMapping("/{id}/edit")
     public String update(@PathVariable Long id,
                          @ModelAttribute("report") CustomerReportDto dto,
-                         @RequestParam(value = "attachFile", required = false) MultipartFile attachFile,
+                         @RequestParam(value = "attachFiles", required = false) List<MultipartFile> attachFiles,
                          HttpSession session, RedirectAttributes redirectAttributes) throws IOException {
         if (isNotReady(session)) return "redirect:/project-select";
         dto.setProjectId(getSelectedProject(session).getId());
-        customerReportService.update(id, dto, attachFile);
+        customerReportService.update(id, dto, attachFiles, getLoginUserId(session));
         redirectAttributes.addFlashAttribute("successMessage", "정기보고가 수정되었습니다.");
         return "redirect:/regular-report/" + id;
     }
@@ -146,27 +156,32 @@ public class RegularReportController {
         return "redirect:/regular-report";
     }
 
-    /** 존재하지 않는 리소스 접근 예외 처리 */
-    @ExceptionHandler(IllegalArgumentException.class)
-    public String handleNotFound(IllegalArgumentException e, RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        return "redirect:/regular-report";
+    /** 첨부파일 개별 삭제 */
+    @SuppressWarnings("null")
+    @PostMapping("/{id}/attachment/{attachmentId}/delete")
+    public String deleteAttachment(@PathVariable Long id,
+                                   @PathVariable Long attachmentId,
+                                   HttpSession session, RedirectAttributes redirectAttributes) {
+        if (isNotReady(session)) return "redirect:/project-select";
+        customerReportService.deleteAttachment(attachmentId);
+        redirectAttributes.addFlashAttribute("successMessage", "첨부파일이 삭제되었습니다.");
+        return "redirect:/regular-report/" + id;
     }
 
-    /** 파일 다운로드 */
+    /** 첨부파일 다운로드 */
     @SuppressWarnings("null")
-    @GetMapping("/{id}/download")
-    public ResponseEntity<Resource> download(@PathVariable Long id, HttpSession session) {
+    @GetMapping("/{id}/attachment/{attachmentId}/download")
+    public ResponseEntity<Resource> download(@PathVariable Long id,
+                                             @PathVariable Long attachmentId,
+                                             HttpSession session) {
         if (isNotReady(session)) return ResponseEntity.status(403).build();
         try {
-            Path filePath = customerReportService.getFilePath(id);
-            CustomerReport entity = customerReportService.findById(id);
+            AttachFile attachment = customerReportService.findAttachmentById(attachmentId);
+            Path filePath = customerReportService.getAttachmentFilePath(attachmentId);
             Resource resource = new PathResource(filePath);
             if (!resource.exists()) return ResponseEntity.notFound().build();
-
-            String originalName = entity.getAttachFileName() != null ? entity.getAttachFileName() : "download";
+            String originalName = attachment.getFileName() != null ? attachment.getFileName() : "download";
             String encodedName = URLEncoder.encode(originalName, StandardCharsets.UTF_8).replace("+", "%20");
-
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedName)
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -174,5 +189,12 @@ public class RegularReportController {
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    /** 존재하지 않는 리소스 접근 예외 처리 */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public String handleNotFound(IllegalArgumentException e, RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        return "redirect:/regular-report";
     }
 }
