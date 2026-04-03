@@ -874,6 +874,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#excelutilgetcellstringvalue-numeric" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ExcelUtil.getCellStringValue — NUMERIC 날짜 직렬 번호 파싱 (중요!)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete-all-insert-wbs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        엑셀 업로드 — delete-all + insert 패턴 (WBS/이슈/위험 등 순서 의존 데이터)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1043,6 +1065,28 @@
     <span class="md-ellipsis">
       
         주의사항
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#excelutilgetcellstringvalue-numeric" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ExcelUtil.getCellStringValue — NUMERIC 날짜 직렬 번호 파싱 (중요!)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete-all-insert-wbs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        엑셀 업로드 — delete-all + insert 패턴 (WBS/이슈/위험 등 순서 의존 데이터)
       
     </span>
   </a>
@@ -1272,6 +1316,32 @@
 <li><code>빈 파일</code> 업로드 시 <code>file.isEmpty()</code> 체크 후 에러 메시지 처리 필수</li>
 <li>Controller import 필수: <code>XSSFWorkbook</code>, <code>ExcelUtil</code>, <code>HttpServletResponse</code>, <code>MultipartFile</code>, <code>LocalDate</code>, <code>Collectors</code></li>
 </ul>
+<h3 id="excelutilgetcellstringvalue-numeric">ExcelUtil.getCellStringValue — NUMERIC 날짜 직렬 번호 파싱 (중요!)<a class="headerlink" href="#excelutilgetcellstringvalue-numeric" title="Permanent link">&para;</a></h3>
+<p>엑셀의 날짜 셀이 숫자 직렬(예: 46076)로 저장될 때 <code>DateUtil</code>로 변환해야 한다.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// ExcelUtil.getCellStringValue NUMERIC 케이스</span>
+<span class="k">case</span><span class="w"> </span><span class="n">NUMERIC</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cell</span><span class="p">.</span><span class="na">getNumericCellValue</span><span class="p">();</span>
+<span class="w">    </span><span class="kt">boolean</span><span class="w"> </span><span class="n">looksLikeDate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DateUtil</span><span class="p">.</span><span class="na">isCellDateFormatted</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+<span class="w">            </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="n">d</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">36526</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">73050</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">Math</span><span class="p">.</span><span class="na">floor</span><span class="p">(</span><span class="n">d</span><span class="p">));</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">looksLikeDate</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="kd">yield</span><span class="w"> </span><span class="n">DateUtil</span><span class="p">.</span><span class="na">getLocalDateTime</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">).</span><span class="na">toLocalDate</span><span class="p">().</span><span class="na">toString</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">ignored</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="kd">yield</span><span class="w"> </span><span class="p">(</span><span class="n">d</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">Math</span><span class="p">.</span><span class="na">floor</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">Double</span><span class="p">.</span><span class="na">isInfinite</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
+<span class="w">        </span><span class="o">?</span><span class="w"> </span><span class="n">String</span><span class="p">.</span><span class="na">valueOf</span><span class="p">((</span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">.</span><span class="na">valueOf</span><span class="p">(</span><span class="n">d</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="delete-all-insert-wbs">엑셀 업로드 — delete-all + insert 패턴 (WBS/이슈/위험 등 순서 의존 데이터)<a class="headerlink" href="#delete-all-insert-wbs" title="Permanent link">&para;</a></h3>
+<p>기존 upsert 대신 전체 삭제 후 재삽입하는 패턴.
+사용 시점: 행 순서(sortOrder)가 의미 있거나 모든 데이터를 교체해야 할 때.</p>
+<ol>
+<li>첨부파일이 있는 경우: <code>findByEntityTypeAndEntityIdIn</code> → 물리 파일 삭제 → <code>deleteByEntityTypeAndEntityIdIn</code></li>
+<li>전체 엔티티 삭제: <code>repository.deleteAll(repository.findAll...)</code></li>
+<li>엑셀 행 순서대로 신규 INSERT (<code>sortOrder = 1</code>부터 순번 부여)</li>
+<li>반환: <code>int[]{ inserted, 0, skipped }</code> (updated 항상 0)</li>
+</ol>
 
 
 
