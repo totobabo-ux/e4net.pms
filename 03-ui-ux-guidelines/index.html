@@ -469,6 +469,78 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#2-parity-flip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2열 그리드 구분선 — parity flip 문제와 해결 패턴 (중요!)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2열 그리드 구분선 — parity flip 문제와 해결 패턴 (중요!)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        문제 원인
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        해결 규칙
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        예외 — 전체 너비 셀 2개 연속
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        적용 범위
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#align-self-stretch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        다중 행 셀 레이블 배경색 — align-self: stretch 처리
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -995,6 +1067,78 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#2-parity-flip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2열 그리드 구분선 — parity flip 문제와 해결 패턴 (중요!)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2열 그리드 구분선 — parity flip 문제와 해결 패턴 (중요!)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        문제 원인
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        해결 규칙
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        예외 — 전체 너비 셀 2개 연속
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        적용 범위
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#align-self-stretch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        다중 행 셀 레이블 배경색 — align-self: stretch 처리
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1181,6 +1325,66 @@
 <li><strong>목록 페이지:</strong> 검색 폼 + 페이징 처리된 테이블. 테이블 상단에 검색 바 배치.</li>
 <li><strong>Badge 상태 표시:</strong> <code>&lt;span class="badge" th:classappend="'badge-' + ${r.status}" th:text="${r.status}"&gt;</code> 패턴 사용.</li>
 </ul>
+<hr />
+<h3 id="2-parity-flip">2열 그리드 구분선 — parity flip 문제와 해결 패턴 (중요!)<a class="headerlink" href="#2-parity-flip" title="Permanent link">&para;</a></h3>
+<h4 id="_4">문제 원인<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h4>
+<p><code>form-grid-2col</code> / <code>detail-grid</code> 내에서 <code>grid-column: 1 / -1</code> (전체 너비) 셀이 <strong>홀수 번째(odd) DOM 위치</strong>에 오면, 이후 2열 셀들의 좌/우 열 배정이 뒤집혀 왼쪽 셀의 구분선이 사라진다.</p>
+<blockquote>
+<p>CSS <code>nth-child(odd)</code>가 전체 너비 셀도 카운트하기 때문에 홀짝 순서가 어긋난다.</p>
+</blockquote>
+<h4 id="_5">해결 규칙<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h4>
+<p>전체 너비 셀(<code>grid-column: 1 / -1</code>) 이후에 오는 2열 셀 쌍은 <strong><code>border-right</code>를 인라인으로 명시</strong>한다.</p>
+<div class="codehilite"><pre><span></span><code><span class="cm">&lt;!-- 조회 섹션 (detail-grid) — 전체 너비 셀 이후 2열 배치 --&gt;</span>
+<span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;detail-cell&quot;</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;border-right: 1px solid #d0d8e4;&quot;</span><span class="p">&gt;</span>  <span class="cm">&lt;!-- 왼쪽 셀 --&gt;</span>
+    <span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;detail-label&quot;</span><span class="p">&gt;</span>항목A<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;detail-value&quot;</span> <span class="na">th:text</span><span class="o">=</span><span class="s">&quot;${dto.fieldA}&quot;</span><span class="p">&gt;</span>-<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;detail-cell&quot;</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;border-right: none;&quot;</span><span class="p">&gt;</span>              <span class="cm">&lt;!-- 오른쪽 셀 --&gt;</span>
+    <span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;detail-label&quot;</span><span class="p">&gt;</span>항목B<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;detail-value&quot;</span> <span class="na">th:text</span><span class="o">=</span><span class="s">&quot;${dto.fieldB}&quot;</span><span class="p">&gt;</span>-<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="cm">&lt;!-- 등록/수정 섹션 (form-grid-2col) — 색상만 다름 --&gt;</span>
+<span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;form-cell&quot;</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;border-right: 1px solid #f0f2f5;&quot;</span><span class="p">&gt;</span>   <span class="cm">&lt;!-- 왼쪽 셀 --&gt;</span>
+    <span class="p">&lt;</span><span class="nt">label</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;form-label&quot;</span><span class="p">&gt;</span>항목A<span class="p">&lt;/</span><span class="nt">label</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text&quot;</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;form-control&quot;</span> <span class="na">th:field</span><span class="o">=</span><span class="s">&quot;*{fieldA}&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;form-cell&quot;</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;border-right: none;&quot;</span><span class="p">&gt;</span>               <span class="cm">&lt;!-- 오른쪽 셀 --&gt;</span>
+    <span class="p">&lt;</span><span class="nt">label</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;form-label&quot;</span><span class="p">&gt;</span>항목B<span class="p">&lt;/</span><span class="nt">label</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text&quot;</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;form-control&quot;</span> <span class="na">th:field</span><span class="o">=</span><span class="s">&quot;*{fieldB}&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<h4 id="2">예외 — 전체 너비 셀 2개 연속<a class="headerlink" href="#2" title="Permanent link">&para;</a></h4>
+<p>홀수 위치 전체 너비 셀 바로 다음에 또 전체 너비 셀이 오면(짝수 위치) parity가 복원되므로, 이후 2열 셀들은 인라인 스타일 없이도 정상 동작한다.</p>
+<h4 id="_6">적용 범위<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>detail.html</code>: <code>viewSection</code>과 <code>editSection</code> <strong>양쪽</strong> 모두 적용</li>
+<li><code>form.html</code>: 등록 폼도 동일하게 적용</li>
+<li>구분선 색상: <code>detail-cell</code> → <code>#d0d8e4</code> / <code>form-cell</code> → <code>#f0f2f5</code></li>
+</ul>
+<hr />
+<h3 id="align-self-stretch">다중 행 셀 레이블 배경색 — align-self: stretch 처리<a class="headerlink" href="#align-self-stretch" title="Permanent link">&para;</a></h3>
+<p><code>align-items: flex-start</code> 인라인 스타일이 붙은 셀에서 <code>.detail-label</code> / <code>.form-label</code>의 회색 배경이 셀 높이 전체를 채우지 못하는 문제는 <code>common.css</code>에서 자동으로 처리된다.</p>
+<div class="codehilite"><pre><span></span><code><span class="c">/* common.css — 이미 적용됨 (HTML 별도 처리 불필요) */</span>
+<span class="p">.</span><span class="nc">detail-cell</span><span class="o">[</span><span class="nt">style</span><span class="o">*=</span><span class="s2">&quot;align-items: flex-start&quot;</span><span class="o">]</span><span class="w"> </span><span class="p">.</span><span class="nc">detail-label</span><span class="o">,</span>
+<span class="p">.</span><span class="nc">detail-cell</span><span class="o">[</span><span class="nt">style</span><span class="o">*=</span><span class="s2">&quot;align-items:flex-start&quot;</span><span class="o">]</span><span class="w"> </span><span class="p">.</span><span class="nc">detail-label</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">align-self</span><span class="p">:</span><span class="w"> </span><span class="kc">stretch</span><span class="p">;</span>
+<span class="w">    </span><span class="k">align-items</span><span class="p">:</span><span class="w"> </span><span class="kc">flex-start</span><span class="p">;</span>
+<span class="w">    </span><span class="k">padding-top</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="kt">px</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="p">.</span><span class="nc">form-cell</span><span class="o">[</span><span class="nt">style</span><span class="o">*=</span><span class="s2">&quot;align-items: flex-start&quot;</span><span class="o">]</span><span class="w"> </span><span class="p">.</span><span class="nc">form-label</span><span class="o">,</span>
+<span class="p">.</span><span class="nc">form-cell</span><span class="o">[</span><span class="nt">style</span><span class="o">*=</span><span class="s2">&quot;align-items:flex-start&quot;</span><span class="o">]</span><span class="w"> </span><span class="p">.</span><span class="nc">form-label</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">align-self</span><span class="p">:</span><span class="w"> </span><span class="kc">stretch</span><span class="p">;</span>
+<span class="w">    </span><span class="k">align-items</span><span class="p">:</span><span class="w"> </span><span class="kc">flex-start</span><span class="p">;</span>
+<span class="w">    </span><span class="k">padding-top</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="kt">px</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>주의:</strong> CSS 속성 선택자가 동작하려면 셀에 <code>style="align-items: flex-start"</code> (공백 있음) 또는 <code>style="align-items:flex-start"</code> (공백 없음) 형태의 <strong>인라인 스타일이 반드시 있어야</strong> 한다.</p>
+</blockquote>
 
 
 

@@ -706,6 +706,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#2-3-parity-flip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2열 그리드 구분선 체크 (§3 parity flip 규칙)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#url" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -951,6 +962,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#2-3-parity-flip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2열 그리드 구분선 체크 (§3 parity flip 규칙)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#url" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1064,6 +1086,12 @@
 <li>[ ] <code>detail.html</code>: 유효성 오류 시 수정 모드 자동 유지 (<code>hasErrors</code> 체크 스크립트 포함)</li>
 <li>[ ] <code>detail.html</code>: 삭제 확인 모달 포함</li>
 <li>[ ] <code>fragments.html</code> sidebar에 신규 메뉴 링크 추가 (activePage 키 목록 §8 참조)</li>
+</ul>
+<h3 id="2-3-parity-flip">2열 그리드 구분선 체크 (§3 parity flip 규칙)<a class="headerlink" href="#2-3-parity-flip" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] <code>form.html</code> / <code>detail.html</code> viewSection / <code>detail.html</code> editSection — 모든 섹션에서 <code>grid-column: 1/-1</code> 전체 너비 셀의 <strong>홀짝 DOM 위치</strong> 확인</li>
+<li>[ ] 전체 너비 셀 이후 첫 번째 2열 쌍: 왼쪽 셀에 <code>style="border-right: 1px solid #f0f2f5;"</code> (form) 또는 <code>#d0d8e4</code> (detail-view), 오른쪽 셀에 <code>style="border-right: none;"</code> 명시</li>
+<li>[ ] 다중 행 셀(<code>align-items: flex-start</code>)이 있으면 인라인 스타일 형태(<code>style="align-items: flex-start"</code>) 유지 — CSS 속성 선택자가 이 형태를 요구함</li>
 </ul>
 <h3 id="url">컨트롤러 URL 매핑<a class="headerlink" href="#url" title="Permanent link">&para;</a></h3>
 <ul>
