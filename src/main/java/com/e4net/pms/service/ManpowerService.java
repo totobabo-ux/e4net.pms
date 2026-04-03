@@ -2,11 +2,9 @@ package com.e4net.pms.service;
 
 import com.e4net.pms.dto.ManpowerDto;
 import com.e4net.pms.dto.ManpowerSearchDto;
-import com.e4net.pms.entity.CommonCode;
 import com.e4net.pms.entity.Project;
 import com.e4net.pms.entity.ProjectManpower;
 import com.e4net.pms.entity.User;
-import com.e4net.pms.repository.CommonCodeRepository;
 import com.e4net.pms.repository.ManpowerRepository;
 import com.e4net.pms.repository.ManpowerSpec;
 import com.e4net.pms.repository.ProjectRepository;
@@ -18,8 +16,6 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -28,7 +24,6 @@ public class ManpowerService {
     private final ManpowerRepository manpowerRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
-    private final CommonCodeRepository commonCodeRepository;
 
     /** 목록 조회 (페이징) */
     public Page<ProjectManpower> search(ManpowerSearchDto dto, @NonNull Pageable pageable) {
@@ -44,17 +39,20 @@ public class ManpowerService {
 
     /** 등록 */
     @Transactional
-    public ProjectManpower save(ManpowerDto dto) {
+    public ProjectManpower save(ManpowerDto dto, String userId) {
         ProjectManpower entity = new ProjectManpower();
         mapDtoToEntity(dto, entity);
+        entity.setRegId(userId);
+        entity.setUpdId(userId);
         return manpowerRepository.save(entity);
     }
 
     /** 수정 */
     @Transactional
-    public ProjectManpower update(@NonNull Long id, ManpowerDto dto) {
+    public ProjectManpower update(@NonNull Long id, ManpowerDto dto, String userId) {
         ProjectManpower entity = findById(id);
         mapDtoToEntity(dto, entity);
+        entity.setUpdId(userId);
         return manpowerRepository.save(entity);
     }
 
@@ -62,16 +60,6 @@ public class ManpowerService {
     @Transactional
     public void delete(@NonNull Long id) {
         manpowerRepository.deleteById(id);
-    }
-
-    /** 급수 코드 목록 */
-    public List<CommonCode> getGradeCodes() {
-        return commonCodeRepository.findByGroupCodeAndUseYnOrderBySortOrder("GRADE", "Y");
-    }
-
-    /** 투입구분 코드 목록 */
-    public List<CommonCode> getInputTypeCodes() {
-        return commonCodeRepository.findByGroupCodeAndUseYnOrderBySortOrder("INPUT_TYPE", "Y");
     }
 
     /** Entity → DTO */

@@ -64,11 +64,11 @@
                             <span class="detail-value" th:text="${issue.issueName}">-</span>
                         </div>
 
-                        <div class="detail-cell">
+                        <div class="detail-cell" style="border-right: 1px solid #d0d8e4;">
                             <span class="detail-label">제기자</span>
                             <span class="detail-value" th:text="${issue.raiser ?: '-'}">-</span>
                         </div>
-                        <div class="detail-cell">
+                        <div class="detail-cell" style="border-right: none;">
                             <span class="detail-label">제기일자</span>
                             <span class="detail-value" th:text="${issue.raisedDate ?: '-'}">-</span>
                         </div>
@@ -180,11 +180,11 @@
                                     <input type="text" class="form-control" th:field="*{issueName}" placeholder="이슈명을 입력하세요">
                                 </div>
 
-                                <div class="form-cell">
+                                <div class="form-cell" style="border-right: 1px solid #f0f2f5;">
                                     <label class="form-label">제기자</label>
                                     <input type="text" class="form-control" th:field="*{raiser}" placeholder="제기자명">
                                 </div>
-                                <div class="form-cell">
+                                <div class="form-cell" style="border-right: none;">
                                     <label class="form-label">제기일자</label>
                                     <input type="date" class="form-control" th:field="*{raisedDate}">
                                 </div>
@@ -232,10 +232,8 @@
                                 <div class="form-cell">
                                     <label class="form-label">조치상태</label>
                                     <select class="form-control" th:field="*{actionStatus}">
-                                        <option value="미조치">미조치</option>
-                                        <option value="조치중">조치중</option>
-                                        <option value="조치완료">조치완료</option>
-                                        <option value="보류">보류</option>
+                                        <option th:each="c : ${codes['ISSUE_ACTION_STATUS']}"
+                                                th:value="${c.code}" th:text="${c.codeName}"></option>
                                     </select>
                                 </div>
                                 <div class="form-cell">

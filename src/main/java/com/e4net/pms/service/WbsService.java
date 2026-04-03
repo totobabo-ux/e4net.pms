@@ -5,7 +5,9 @@ import com.e4net.pms.entity.Project;
 import com.e4net.pms.entity.Wbs;
 import com.e4net.pms.repository.ProjectRepository;
 import com.e4net.pms.repository.WbsRepository;
+import com.e4net.pms.util.ExcelUtil;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,6 +63,92 @@ public class WbsService {
     @Transactional
     public void delete(Long id) {
         wbsRepository.deleteById(id);
+    }
+
+    /**
+     * 엑셀 워크북 생성 (다운로드용) — COLS 순서와 동일
+     * TASK ID(0) TASK명(1) 산출물(2) 담당자(3) 계획%(4) 실적%(5)
+     * 계획시작일(6) 계획종료일(7) 계획기간(8) 계획진척률(9)
+     * 실제시작일(10) 실제종료일(11) 실제기간(12) 실제진척율(13) 상태(14)
+     */
+    public XSSFWorkbook createExcelWorkbook(Long projectId) {
+        List<WbsDto> list = findByProjectId(projectId);
+        String[] headers = {
+            "TASK ID", "TASK명", "산출물", "담당자", "계획%", "실적%",
+            "계획시작일", "계획종료일", "계획기간", "계획진척률",
+            "실제시작일", "실제종료일", "실제기간", "실제진척율", "상태"
+        };
+        List<Object[]> rows = list.stream().map(r -> new Object[]{
+            r.getTaskId(), r.getTaskName(), r.getDeliverable(), r.getAssignee(),
+            r.getPlanProgress(), r.getActualProgress(),
+            r.getPlanStartDate(), r.getPlanEndDate(), r.getPlanDuration(), r.getPlanRate(),
+            r.getActualStartDate(), r.getActualEndDate(), r.getActualDuration(), r.getActualRate(),
+            r.getStatus()
+        }).toList();
+        return ExcelUtil.createWorkbook("사업일정(WBS)", headers, rows);
+    }
+
+    /**
+     * 엑셀 업로드 — 기존 데이터 전체 삭제 후 재등록
+     * TASK ID(0) TASK명(1) 산출물(2) 담당자(3) 계획%(4) 실적%(5)
+     * 계획시작일(6) 계획종료일(7) 계획기간(8, read-only skip) 계획진척률(9)
+     * 실제시작일(10) 실제종료일(11) 실제기간(12, computed skip) 실제진척율(13) 상태(14)
+     *
+     * @return int[] { 신규등록 수, 0(수정없음), 건너뜀 수 }
+     */
+    @Transactional
+    @SuppressWarnings("null")
+    public int[] upsertFromExcel(List<String[]> rows, Long projectId, String userId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("사업을 찾을 수 없습니다."));
+
+        // 기존 데이터 전체 삭제
+        wbsRepository.deleteAll(wbsRepository.findByProjectIdOrderBySortOrderAscIdAsc(projectId));
+
+        int inserted = 0, skipped = 0, sortOrder = 0;
+
+        for (String[] cells : rows) {
+            String taskIdVal   = getCell(cells, 0);
+            String taskNameVal = getCell(cells, 1);
+            if (taskNameVal.isBlank()) { skipped++; continue; }
+
+            Wbs entity = new Wbs();
+            entity.setProject(project);
+            entity.setRegId(userId);
+            entity.setTaskId(taskIdVal.isBlank() ? null : taskIdVal);
+            entity.setTaskName(taskNameVal);
+            entity.setDeliverable(getCell(cells, 2));
+            entity.setAssignee(getCell(cells, 3));
+            entity.setPlanProgress(parseInteger(getCell(cells, 4)));
+            entity.setActualProgress(parseInteger(getCell(cells, 5)));
+            entity.setPlanStartDate(parseDate(getCell(cells, 6)));
+            entity.setPlanEndDate(parseDate(getCell(cells, 7)));
+            // col 8: planDuration (read-only) — skip
+            entity.setPlanRate(parseInteger(getCell(cells, 9)));
+            entity.setActualStartDate(parseDate(getCell(cells, 10)));
+            entity.setActualEndDate(parseDate(getCell(cells, 11)));
+            // col 12: actualDuration (computed) — skip
+            entity.setActualRate(parseInteger(getCell(cells, 13)));
+            String status = getCell(cells, 14);
+            entity.setStatus(status.isBlank() ? "미착수" : status);
+            entity.setUpdId(userId);
+            entity.setSortOrder(++sortOrder);
+
+            wbsRepository.save(entity);
+            inserted++;
+        }
+        return new int[]{ inserted, 0, skipped };
+    }
+
+    /** 셀 값 안전 추출 */
+    private String getCell(String[] cells, int idx) {
+        return (cells != null && idx < cells.length && cells[idx] != null) ? cells[idx].trim() : "";
+    }
+
+    /** 문자열 → Integer (파싱 실패 시 null) */
+    private Integer parseInteger(String s) {
+        if (s == null || s.isBlank()) return null;
+        try { return Integer.parseInt(s); } catch (Exception e) { return null; }
     }
 
     /** Entity → DTO */

@@ -21,3 +21,6 @@ Generated from instructions.md
 - [16. 공통 첨부파일 테이블 패턴 — attach_file (다중 파일, 신규 기능 기본)](17-16-attach_file.md)
 - [17. 엑셀 다운로드/업로드 공통 모듈 — ExcelUtil](18-17-excelutil.md)
 - [18. 테스트 계정 관리 및 curl 통합 테스트 패턴](19-18-curl.md)
+- [19. 커뮤니티(공지사항/자료실) 패턴](19-community-pattern.md)
+- [20. AJAX/JSON 기반 컨트롤러 패턴](20-ajax-json-pattern.md)
+- [21. jsTree 기반 트리뷰 분할 패널 패턴](21-jstree-pattern.md)

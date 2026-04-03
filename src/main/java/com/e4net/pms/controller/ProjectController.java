@@ -3,6 +3,7 @@ package com.e4net.pms.controller;
 import com.e4net.pms.dto.ProjectDto;
 import com.e4net.pms.dto.ProjectSearchDto;
 import com.e4net.pms.entity.Project;
+import com.e4net.pms.entity.User;
 import com.e4net.pms.service.ProjectService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -24,6 +25,11 @@ public class ProjectController {
 
     private boolean isNotLoggedIn(HttpSession session) {
         return session.getAttribute("loginUser") == null;
+    }
+
+    private String getLoginUserId(HttpSession session) {
+        User user = (User) session.getAttribute("loginUser");
+        return user != null ? user.getEmployeeNo() : "";
     }
 
     /** 목록 + 검색 — 관리자: 모든 프로젝트 조회 */
@@ -58,7 +64,7 @@ public class ProjectController {
             model.addAttribute("mode", "create");
             return "project/form";
         }
-        projectService.save(dto);
+        projectService.save(dto, getLoginUserId(session));
         redirectAttributes.addFlashAttribute("successMessage", "프로젝트가 등록되었습니다.");
         return "redirect:/projects";
     }
@@ -88,7 +94,7 @@ public class ProjectController {
             model.addAttribute("mode", "edit");
             return "project/form";
         }
-        projectService.update(id, dto);
+        projectService.update(id, dto, getLoginUserId(session));
         redirectAttributes.addFlashAttribute("successMessage", "프로젝트가 수정되었습니다.");
         return "redirect:/projects";
     }

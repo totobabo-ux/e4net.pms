@@ -55,10 +55,9 @@
                         <span class="search-label">조치상태</span>
                         <select name="actionStatus" class="search-select w-md">
                             <option value="">전체</option>
-                            <option value="미조치"   th:selected="${search.actionStatus == '미조치'}">미조치</option>
-                            <option value="조치중"   th:selected="${search.actionStatus == '조치중'}">조치중</option>
-                            <option value="조치완료" th:selected="${search.actionStatus == '조치완료'}">조치완료</option>
-                            <option value="보류"     th:selected="${search.actionStatus == '보류'}">보류</option>
+                            <option th:each="c : ${codes['ISSUE_ACTION_STATUS']}"
+                                    th:value="${c.code}" th:text="${c.codeName}"
+                                    th:selected="${search.actionStatus == c.code}"></option>
                         </select>
                         <button type="submit" class="btn-search">&#128269; 검색</button>
                     </div>

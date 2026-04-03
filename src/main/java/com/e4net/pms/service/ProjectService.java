@@ -39,17 +39,20 @@ public class ProjectService {
 
     /** 등록 */
     @Transactional
-    public Project save(ProjectDto dto) {
+    public Project save(ProjectDto dto, String userId) {
         Project project = new Project();
         mapDtoToEntity(dto, project);
+        project.setRegId(userId);
+        project.setUpdId(userId);
         return projectRepository.save(project);
     }
 
     /** 수정 */
     @Transactional
-    public Project update(@NonNull Long id, ProjectDto dto) {
+    public Project update(@NonNull Long id, ProjectDto dto, String userId) {
         Project project = findById(id);
         mapDtoToEntity(dto, project);
+        project.setUpdId(userId);
         return projectRepository.save(project);
     }
 

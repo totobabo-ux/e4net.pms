@@ -637,6 +637,7 @@ tbody tr:hover { background: #f7f9fc; }
 /* textarea 행은 레이블을 상단 정렬 */
 .form-cell[style*="align-items: flex-start"] .form-label,
 .form-cell[style*="align-items:flex-start"] .form-label {
+    align-self: stretch;
     align-items: flex-start;
     padding-top: 10px;
 }
@@ -791,7 +792,7 @@ textarea.form-control { height: auto; padding: 8px 10px; resize: vertical; }
 /* ── 14. 상세 카드 ────────────────────────────────────────── */
 .detail-card {
     background: #fff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #c8d0dc;
     border-radius: 6px;
     margin-bottom: 16px;
 }
@@ -810,23 +811,37 @@ textarea.form-control { height: auto; padding: 8px 10px; resize: vertical; }
 .detail-cell {
     display: flex;
     align-items: stretch;
-    border-bottom: 1px solid #f0f2f5;
+    border-bottom: 1px solid #d0d8e4;
     min-height: 46px;
 }
 
-.detail-cell:nth-child(odd)  { border-right: 1px solid #f0f2f5; }
+.detail-cell:nth-child(odd)  { border-right: 1px solid #d0d8e4; }
 .detail-cell.full-width      { grid-column: 1 / -1; border-right: none; }
 
-/* 항목명 열 — form-label과 동일한 스타일 */
+/* 다중 행 셀(비고 등)에서 레이블 배경이 전체 높이를 채우도록 */
+.detail-cell[style*="align-items: flex-start"] .detail-label,
+.detail-cell[style*="align-items:flex-start"] .detail-label {
+    align-self: stretch;
+    align-items: flex-start;
+    padding-top: 10px;
+}
+
+/* 다중 행 셀에서 값 영역을 상단 정렬 */
+.detail-cell[style*="align-items: flex-start"] .detail-value,
+.detail-cell[style*="align-items:flex-start"] .detail-value {
+    align-self: flex-start;
+}
+
+/* 항목명 열 */
 .detail-label {
     width: 110px;
     min-width: 110px;
     flex-shrink: 0;
-    background: #f7f8fa;
-    border-right: 1px solid #e2e8f0;
+    background: #e8edf4;
+    border-right: 1px solid #c8d0dc;
     padding: 0 12px;
     font-size: 12px;
-    color: #718096;
+    color: #3d4f66;
     font-weight: bold;
     display: flex;
     align-items: center;

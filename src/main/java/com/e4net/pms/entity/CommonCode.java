@@ -4,11 +4,17 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "common_code",
        uniqueConstraints = @UniqueConstraint(columnNames = {"group_code", "code"}))
 @Getter @Setter @NoArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class CommonCode {
 
     @Id
@@ -29,4 +35,18 @@ public class CommonCode {
 
     @Column(name = "use_yn", length = 1)
     private String useYn = "Y";         // 사용여부
+
+    @Column(name = "reg_id", length = 50, updatable = false)
+    private String regId;               // 등록자 ID
+
+    @Column(name = "upd_id", length = 50)
+    private String updId;               // 수정자 ID
+
+    @CreatedDate
+    @Column(name = "reg_dt", updatable = false)
+    private LocalDateTime regDt;        // 등록일시
+
+    @LastModifiedDate
+    @Column(name = "upd_dt")
+    private LocalDateTime updDt;        // 수정일시
 }

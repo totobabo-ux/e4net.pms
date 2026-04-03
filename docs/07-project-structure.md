@@ -25,9 +25,15 @@ src/main/
       weekly-report/   ← 사업관리 > 보고관리 > 주간보고
       monthly-report/  ← 사업관리 > 보고관리 > 월간보고
       meeting-report/  ← 사업관리 > 보고관리 > 회의록
+      notice/          ← 커뮤니티 > 공지사항 (list.html / form.html / detail.html)
+      archive/         ← 커뮤니티 > 자료실 (list.html / form.html / detail.html)
+      screen-list/     ← 사업수행 > 설계 > 화면목록 (list.html / form.html / detail.html)
+      menu-structure/  ← 사업수행 > 분석 > 메뉴구조 (list.html — jsTree 분할패널)
 uploads/             ← 첨부파일 저장소 (app.upload.dir, .gitignore 제외 권장)
   regular-report/{projectId}/{uuid}.확장자  ← 정기보고
   weekly-report/{projectId}/{uuid}.확장자   ← 주간보고
   monthly-report/{projectId}/{uuid}.확장자  ← 월간보고
   meeting-report/{projectId}/{uuid}.확장자  ← 회의록
+  community/{communityType}/{entityId}/{uuid}.확장자  ← 공지사항/자료실
+  screen-list/{projectId}/{uuid}.확장자     ← 화면목록 첨부파일
 ```

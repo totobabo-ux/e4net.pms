@@ -16,4 +16,10 @@ public interface AttachFileRepository extends JpaRepository<AttachFile, Long> {
 
     /** 특정 엔티티의 첨부파일 전체 삭제 (물리파일 삭제 후 호출) */
     void deleteByEntityTypeAndEntityId(String entityType, Long entityId);
+
+    /** 여러 엔티티의 첨부파일 목록 일괄 조회 */
+    List<AttachFile> findByEntityTypeAndEntityIdIn(String entityType, List<Long> entityIds);
+
+    /** 여러 엔티티의 첨부파일 일괄 삭제 (물리파일 삭제 후 호출) */
+    void deleteByEntityTypeAndEntityIdIn(String entityType, List<Long> entityIds);
 }

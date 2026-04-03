@@ -59,6 +59,8 @@ public class UserController {
 
         // BCrypt 암호화 후 저장
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRegId(user.getEmployeeNo());  // 자기 등록 시 본인 사번
+        user.setUpdId(user.getEmployeeNo());
         userRepository.save(user);
 
         return "redirect:/?registerSuccess=true";

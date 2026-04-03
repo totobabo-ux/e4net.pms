@@ -48,6 +48,39 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- MariaDB JDBC -->
+        <dependency>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+            <version>3.5.1</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Oracle JDBC (ojdbc11) -->
+        <dependency>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc11</artifactId>
+            <version>23.6.0.24.10</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- SQL Server JDBC -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>12.8.1.jre11</version>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- Tibero JDBC: Maven Central 미제공 — tibero-jdbc.jar를 lib/에 추가 후 system scope 사용
+        <dependency>
+            <groupId>com.tmax.tibero</groupId>
+            <artifactId>tibero-jdbc</artifactId>
+            <version>7</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/tibero-jdbc.jar</systemPath>
+        </dependency>
+        -->
+
         <!-- Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

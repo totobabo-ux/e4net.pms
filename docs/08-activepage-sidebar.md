@@ -16,14 +16,14 @@
 | `biz-risk-risk` | 사업관리 > 위험관리 > 위험관리 | (미구현) |
 | `biz-risk-issue` | 사업관리 > 위험관리 > 이슈관리 | (미구현) |
 | `exec-analysis-flow` | 사업수행 > 분석 > 업무흐름 | (미구현) |
-| `exec-analysis-menu` | 사업수행 > 분석 > 메뉴구조 | (미구현) |
+| `exec-analysis-menu` | 사업수행 > 분석 > 메뉴구조 | `/menu-structure` |
 | `exec-design-interface` | 사업수행 > 설계 > 인터페이스 목록 | (미구현) |
-| `exec-design-screen` | 사업수행 > 설계 > 화면목록 | (미구현) |
+| `exec-design-screen` | 사업수행 > 설계 > 화면목록 | `/screen-list` |
 | `exec-design-program` | 사업수행 > 설계 > 프로그램목록 | (미구현) |
 | `exec-impl-unit` | 사업수행 > 구현 > 단위테스트 목록 | (미구현) |
 | `exec-test-integration` | 사업수행 > 시험 > 통합테스트 목록 | (미구현) |
-| `community-notice-list` | 커뮤니티 > 공지사항 | (미구현) |
-| `community-archive-list` | 커뮤니티 > 자료실 | (미구현) |
+| `community-notice-list` | 커뮤니티 > 공지사항 | `/notice` |
+| `community-archive-list` | 커뮤니티 > 자료실 | `/archive` |
 | `admin-project-list` | 관리자 > 사업 관리 > 사업 목록 | `/project/list` |
 | `admin-user-list` | 관리자 > 사용자 관리 > 사용자 목록 | `/admin/users` |
 | `admin-role-list` | 관리자 > 권한 관리 > 권한 목록 | (미구현) |

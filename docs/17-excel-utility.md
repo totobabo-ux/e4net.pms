@@ -170,3 +170,30 @@ Optional<XxxEntity> findByProject_IdAndBizId(Long projectId, String bizId);
 - upsert 키가 되는 비즈니스 ID 컬럼은 헤더에 명확히 표시하고, 업무 설명에 "이 컬럼 기준으로 수정/신규 구분" 안내 필수
 - `빈 파일` 업로드 시 `file.isEmpty()` 체크 후 에러 메시지 처리 필수
 - Controller import 필수: `XSSFWorkbook`, `ExcelUtil`, `HttpServletResponse`, `MultipartFile`, `LocalDate`, `Collectors`
+
+### ExcelUtil.getCellStringValue — NUMERIC 날짜 직렬 번호 파싱 (중요!)
+엑셀의 날짜 셀이 숫자 직렬(예: 46076)로 저장될 때 `DateUtil`로 변환해야 한다.
+```java
+// ExcelUtil.getCellStringValue NUMERIC 케이스
+case NUMERIC -> {
+    double d = cell.getNumericCellValue();
+    boolean looksLikeDate = DateUtil.isCellDateFormatted(cell)
+            || (d >= 36526 && d < 73050 && d == Math.floor(d));
+    if (looksLikeDate) {
+        try {
+            yield DateUtil.getLocalDateTime(d, false).toLocalDate().toString();
+        } catch (Exception ignored) {}
+    }
+    yield (d == Math.floor(d) && !Double.isInfinite(d))
+        ? String.valueOf((long) d) : String.valueOf(d);
+}
+```
+
+### 엑셀 업로드 — delete-all + insert 패턴 (WBS/이슈/위험 등 순서 의존 데이터)
+기존 upsert 대신 전체 삭제 후 재삽입하는 패턴.
+사용 시점: 행 순서(sortOrder)가 의미 있거나 모든 데이터를 교체해야 할 때.
+
+1. 첨부파일이 있는 경우: `findByEntityTypeAndEntityIdIn` → 물리 파일 삭제 → `deleteByEntityTypeAndEntityIdIn`
+2. 전체 엔티티 삭제: `repository.deleteAll(repository.findAll...)`
+3. 엑셀 행 순서대로 신규 INSERT (`sortOrder = 1`부터 순번 부여)
+4. 반환: `int[]{ inserted, 0, skipped }` (updated 항상 0)

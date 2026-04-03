@@ -157,76 +157,85 @@ public class IssueService {
     }
 
     /**
-     * 엑셀 워크북 생성 (다운로드용)
-     * 컬럼 순서: 관리번호(0) 이슈명(1) 제기자(2) 제기일자(3) 조치상태(4) 조치계획일자(5) 조치일자(6) 이슈내용(7) 조치계획내용(8) 조치내용(9) 비고(10)
+     * 엑셀 워크북 생성 (다운로드용) — 등록 화면 그룹 순서
+     * [이슈정보] 관리번호(0) 이슈명(1) 제기자(2) 제기일자(3) 이슈내용(4)
+     * [조치계획] 조치계획일자(5) 조치계획내용(6)
+     * [조치결과] 조치상태(7) 조치일자(8) 조치내용(9) 비고(10)
      */
     public XSSFWorkbook createExcelWorkbook(Long projectId) {
         List<Issue> list = findAllByProject(projectId);
-        String[] headers = { "관리번호", "이슈명", "제기자", "제기일자", "조치상태", "조치계획일자", "조치일자", "이슈내용", "조치계획내용", "조치내용", "비고" };
+        String[] headers = {
+            "관리번호", "이슈명", "제기자", "제기일자", "이슈내용",
+            "조치계획일자", "조치계획내용",
+            "조치상태", "조치일자", "조치내용", "비고"
+        };
         List<Object[]> rows = list.stream().map(r -> new Object[]{
             r.getIssueNo(), r.getIssueName(), r.getRaiser(),
             r.getRaisedDate() != null ? r.getRaisedDate().toString() : null,
-            r.getActionStatus(),
+            r.getIssueContent(),
             r.getActionPlanDate() != null ? r.getActionPlanDate().toString() : null,
+            r.getActionPlanContent(),
+            r.getActionStatus(),
             r.getActionDate() != null ? r.getActionDate().toString() : null,
-            r.getIssueContent(), r.getActionPlanContent(), r.getActionContent(), r.getNote()
+            r.getActionContent(), r.getNote()
         }).toList();
         return ExcelUtil.createWorkbook("이슈목록", headers, rows);
     }
 
     /**
-     * 엑셀 업로드 — upsert 처리
-     * 관리번호 기준으로 현재 사업 내 기존 데이터 수정, 없으면 신규 등록
-     * 컬럼 순서: 관리번호(0) 이슈명(1) 제기자(2) 제기일자(3) 조치상태(4) 조치계획일자(5) 조치일자(6) 이슈내용(7) 조치계획내용(8) 조치내용(9) 비고(10)
+     * 엑셀 업로드 — 기존 데이터 전체 삭제 후 재등록 (등록 화면 그룹 순서와 동일)
+     * [이슈정보] 관리번호(0) 이슈명(1) 제기자(2) 제기일자(3) 이슈내용(4)
+     * [조치계획] 조치계획일자(5) 조치계획내용(6)
+     * [조치결과] 조치상태(7) 조치일자(8) 조치내용(9) 비고(10)
      *
-     * @return int[] { 신규등록 수, 수정 수, 건너뜀 수 }
+     * @return int[] { 신규등록 수, 0(수정없음), 건너뜀 수 }
      */
     @Transactional
     public int[] upsertFromExcel(List<String[]> rows, Long projectId, String userId) {
-        int inserted = 0, updated = 0, skipped = 0;
+        @SuppressWarnings("null")
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("사업을 찾을 수 없습니다."));
+
+        // 기존 이슈 전체 삭제 (첨부파일 포함)
+        List<Issue> existingIssues = issueRepository.findAllByProject_IdOrderByIdAsc(projectId);
+        if (!existingIssues.isEmpty()) {
+            List<Long> issueIds = existingIssues.stream().map(Issue::getId).toList();
+            List<AttachFile> attachments = attachFileRepository.findByEntityTypeAndEntityIdIn(ENTITY_TYPE, issueIds);
+            attachments.forEach(a -> deletePhysicalFile(a.getFilePath()));
+            attachFileRepository.deleteByEntityTypeAndEntityIdIn(ENTITY_TYPE, issueIds);
+            issueRepository.deleteAll(existingIssues);
+        }
+
+        int inserted = 0, skipped = 0;
 
         for (String[] cells : rows) {
-            String issueNoVal   = getCell(cells, 0);
             String issueNameVal = getCell(cells, 1);
-            if (issueNoVal.isBlank() || issueNameVal.isBlank()) {
-                skipped++;
-                continue;
-            }
+            if (issueNameVal.isBlank()) { skipped++; continue; }
 
-            Issue entity;
-            boolean isNew;
-            var existing = issueRepository.findFirstByProject_IdAndIssueNo(projectId, issueNoVal);
-            if (existing.isPresent()) {
-                entity = existing.get();
-                isNew  = false;
-            } else {
-                entity = new Issue();
-                @SuppressWarnings("null")
-                Project project = projectRepository.findById(projectId)
-                        .orElseThrow(() -> new IllegalArgumentException("사업을 찾을 수 없습니다."));
-                entity.setProject(project);
-                entity.setRegId(userId);
-                isNew = true;
-            }
-
-            entity.setIssueNo(issueNoVal);
+            Issue entity = new Issue();
+            entity.setProject(project);
+            entity.setRegId(userId);
+            // [이슈정보]
+            entity.setIssueNo(getCell(cells, 0));
             entity.setIssueName(issueNameVal);
             entity.setRaiser(getCell(cells, 2));
             parseDate(getCell(cells, 3), entity::setRaisedDate);
-            String actionStatus = getCell(cells, 4);
-            entity.setActionStatus(actionStatus.isBlank() ? "미조치" : actionStatus);
+            entity.setIssueContent(getCell(cells, 4));
+            // [조치계획]
             parseDate(getCell(cells, 5), entity::setActionPlanDate);
-            parseDate(getCell(cells, 6), entity::setActionDate);
-            entity.setIssueContent(getCell(cells, 7));
-            entity.setActionPlanContent(getCell(cells, 8));
+            entity.setActionPlanContent(getCell(cells, 6));
+            // [조치결과]
+            String actionStatus = getCell(cells, 7);
+            entity.setActionStatus(actionStatus.isBlank() ? "미조치" : actionStatus);
+            parseDate(getCell(cells, 8), entity::setActionDate);
             entity.setActionContent(getCell(cells, 9));
             entity.setNote(getCell(cells, 10));
             entity.setUpdId(userId);
 
             issueRepository.save(entity);
-            if (isNew) inserted++; else updated++;
+            inserted++;
         }
-        return new int[]{ inserted, updated, skipped };
+        return new int[]{ inserted, 0, skipped };
     }
 
     // ── private ───────────────────────────────────────────────────

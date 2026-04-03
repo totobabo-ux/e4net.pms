@@ -116,7 +116,7 @@
                                     <select class="form-control" th:field="*{gradeCode}"
                                             th:classappend="${#fields.hasErrors('gradeCode')} ? 'is-invalid'">
                                         <option value="">-- 급수 선택 --</option>
-                                        <option th:each="c : ${gradeCodes}"
+                                        <option th:each="c : ${codes['GRADE']}"
                                                 th:value="${c.code}"
                                                 th:text="${c.codeName}"></option>
                                     </select>
@@ -132,7 +132,7 @@
                                     <select class="form-control" th:field="*{inputTypeCode}"
                                             th:classappend="${#fields.hasErrors('inputTypeCode')} ? 'is-invalid'">
                                         <option value="">-- 투입구분 선택 --</option>
-                                        <option th:each="c : ${inputTypeCodes}"
+                                        <option th:each="c : ${codes['INPUT_TYPE']}"
                                                 th:value="${c.code}"
                                                 th:text="${c.codeName}"></option>
                                     </select>
@@ -170,9 +170,8 @@
                             <div class="form-cell">
                                 <label class="form-label">상태</label>
                                 <select class="form-control" th:field="*{status}">
-                                    <option value="투입중">투입중</option>
-                                    <option value="대기">대기</option>
-                                    <option value="투입종료">투입종료</option>
+                                    <option th:each="c : ${codes['MANPOWER_STATUS']}"
+                                            th:value="${c.code}" th:text="${c.codeName}"></option>
                                 </select>
                             </div>
                             <div class="form-cell">

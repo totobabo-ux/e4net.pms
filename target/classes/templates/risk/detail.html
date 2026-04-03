@@ -64,11 +64,11 @@
                             <span class="detail-value" th:text="${risk.riskName}">-</span>
                         </div>
 
-                        <div class="detail-cell">
+                        <div class="detail-cell" style="border-right: 1px solid #d0d8e4;">
                             <span class="detail-label">위험유형</span>
                             <span class="detail-value" th:text="${risk.riskType ?: '-'}">-</span>
                         </div>
-                        <div class="detail-cell">
+                        <div class="detail-cell" style="border-right: none;">
                             <span class="detail-label">식별일자</span>
                             <span class="detail-value" th:text="${risk.identifiedDate ?: '-'}">-</span>
                         </div>
@@ -188,18 +188,15 @@
                                     <input type="text" class="form-control" th:field="*{riskName}" placeholder="위험명을 입력하세요">
                                 </div>
 
-                                <div class="form-cell">
+                                <div class="form-cell" style="border-right: 1px solid #f0f2f5;">
                                     <label class="form-label">위험유형</label>
                                     <select class="form-control" th:field="*{riskType}">
                                         <option value="">선택</option>
-                                        <option value="기술">기술</option>
-                                        <option value="일정">일정</option>
-                                        <option value="비용">비용</option>
-                                        <option value="인력">인력</option>
-                                        <option value="외부">외부</option>
+                                        <option th:each="c : ${codes['RISK_TYPE']}"
+                                                th:value="${c.code}" th:text="${c.codeName}"></option>
                                     </select>
                                 </div>
-                                <div class="form-cell">
+                                <div class="form-cell" style="border-right: none;">
                                     <label class="form-label">식별일자</label>
                                     <input type="date" class="form-control" th:field="*{identifiedDate}">
                                 </div>
@@ -224,18 +221,15 @@
                                 <div class="form-cell">
                                     <label class="form-label">발생가능성</label>
                                     <select class="form-control" th:field="*{probability}">
-                                        <option value="낮음">낮음</option>
-                                        <option value="보통">보통</option>
-                                        <option value="높음">높음</option>
+                                        <option th:each="c : ${codes['RISK_PROBABILITY']}"
+                                                th:value="${c.code}" th:text="${c.codeName}"></option>
                                     </select>
                                 </div>
                                 <div class="form-cell">
                                     <label class="form-label">영향도</label>
                                     <select class="form-control" th:field="*{impact}">
-                                        <option value="적음">적음</option>
-                                        <option value="보통">보통</option>
-                                        <option value="심각">심각</option>
-                                        <option value="매우심각">매우심각</option>
+                                        <option th:each="c : ${codes['RISK_IMPACT']}"
+                                                th:value="${c.code}" th:text="${c.codeName}"></option>
                                     </select>
                                 </div>
 
@@ -243,19 +237,15 @@
                                     <label class="form-label">위험등급</label>
                                     <select class="form-control" th:field="*{riskLevel}">
                                         <option value="">선택</option>
-                                        <option value="VERY LOW">VERY LOW</option>
-                                        <option value="LOW">LOW</option>
-                                        <option value="MODERATE">MODERATE</option>
-                                        <option value="HIGH">HIGH</option>
-                                        <option value="VERY HIGH">VERY HIGH</option>
+                                        <option th:each="c : ${codes['RISK_LEVEL']}"
+                                                th:value="${c.code}" th:text="${c.codeName}"></option>
                                     </select>
                                 </div>
                                 <div class="form-cell">
                                     <label class="form-label">위험상태</label>
                                     <select class="form-control" th:field="*{status}">
-                                        <option value="진행중">진행중</option>
-                                        <option value="해결">해결</option>
-                                        <option value="종료">종료</option>
+                                        <option th:each="c : ${codes['RISK_STATUS']}"
+                                                th:value="${c.code}" th:text="${c.codeName}"></option>
                                     </select>
                                 </div>
 
@@ -273,10 +263,8 @@
                                     <label class="form-label">대응전략</label>
                                     <select class="form-control" th:field="*{responseStrategy}">
                                         <option value="">선택</option>
-                                        <option value="회피">회피</option>
-                                        <option value="전가">전가</option>
-                                        <option value="완화">완화</option>
-                                        <option value="수용">수용</option>
+                                        <option th:each="c : ${codes['RISK_STRATEGY']}"
+                                                th:value="${c.code}" th:text="${c.codeName}"></option>
                                     </select>
                                 </div>
                                 <div class="form-cell">

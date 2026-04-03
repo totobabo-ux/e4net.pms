@@ -51,20 +51,17 @@
                         <span class="search-label">산출물 구분</span>
                         <select name="deliverableType" class="search-select w-md">
                             <option value="">전체</option>
-                            <option value="관리산출물" th:selected="${search.deliverableType == '관리산출물'}">관리산출물</option>
-                            <option value="개발산출물" th:selected="${search.deliverableType == '개발산출물'}">개발산출물</option>
+                            <option th:each="c : ${codes['DELIVERABLE_TYPE']}"
+                                    th:value="${c.code}" th:text="${c.codeName}"
+                                    th:selected="${search.deliverableType == c.code}"></option>
                         </select>
                         <div class="divider"></div>
                         <span class="search-label">단계</span>
                         <select name="stage" class="search-select w-md">
                             <option value="">전체</option>
-                            <option value="미도래"   th:selected="${search.stage == '미도래'}">미도래</option>
-                            <option value="미착수"   th:selected="${search.stage == '미착수'}">미착수</option>
-                            <option value="수행"     th:selected="${search.stage == '수행'}">수행</option>
-                            <option value="PL확인"   th:selected="${search.stage == 'PL확인'}">PL확인</option>
-                            <option value="PM확인"   th:selected="${search.stage == 'PM확인'}">PM확인</option>
-                            <option value="PMO확인"  th:selected="${search.stage == 'PMO확인'}">PMO확인</option>
-                            <option value="완료"     th:selected="${search.stage == '완료'}">완료</option>
+                            <option th:each="c : ${codes['DELIVERABLE_STAGE']}"
+                                    th:value="${c.code}" th:text="${c.codeName}"
+                                    th:selected="${search.stage == c.code}"></option>
                         </select>
                         <div class="divider"></div>
                         <span class="search-label">산출물명</span>

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메뉴구조 - e4net PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <!-- jsTree -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.16/themes/default/style.min.css">
+    <style>
+        /* ── 분할 패널 레이아웃 ─────────────────────────────── */
+        .menu-wrap {
+            display: flex;
+            gap: 14px;
+            height: calc(100vh - 190px);
+            min-height: 500px;
+        }
+
+        /* ── 좌측 트리 패널 ──────────────────────────────────── */
+        .tree-panel {
+            width: 340px;
+            flex-shrink: 0;
+            background: #fff;
+            border: 1px solid #dde3ec;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 12px;
+            background: #f4f6fa;
+            border-bottom: 1px solid #dde3ec;
+            font-size: 13px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .tree-toolbar { display: flex; gap: 4px; }
+        .btn-t {
+            padding: 3px 9px;
+            font-size: 11px;
+            border-radius: 3px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            line-height: 1.4;
+        }
+        .btn-t-add  { background:#2980b9; color:#fff; border-color:#2472a4; }
+        .btn-t-add:hover  { background:#2472a4; }
+        .btn-t-add:disabled  { background:#a8cce0; border-color:#a8cce0; cursor:not-allowed; }
+        .btn-t-del  { background:#e74c3c; color:#fff; border-color:#c0392b; }
+        .btn-t-del:hover  { background:#c0392b; }
+        .btn-t-del:disabled  { background:#f5aaaa; border-color:#f5aaaa; cursor:not-allowed; }
+
+        .tree-search {
+            padding: 7px 10px;
+            border-bottom: 1px solid #dde3ec;
+        }
+        .tree-search input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 5px 10px;
+            border: 1px solid #dde3ec;
+            border-radius: 4px;
+            font-size: 12px;
+            outline: none;
+            color: #2c3e50;
+        }
+        .tree-search input:focus { border-color: #2980b9; }
+
+        #menuTree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 6px 2px;
+        }
+        /* jsTree 커스텀 폰트 크기 */
+        #menuTree .jstree-anchor { font-size: 13px; }
+
+        /* ── 우측 상세 패널 ──────────────────────────────────── */
+        .detail-panel {
+            flex: 1;
+            background: #fff;
+            border: 1px solid #dde3ec;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .detail-panel-body {
+            flex: 1;
+            padding: 28px 32px;
+            overflow-y: auto;
+        }
+
+        /* 안내 메시지 */
+        .no-sel {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #b0bec5;
+            font-size: 13px;
+        }
+
+        /* 폼 행 */
+        .d-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 14px;
+            gap: 14px;
+        }
+        .d-row.top { align-items: flex-start; }
+        .d-label {
+            width: 110px;
+            flex-shrink: 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .d-value { flex: 1; font-size: 13px; }
+        .d-value input[type=text] {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 6px 10px;
+            border: 1px solid #dde3ec;
+            border-radius: 4px;
+            font-size: 13px;
+            outline: none;
+            color: #2c3e50;
+        }
+        .d-value input[type=text]:focus  { border-color: #2980b9; }
+        .d-value input[readonly]  {
+            background: #f7f8fa;
+            color: #718096;
+            cursor: default;
+        }
+        .d-divider { border: none; border-top: 1px solid #eee; margin: 6px 0 18px; }
+
+        /* 라디오 */
+        .radio-g { display: flex; gap: 18px; }
+        .radio-g label {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 13px; cursor: pointer; color: #2c3e50;
+        }
+
+        /* Depth 배지 */
+        .dbadge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .dbadge-1 { background: #e8f0fe; color: #1a73e8; }
+        .dbadge-2 { background: #e6f4ea; color: #1e8e3e; }
+        .dbadge-3 { background: #fce8e6; color: #d93025; }
+
+        /* 고정 메뉴 경고 */
+        .fixed-warn {
+            background: #fff8e1;
+            border: 1px solid #ffe082;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 12px;
+            color: #e65100;
+            margin-bottom: 14px;
+        }
+
+        /* 저장/취소 버튼 영역 */
+        .save-area {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 28px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+    <aside th:replace="~{layout/fragments :: sidebar('exec-analysis-menu')}"></aside>
+
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업수행</span>
+            <span class="sep">/</span><span>분석</span>
+            <span class="sep">/</span><span class="current">메뉴구조</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">
+                    메뉴구조
+                    <span th:if="${selectedProject != null}"
+                          style="font-size:13px;font-weight:normal;color:#2980b9;margin-left:10px;"
+                          th:text="'[ ' + ${selectedProject.projectName} + ' ]'"></span>
+                </div>
+                <div class="btn-group">
+                    <a class="btn btn-secondary" th:href="@{/menu-structure/excel/download}">&#11015; 엑셀 다운로드</a>
+                </div>
+            </div>
+
+            <!-- ── 분할 패널 ───────────────────────────────── -->
+            <div class="menu-wrap">
+
+                <!-- 좌측: 트리 패널 -->
+                <div class="tree-panel">
+                    <div class="panel-header">
+                        <span>&#128197; 메뉴 목록</span>
+                        <div class="tree-toolbar">
+                            <button class="btn-t btn-t-add" id="btnRoot"  title="루트 메뉴 추가">+ 루트</button>
+                            <button class="btn-t btn-t-add" id="btnChild" title="하위 메뉴 추가" disabled>+ 하위</button>
+                            <button class="btn-t btn-t-del" id="btnDel"   title="선택 메뉴 삭제" disabled>삭제</button>
+                        </div>
+                    </div>
+                    <div class="tree-search">
+                        <input type="text" id="treeSearch" placeholder="&#128269; 메뉴명으로 검색">
+                    </div>
+                    <div id="menuTree"></div>
+                </div>
+
+                <!-- 우측: 상세 패널 -->
+                <div class="detail-panel">
+                    <div class="panel-header">&#128204; 선택 메뉴 정보</div>
+                    <div class="detail-panel-body">
+
+                        <div class="no-sel" id="noSel">좌측에서 메뉴를 선택하거나 추가 버튼을 클릭하세요.</div>
+
+                        <div id="detailForm" style="display:none;">
+                            <!-- 히든 필드 -->
+                            <input type="hidden" id="fId">
+                            <input type="hidden" id="fParentId">
+                            <input type="hidden" id="fDepth">
+                            <input type="hidden" id="fIsNew">
+
+                            <!-- 읽기전용 정보 -->
+                            <div class="d-row">
+                                <span class="d-label">메뉴 코드</span>
+                                <span class="d-value"><input type="text" id="fCode" readonly placeholder="저장 시 자동 생성"></span>
+                            </div>
+                            <div class="d-row">
+                                <span class="d-label">상위 메뉴</span>
+                                <span class="d-value"><input type="text" id="fParentName" readonly></span>
+                            </div>
+                            <div class="d-row">
+                                <span class="d-label">Depth</span>
+                                <span class="d-value" id="fDepthBadge"></span>
+                            </div>
+
+                            <hr class="d-divider">
+
+                            <!-- 편집 가능 필드 -->
+                            <div class="d-row">
+                                <span class="d-label">메뉴명 <span style="color:#e74c3c;">※</span></span>
+                                <span class="d-value"><input type="text" id="fName" placeholder="메뉴명을 입력하세요" maxlength="100"></span>
+                            </div>
+                            <div class="d-row">
+                                <span class="d-label">Context Path</span>
+                                <span class="d-value"><input type="text" id="fPath" placeholder="예: /screen-list" maxlength="200"></span>
+                            </div>
+                            <div class="d-row">
+                                <span class="d-label">사용 여부</span>
+                                <span class="d-value">
+                                    <div class="radio-g">
+                                        <label><input type="radio" name="useYn" value="Y" checked> 사용</label>
+                                        <label><input type="radio" name="useYn" value="N"> 미사용</label>
+                                    </div>
+                                </span>
+                            </div>
+
+                            <div class="fixed-warn" id="fixedWarn" style="display:none;">
+                                &#9888; 고정 메뉴입니다. 메뉴명 · Context Path · 사용여부만 수정할 수 있습니다.
+                            </div>
+
+                            <div class="save-area">
+                                <button type="button" class="btn btn-cancel" id="btnCancel">&#10005; 취소</button>
+                                <button type="button" class="btn btn-primary" id="btnSave">&#10003; 저장</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div><!-- /.menu-wrap -->
+        </div>
+    </div>
+</div>
+
+<!-- jQuery + jsTree CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.16/jstree.min.js"></script>
+<script th:src="@{/js/common.js}"></script>
+<script>
+/* ================================================================
+   메뉴구조 관리 스크립트
+   ================================================================ */
+
+let selNodeId   = null;   // 현재 선택된 jsTree 노드 ID (string)
+let selNodeData = null;   // 선택된 노드의 data 객체
+
+// ── jsTree 초기화 ───────────────────────────────────────────────
+$('#menuTree').jstree({
+    core: {
+        data: { url: '/menu-structure/tree', dataType: 'json' },
+        check_callback: true,       // create_node / rename_node / delete_node 허용
+        themes: { responsive: false }
+    },
+    plugins: ['search', 'wholerow'],
+    search: { case_insensitive: true, show_only_matches: true }
+});
+
+// 트리 로드 완료 → 모든 노드 열기
+$('#menuTree').on('loaded.jstree', function() {
+    $(this).jstree('open_all');
+});
+
+// 노드 선택
+$('#menuTree').on('select_node.jstree', function(e, data) {
+    selNodeId   = data.node.id;
+    selNodeData = data.node.data;
+    setToolbar(selNodeData.depth, selNodeData.fixedYn);
+    loadDetail(selNodeId);
+});
+
+// 노드 선택 해제
+$('#menuTree').on('deselect_node.jstree', function() {
+    selNodeId   = null;
+    selNodeData = null;
+    setToolbar(null, null);
+});
+
+// ── 검색 ────────────────────────────────────────────────────────
+let searchTimer;
+$('#treeSearch').on('input', function() {
+    clearTimeout(searchTimer);
+    const v = $(this).val();
+    searchTimer = setTimeout(() => $('#menuTree').jstree('search', v), 300);
+});
+
+// ── 툴바 버튼 활성화 ────────────────────────────────────────────
+function setToolbar(depth, fixedYn) {
+    const hasSel = depth !== null;
+    document.getElementById('btnChild').disabled = !hasSel || depth >= 3;
+    document.getElementById('btnDel').disabled   = !hasSel;
+}
+
+// ── 버튼 이벤트 ─────────────────────────────────────────────────
+document.getElementById('btnRoot').addEventListener('click', function() {
+    deselectTree();
+    showNewForm(null, 1, '없음 (루트)');
+});
+
+document.getElementById('btnChild').addEventListener('click', function() {
+    if (!selNodeId) return;
+    const pName = selNodeData.menuName + ' (' + selNodeData.menuCode + ')';
+    showNewForm(selNodeId, selNodeData.depth + 1, pName);
+});
+
+document.getElementById('btnDel').addEventListener('click', function() {
+    if (!selNodeId) return;
+    if (!confirm('선택한 메뉴를 삭제하시겠습니까?\n하위 메뉴가 있으면 삭제할 수 없습니다.')) return;
+    doDelete(selNodeId);
+});
+
+document.getElementById('btnSave').addEventListener('click', doSave);
+
+document.getElementById('btnCancel').addEventListener('click', function() {
+    const isNew = document.getElementById('fIsNew').value === 'true';
+    if (!isNew && selNodeId) {
+        loadDetail(selNodeId);      // 원본 데이터 복원
+    } else {
+        hideForm();
+    }
+});
+
+// ── 상세 로드 ────────────────────────────────────────────────────
+function loadDetail(nodeId) {
+    fetch('/menu-structure/' + nodeId + '/detail')
+        .then(r => r.json())
+        .then(d => fillForm(d, false));
+}
+
+// ── 폼 제어 ─────────────────────────────────────────────────────
+function fillForm(d, isNew) {
+    document.getElementById('noSel').style.display      = 'none';
+    document.getElementById('detailForm').style.display = 'block';
+
+    document.getElementById('fId').value       = d.id        || '';
+    document.getElementById('fParentId').value = d.parentId  || '';
+    document.getElementById('fDepth').value    = d.depth     || '';
+    document.getElementById('fIsNew').value    = isNew ? 'true' : 'false';
+
+    document.getElementById('fCode').value       = isNew ? '저장 시 자동 생성' : (d.menuCode || '');
+    document.getElementById('fParentName').value = d.parentName || '없음 (루트)';
+    document.getElementById('fName').value       = isNew ? '' : (d.menuName || '');
+    document.getElementById('fPath').value       = d.contextPath || '';
+
+    // Depth 배지
+    const depthLabel = ['', '1 (루트)', '2', '3'];
+    const depthClass = ['', 'dbadge-1', 'dbadge-2', 'dbadge-3'];
+    const dep = d.depth || 1;
+    document.getElementById('fDepthBadge').innerHTML =
+        '<span class="dbadge ' + depthClass[dep] + '">' + depthLabel[dep] + '</span>';
+
+    // 사용여부
+    document.querySelectorAll('input[name=useYn]').forEach(r => {
+        r.checked = (r.value === (d.useYn || 'Y'));
+    });
+
+    // 고정 메뉴 경고
+    document.getElementById('fixedWarn').style.display =
+        (d.fixedYn === 'Y') ? 'block' : 'none';
+}
+
+function showNewForm(parentId, depth, parentName) {
+    fillForm({
+        id: null, parentId: parentId,
+        parentName: parentName,
+        menuCode: null, menuName: '',
+        contextPath: '', depth: depth,
+        fixedYn: 'N', useYn: 'Y'
+    }, true);
+    document.getElementById('fName').focus();
+}
+
+function hideForm() {
+    document.getElementById('noSel').style.display      = 'flex';
+    document.getElementById('detailForm').style.display = 'none';
+    deselectTree();
+}
+
+function deselectTree() {
+    $('#menuTree').jstree('deselect_all');
+    selNodeId   = null;
+    selNodeData = null;
+    setToolbar(null, null);
+}
+
+// ── 저장 ─────────────────────────────────────────────────────────
+function doSave() {
+    const name = document.getElementById('fName').value.trim();
+    if (!name) {
+        alert('메뉴명을 입력해주세요.');
+        document.getElementById('fName').focus();
+        return;
+    }
+
+    const id      = document.getElementById('fId').value;
+    const isNew   = document.getElementById('fIsNew').value === 'true';
+    const parentId = document.getElementById('fParentId').value || null;
+    const payload = {
+        menuName:    name,
+        contextPath: document.getElementById('fPath').value.trim(),
+        useYn:       document.querySelector('input[name=useYn]:checked').value
+    };
+
+    if (isNew) {
+        payload.parentId = parentId ? parseInt(parentId) : null;
+        fetch('/menu-structure', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (!res.success) { alert('오류: ' + res.message); return; }
+            const newId = String(res.id);
+            // 트리 새로고침 후 신규 노드 선택
+            $('#menuTree').jstree(true).refresh();
+            $('#menuTree').one('refresh.jstree', function() {
+                $(this).jstree('select_node', newId);
+            });
+        });
+    } else {
+        fetch('/menu-structure/' + id + '/edit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (!res.success) { alert('오류: ' + res.message); return; }
+            // 트리 노드 텍스트 갱신
+            const code = document.getElementById('fCode').value;
+            $('#menuTree').jstree('rename_node', selNodeId, name + ' (' + code + ')');
+            if (selNodeData) {
+                selNodeData.menuName    = name;
+                selNodeData.contextPath = payload.contextPath;
+                selNodeData.useYn       = payload.useYn;
+            }
+        });
+    }
+}
+
+// ── 삭제 ─────────────────────────────────────────────────────────
+function doDelete(nodeId) {
+    fetch('/menu-structure/' + nodeId + '/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (!res.success) { alert('삭제 실패: ' + res.message); return; }
+        $('#menuTree').jstree('delete_node', nodeId);
+        hideForm();
+    });
+}
+</script>
+</body>
+</html>

@@ -44,11 +44,17 @@ public class User {
     @Column(name = "email", length = 100)
     private String email;               // 이메일
 
+    @Column(name = "reg_id", length = 50, updatable = false)
+    private String regId;               // 등록자 ID
+
+    @Column(name = "upd_id", length = 50)
+    private String updId;               // 수정자 ID
+
     @CreatedDate
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "reg_dt", updatable = false)
+    private LocalDateTime regDt;        // 등록일시
 
     @LastModifiedDate
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "upd_dt")
+    private LocalDateTime updDt;        // 수정일시
 }

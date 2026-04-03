@@ -4,6 +4,7 @@ import com.e4net.pms.dto.ManpowerDto;
 import com.e4net.pms.dto.ManpowerSearchDto;
 import com.e4net.pms.entity.Project;
 import com.e4net.pms.entity.ProjectManpower;
+import com.e4net.pms.entity.User;
 import com.e4net.pms.service.ManpowerService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -26,6 +27,12 @@ import java.util.List;
 public class ManpowerController {
 
     private final ManpowerService manpowerService;
+
+    /** 로그인 사용자 ID 반환 */
+    private String getLoginUserId(HttpSession session) {
+        User user = (User) session.getAttribute("loginUser");
+        return user != null ? user.getEmployeeNo() : "";
+    }
 
     /** 세션에서 선택된 프로젝트 반환 (없으면 null) */
     private Project getSelectedProject(HttpSession session) {
@@ -91,7 +98,7 @@ public class ManpowerController {
             addFormAttributes(model, selectedProject);
             return "manpower/form";
         }
-        manpowerService.save(dto);
+        manpowerService.save(dto, getLoginUserId(session));
         redirectAttributes.addFlashAttribute("successMessage", "인력이 등록되었습니다.");
         return "redirect:/manpower";
     }
@@ -103,8 +110,6 @@ public class ManpowerController {
         if (isNotReady(session)) return "redirect:/project-select";
         ProjectManpower entity = manpowerService.findById(id);
         model.addAttribute("manpower", manpowerService.toDto(entity));
-        model.addAttribute("gradeCodes", manpowerService.getGradeCodes());
-        model.addAttribute("inputTypeCodes", manpowerService.getInputTypeCodes());
         return "manpower/detail";
     }
 
@@ -139,7 +144,7 @@ public class ManpowerController {
             addFormAttributes(model, selectedProject);
             return "manpower/form";
         }
-        manpowerService.update(id, dto);
+        manpowerService.update(id, dto, getLoginUserId(session));
         redirectAttributes.addFlashAttribute("successMessage", "인력 정보가 수정되었습니다.");
         return "redirect:/manpower/" + id;
     }
@@ -157,8 +162,7 @@ public class ManpowerController {
     /** 폼 공통 속성: 선택된 사업만 드롭다운에 표시 */
     private void addFormAttributes(Model model, Project selectedProject) {
         // 사업관리 컨텍스트에서는 선택된 프로젝트만 제공 (폼에서 변경 불가)
+        // 공통코드(gradeCodes, inputTypeCodes 등)는 CommonCodeAdvice 에서 자동 주입
         model.addAttribute("projects", List.of(selectedProject));
-        model.addAttribute("gradeCodes", manpowerService.getGradeCodes());
-        model.addAttribute("inputTypeCodes", manpowerService.getInputTypeCodes());
     }
 }

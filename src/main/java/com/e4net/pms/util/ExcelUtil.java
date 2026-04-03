@@ -155,6 +155,14 @@ public class ExcelUtil {
             case STRING  -> cell.getStringCellValue().trim();
             case NUMERIC -> {
                 double d = cell.getNumericCellValue();
+                // 날짜 포맷이 적용됐거나, 2000~2099년 범위의 날짜 시리얼 정수값
+                boolean looksLikeDate = DateUtil.isCellDateFormatted(cell)
+                        || (d >= 36526 && d < 73050 && d == Math.floor(d));
+                if (looksLikeDate) {
+                    try {
+                        yield DateUtil.getLocalDateTime(d, false).toLocalDate().toString();
+                    } catch (Exception ignored) {}
+                }
                 yield (d == Math.floor(d) && !Double.isInfinite(d))
                     ? String.valueOf((long) d) : String.valueOf(d);
             }

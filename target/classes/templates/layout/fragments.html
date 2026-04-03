@@ -11,7 +11,7 @@
        biz-report-regular, biz-report-weekly, biz-report-monthly, biz-report-meeting
        biz-risk-risk, biz-risk-issue
        exec-analysis-flow, exec-analysis-menu
-       exec-design-interface, exec-design-screen, exec-design-program
+       exec-design-interface, exec-design-screen, exec-design-program, exec-design-table
        exec-impl-unit
        exec-test-integration
        community-notice-list
@@ -133,7 +133,7 @@
                     <div class="menu-group-header">분석<span class="arrow-sm">&#9660;</span></div>
                     <ul class="submenu">
                         <li th:classappend="${activePage == 'exec-analysis-flow'} ? 'active'"><a href="#">업무흐름</a></li>
-                        <li th:classappend="${activePage == 'exec-analysis-menu'} ? 'active'"><a href="#">메뉴구조</a></li>
+                        <li th:classappend="${activePage == 'exec-analysis-menu'} ? 'active'"><a href="/menu-structure">메뉴구조</a></li>
                     </ul>
                 </li>
 
@@ -143,8 +143,9 @@
                     <div class="menu-group-header">설계<span class="arrow-sm">&#9660;</span></div>
                     <ul class="submenu">
                         <li th:classappend="${activePage == 'exec-design-interface'} ? 'active'"><a href="#">인터페이스 목록</a></li>
-                        <li th:classappend="${activePage == 'exec-design-screen'} ? 'active'"><a href="#">화면목록</a></li>
+                        <li th:classappend="${activePage == 'exec-design-screen'} ? 'active'"><a href="/screen-list">화면목록</a></li>
                         <li th:classappend="${activePage == 'exec-design-program'} ? 'active'"><a href="#">프로그램목록</a></li>
+                        <li th:classappend="${activePage == 'exec-design-table'} ? 'active'"><a href="/admin/system/database">테이블목록</a></li>
                     </ul>
                 </li>
 
@@ -183,7 +184,7 @@
                     th:classappend="${activePage != null and activePage.startsWith('community-notice')} ? 'open'">
                     <div class="menu-group-header">공지사항<span class="arrow-sm">&#9660;</span></div>
                     <ul class="submenu">
-                        <li th:classappend="${activePage == 'community-notice-list'} ? 'active'"><a href="#">공지사항 목록</a></li>
+                        <li th:classappend="${activePage == 'community-notice-list'} ? 'active'"><a href="/notice">공지사항 목록</a></li>
                     </ul>
                 </li>
 
@@ -192,7 +193,7 @@
                     th:classappend="${activePage != null and activePage.startsWith('community-archive')} ? 'open'">
                     <div class="menu-group-header">자료실<span class="arrow-sm">&#9660;</span></div>
                     <ul class="submenu">
-                        <li th:classappend="${activePage == 'community-archive-list'} ? 'active'"><a href="#">자료실 목록</a></li>
+                        <li th:classappend="${activePage == 'community-archive-list'} ? 'active'"><a href="/archive">자료실 목록</a></li>
                     </ul>
                 </li>
 
@@ -236,6 +237,7 @@
                         <li th:classappend="${activePage == 'admin-role-list'} ? 'active'"><a href="#">권한 목록</a></li>
                     </ul>
                 </li>
+
 
             </ul>
         </li>

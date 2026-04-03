@@ -55,19 +55,17 @@
                         <span class="search-label">위험유형</span>
                         <select name="riskType" class="search-select w-md">
                             <option value="">전체</option>
-                            <option value="기술"   th:selected="${search.riskType == '기술'}">기술</option>
-                            <option value="일정"   th:selected="${search.riskType == '일정'}">일정</option>
-                            <option value="비용"   th:selected="${search.riskType == '비용'}">비용</option>
-                            <option value="인력"   th:selected="${search.riskType == '인력'}">인력</option>
-                            <option value="외부"   th:selected="${search.riskType == '외부'}">외부</option>
+                            <option th:each="c : ${codes['RISK_TYPE']}"
+                                    th:value="${c.code}" th:text="${c.codeName}"
+                                    th:selected="${search.riskType == c.code}"></option>
                         </select>
                         <div class="divider"></div>
                         <span class="search-label">상태</span>
                         <select name="status" class="search-select w-md">
                             <option value="">전체</option>
-                            <option value="진행중" th:selected="${search.status == '진행중'}">진행중</option>
-                            <option value="해결"   th:selected="${search.status == '해결'}">해결</option>
-                            <option value="종료"   th:selected="${search.status == '종료'}">종료</option>
+                            <option th:each="c : ${codes['RISK_STATUS']}"
+                                    th:value="${c.code}" th:text="${c.codeName}"
+                                    th:selected="${search.status == c.code}"></option>
                         </select>
                         <button type="submit" class="btn-search">&#128269; 검색</button>
                     </div>

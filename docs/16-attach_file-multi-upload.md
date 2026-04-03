@@ -46,6 +46,12 @@ public class AttachFile {
 public interface AttachFileRepository extends JpaRepository<AttachFile, Long> {
     List<AttachFile> findByEntityTypeAndEntityIdOrderByRegDtAsc(String entityType, Long entityId);
     void deleteByEntityTypeAndEntityId(String entityType, Long entityId);
+
+    /** 여러 엔티티의 첨부파일 일괄 조회 (엑셀 업로드 delete-all 패턴용) */
+    List<AttachFile> findByEntityTypeAndEntityIdIn(String entityType, List<Long> entityIds);
+
+    /** 여러 엔티티의 첨부파일 일괄 삭제 */
+    void deleteByEntityTypeAndEntityIdIn(String entityType, List<Long> entityIds);
 }
 ```
 

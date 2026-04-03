@@ -40,6 +40,7 @@
             <form id="requirementForm"
                   th:action="${mode == 'create'} ? @{/requirement} : @{/requirement/{id}/edit(id=${requirement.id})}"
                   method="post"
+                  enctype="multipart/form-data"
                   th:object="${requirement}">
 
                 <div class="form-card">
@@ -77,9 +78,8 @@
                                 <div style="display:flex; gap:8px; flex:1;">
                                     <select class="form-control" th:field="*{sourceType}" style="flex:0 0 140px;">
                                         <option value="">-- 출처 선택 --</option>
-                                        <option value="제안요청서">제안요청서</option>
-                                        <option value="회의록">회의록</option>
-                                        <option value="기타">기타</option>
+                                        <option th:each="c : ${codes['REQ_SOURCE']}"
+                                                th:value="${c.code}" th:text="${c.codeName}"></option>
                                     </select>
                                     <input type="text" class="form-control" th:field="*{sourceContent}" placeholder="출처 내용을 입력하세요">
                                 </div>
@@ -90,16 +90,15 @@
                                 <label class="form-label">분류</label>
                                 <select class="form-control" th:field="*{category}">
                                     <option value="">-- 분류 선택 --</option>
-                                    <option value="기능">기능</option>
-                                    <option value="비기능">비기능</option>
+                                    <option th:each="c : ${codes['REQ_TYPE']}"
+                                            th:value="${c.code}" th:text="${c.codeName}"></option>
                                 </select>
                             </div>
                             <div class="form-cell">
                                 <label class="form-label">우선순위</label>
                                 <select class="form-control" th:field="*{priority}">
-                                    <option value="상">상</option>
-                                    <option value="중">중</option>
-                                    <option value="하">하</option>
+                                    <option th:each="c : ${codes['REQ_PRIORITY']}"
+                                            th:value="${c.code}" th:text="${c.codeName}"></option>
                                 </select>
                             </div>
 
@@ -107,11 +106,8 @@
                             <div class="form-cell">
                                 <label class="form-label">상태</label>
                                 <select class="form-control" th:field="*{status}">
-                                    <option value="등록">등록</option>
-                                    <option value="분석중">분석중</option>
-                                    <option value="개발중">개발중</option>
-                                    <option value="완료">완료</option>
-                                    <option value="보류">보류</option>
+                                    <option th:each="c : ${codes['REQ_STATUS']}"
+                                            th:value="${c.code}" th:text="${c.codeName}"></option>
                                 </select>
                             </div>
                             <div class="form-cell">
@@ -146,6 +142,23 @@
                                           style="resize:vertical;"></textarea>
                             </div>
 
+                            <!-- 첨부파일 -->
+                            <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                                <label class="form-label">첨부파일</label>
+                                <div class="attach-zone">
+                                    <div id="pendingList_label" class="attach-section-label" style="display:none; margin-top:8px;">추가할 파일</div>
+                                    <div id="pendingList"></div>
+                                    <div class="attach-add-area">
+                                        <button type="button" class="btn-attach-add"
+                                                onclick="document.getElementById('attachFileInput').click()">
+                                            &#128206; 파일 추가
+                                        </button>
+                                        <span class="attach-hint">여러 파일 동시 선택 가능</span>
+                                    </div>
+                                    <input type="file" id="attachFileInput" name="attachFiles" multiple style="display:none;">
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -156,5 +169,8 @@
 </div>
 
 <script th:src="@{/js/common.js}"></script>
+<script>
+    initAttachUpload('attachFileInput', 'pendingList', 'requirementForm');
+</script>
 </body>
 </html>

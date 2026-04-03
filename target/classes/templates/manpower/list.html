@@ -55,9 +55,9 @@
                         <span class="search-label">상태</span>
                         <select name="status" class="search-select w-md">
                             <option value="">전체</option>
-                            <option value="투입중"   th:selected="${search.status == '투입중'}">투입중</option>
-                            <option value="대기"     th:selected="${search.status == '대기'}">대기</option>
-                            <option value="투입종료" th:selected="${search.status == '투입종료'}">투입종료</option>
+                            <option th:each="c : ${codes['MANPOWER_STATUS']}"
+                                    th:value="${c.code}" th:text="${c.codeName}"
+                                    th:selected="${search.status == c.code}"></option>
                         </select>
                         <button type="submit" class="btn-search">&#128269; 검색</button>
                     </div>
@@ -92,7 +92,7 @@
                             </tr>
                             <tr th:each="m, stat : ${page.content}">
                                 <td th:text="${page.number * page.size + stat.count}"></td>
-                                <td th:text="${m.userName}"></td>
+                                <td th:text="${m.user.name}"></td>
                                 <td th:text="${m.company ?: '-'}"></td>
                                 <td th:text="${m.role}"></td>
                                 <td th:text="${m.gradeCode}"></td>
@@ -110,7 +110,7 @@
                                             onclick="location.href=this.dataset.href">수정</button>
                                     <button class="btn-sm-del"
                                             th:data-id="${m.id}"
-                                            th:data-name="${m.userName}"
+                                            th:data-name="${m.user.name}"
                                             onclick="openDeleteModal(this.dataset.id, this.dataset.name)">삭제</button>
                                 </td>
                             </tr>

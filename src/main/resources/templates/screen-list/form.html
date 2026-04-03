@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${mode == 'create'} ? '화면목록 등록 - e4net PMS' : '화면목록 수정 - e4net PMS'">화면목록 폼</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+    <aside th:replace="~{layout/fragments :: sidebar('exec-design-screen')}"></aside>
+
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업수행</span>
+            <span class="sep">/</span><span>설계</span>
+            <span class="sep">/</span><a href="/screen-list">화면목록</a>
+            <span class="sep">/</span>
+            <span class="current" th:text="${mode == 'create'} ? '등록' : '수정'">등록</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title" th:text="${mode == 'create'} ? '화면목록 등록' : '화면목록 수정'">화면목록 등록</div>
+                <div class="btn-group">
+                    <button type="submit" form="screenForm" class="btn btn-primary">
+                        &#10003; <span th:text="${mode == 'create'} ? '등록' : '저장'">등록</span>
+                    </button>
+                    <button type="button" class="btn btn-cancel" onclick="location.href='/screen-list'">&#10005; 취소</button>
+                </div>
+            </div>
+
+            <form id="screenForm"
+                  th:action="${mode == 'create'} ? @{/screen-list} : @{/screen-list/{id}/edit(id=${screen.id})}"
+                  method="post"
+                  enctype="multipart/form-data"
+                  th:object="${screen}">
+
+                <input type="hidden" th:field="*{projectId}">
+
+                <div class="form-card">
+                    <div class="form-card-header">&#128196; 화면목록 정보</div>
+                    <div class="form-card-body">
+                        <div class="form-grid-2col">
+
+                            <!-- 사업명 -->
+                            <div class="form-cell" style="grid-column: 1 / -1;">
+                                <label class="form-label">사업명</label>
+                                <span th:text="${session.selectedProject != null ? session.selectedProject.projectName : ''}"
+                                      style="font-weight:bold; color:#2c3e50;"></span>
+                            </div>
+
+                            <!-- 메뉴Level1 / Level2 -->
+                            <div class="form-cell" style="border-right: 1px solid #f0f2f5;">
+                                <label class="form-label">메뉴Level1</label>
+                                <select class="form-control" th:field="*{menuLevel1}">
+                                    <option value="">-- 선택 --</option>
+                                    <option th:each="c : ${codes['SCREEN_MENU_LEVEL1']}"
+                                            th:value="${c.code}" th:text="${c.codeName}"></option>
+                                </select>
+                            </div>
+                            <div class="form-cell" style="border-right: none;">
+                                <label class="form-label">메뉴Level2</label>
+                                <input type="text" class="form-control" th:field="*{menuLevel2}"
+                                       placeholder="예: 표준관리, 보고관리">
+                            </div>
+
+                            <!-- 메뉴Level3 / 분류 -->
+                            <div class="form-cell" style="border-right: 1px solid #f0f2f5;">
+                                <label class="form-label">메뉴Level3</label>
+                                <input type="text" class="form-control" th:field="*{menuLevel3}"
+                                       placeholder="예: 산출물 관리">
+                            </div>
+                            <div class="form-cell" style="border-right: none;">
+                                <label class="form-label">분류</label>
+                                <select class="form-control" th:field="*{category}">
+                                    <option value="">-- 선택 --</option>
+                                    <option th:each="c : ${codes['SCREEN_CATEGORY']}"
+                                            th:value="${c.code}" th:text="${c.codeName}"></option>
+                                </select>
+                            </div>
+
+                            <!-- 화면명 -->
+                            <div class="form-cell" style="grid-column: 1 / -1;">
+                                <label class="form-label">화면명<span class="req">※</span></label>
+                                <input type="text" class="form-control" th:field="*{screenName}"
+                                       placeholder="화면명을 입력하세요">
+                            </div>
+
+                            <!-- 화면설명 -->
+                            <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                                <label class="form-label">화면설명</label>
+                                <textarea class="form-control" th:field="*{screenDesc}"
+                                          rows="3" placeholder="화면에 대한 설명을 입력하세요"
+                                          style="resize:vertical;"></textarea>
+                            </div>
+
+                            <!-- URL / 템플릿 파일 -->
+                            <div class="form-cell" style="border-right: 1px solid #f0f2f5;">
+                                <label class="form-label">URL</label>
+                                <input type="text" class="form-control" th:field="*{url}"
+                                       placeholder="예: GET /deliverable">
+                            </div>
+                            <div class="form-cell" style="border-right: none;">
+                                <label class="form-label">템플릿 파일</label>
+                                <input type="text" class="form-control" th:field="*{templateFile}"
+                                       placeholder="예: templates/deliverable/list.html">
+                            </div>
+
+                            <!-- 비고 -->
+                            <div class="form-cell" style="grid-column: 1 / -1;">
+                                <label class="form-label">비고</label>
+                                <input type="text" class="form-control" th:field="*{note}"
+                                       placeholder="비고사항 입력">
+                            </div>
+
+                            <!-- 첨부파일 -->
+                            <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                                <label class="form-label">첨부파일</label>
+                                <div class="attach-zone">
+                                    <div th:if="${not #lists.isEmpty(screen.attachments)}">
+                                        <div class="attach-section-label">기존 첨부파일</div>
+                                        <div th:each="att : ${screen.attachments}" class="attach-row attach-existing">
+                                            <span class="attach-icon">&#128196;</span>
+                                            <span class="attach-name" th:text="${att.fileName}"></span>
+                                            <span class="attach-size" th:text="${att.fileSizeDisplay}"></span>
+                                            <form th:action="@{/screen-list/{id}/attachment/{attId}/delete(id=${screen.id},attId=${att.id})}"
+                                                  method="post" style="margin:0; flex-shrink:0;">
+                                                <button type="submit" class="btn-sm-del"
+                                                        onclick="return confirm('이 첨부파일을 삭제하시겠습니까?')">삭제</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div id="pendingList_label" class="attach-section-label" style="display:none; margin-top:8px;">추가할 파일</div>
+                                    <div id="pendingList"></div>
+                                    <div class="attach-add-area">
+                                        <button type="button" class="btn-attach-add"
+                                                onclick="document.getElementById('attachFileInput').click()">
+                                            &#128206; 파일 추가
+                                        </button>
+                                        <span class="attach-hint">여러 파일 동시 선택 가능</span>
+                                    </div>
+                                    <input type="file" id="attachFileInput" name="attachFiles" multiple style="display:none;">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    initAttachUpload('attachFileInput', 'pendingList', 'screenForm');
+</script>
+</body>
+</html>

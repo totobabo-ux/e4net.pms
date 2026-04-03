@@ -43,9 +43,9 @@
                         <span class="search-label">구분</span>
                         <select name="category" class="search-select w-md">
                             <option value="">전체</option>
-                            <option value="SL" th:selected="${search.category == 'SL'}">SL</option>
-                            <option value="SM" th:selected="${search.category == 'SM'}">SM</option>
-                            <option value="서비스" th:selected="${search.category == '서비스'}">서비스</option>
+                            <option th:each="c : ${codes['PROJECT_CATEGORY']}"
+                                    th:value="${c.code}" th:text="${c.codeName}"
+                                    th:selected="${search.category == c.code}"></option>
                         </select>
                         <div class="divider"></div>
                         <span class="search-label">회사</span>

@@ -31,6 +31,11 @@ public class UserAdminController {
         return session.getAttribute("loginUser") == null;
     }
 
+    private String getLoginUserId(HttpSession session) {
+        User user = (User) session.getAttribute("loginUser");
+        return user != null ? user.getEmployeeNo() : "";
+    }
+
     /** 사용자 목록 (검색 + 페이징) */
     @GetMapping
     public String list(UserSearchDto search,
@@ -95,6 +100,7 @@ public class UserAdminController {
             user.setPassword(passwordEncoder.encode(newPassword));
         }
 
+        user.setUpdId(getLoginUserId(session));
         userRepository.save(user);
         ra.addFlashAttribute("successMessage", "사용자 정보가 수정되었습니다.");
         return "redirect:/admin/users";

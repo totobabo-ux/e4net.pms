@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${mode == 'create'} ? '자료 등록 - e4net PMS' : '자료 수정 - e4net PMS'">자료실 폼 - e4net PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css">
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+    <aside th:replace="~{layout/fragments :: sidebar('community-archive-list')}"></aside>
+
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>커뮤니티</span>
+            <span class="sep">/</span><a href="/archive">자료실</a>
+            <span class="sep">/</span>
+            <span class="current" th:text="${mode == 'create'} ? '자료 등록' : '자료 수정'">자료 등록</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title" th:text="${mode == 'create'} ? '자료 등록' : '자료 수정'">자료 등록</div>
+                <div class="btn-group">
+                    <button type="submit" form="communityForm" class="btn btn-primary">
+                        &#10003; <span th:text="${mode == 'create'} ? '등록' : '저장'">등록</span>
+                    </button>
+                    <button type="button" class="btn btn-cancel" onclick="location.href='/archive'">&#10005; 취소</button>
+                </div>
+            </div>
+
+            <form id="communityForm"
+                  th:action="${mode == 'create'} ? @{/archive} : @{/archive/{id}/edit(id=${community.id})}"
+                  method="post"
+                  enctype="multipart/form-data"
+                  th:object="${community}">
+
+                <div class="form-card">
+                    <div class="form-card-header">&#128196; 자료 정보</div>
+                    <div class="form-card-body">
+                        <div class="form-grid-2col">
+
+                            <!-- 제목 -->
+                            <div class="form-cell" style="grid-column: 1 / -1;">
+                                <label class="form-label">제목<span class="req">※</span></label>
+                                <div style="flex:1;">
+                                    <input type="text" class="form-control" th:field="*{title}"
+                                           th:classappend="${#fields.hasErrors('title')} ? 'is-invalid'"
+                                           placeholder="제목을 입력하세요">
+                                    <span class="field-error" th:if="${#fields.hasErrors('title')}"
+                                          th:errors="*{title}"></span>
+                                </div>
+                            </div>
+
+                            <!-- 작성자 / 작성일 -->
+                            <div class="form-cell" style="border-right: 1px solid #f0f2f5;">
+                                <label class="form-label">작성자</label>
+                                <input type="text" class="form-control" th:field="*{writer}" placeholder="작성자">
+                            </div>
+                            <div class="form-cell" style="border-right: none;">
+                                <label class="form-label">작성일</label>
+                                <input type="date" class="form-control" th:field="*{postDate}">
+                            </div>
+
+                            <!-- 내용 -->
+                            <div class="form-cell" style="grid-column: 1 / -1; align-items: flex-start;">
+                                <label class="form-label">내용</label>
+                                <div style="flex:1; min-width:0;">
+                                    <div id="editor" style="height:300px; background:#fff;"></div>
+                                    <input type="hidden" id="contentInput" th:field="*{content}">
+                                </div>
+                            </div>
+
+                            <!-- 첨부파일 -->
+                            <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                                <label class="form-label">첨부파일</label>
+                                <div class="attach-zone">
+                                    <div id="pendingList_label" class="attach-section-label" style="display:none; margin-top:8px;">추가할 파일</div>
+                                    <div id="pendingList"></div>
+                                    <div class="attach-add-area">
+                                        <button type="button" class="btn-attach-add"
+                                                onclick="document.getElementById('attachFileInput').click()">
+                                            &#128206; 파일 추가
+                                        </button>
+                                        <span class="attach-hint">여러 파일 동시 선택 가능</span>
+                                    </div>
+                                    <input type="file" id="attachFileInput" name="attachFiles" multiple style="display:none;">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+<script th:src="@{/js/common.js}"></script>
+<script>
+    var quill = new Quill('#editor', { theme: 'snow' });
+    // 수정 모드: 기존 내용 로드
+    var existing = document.getElementById('contentInput').value;
+    if (existing) quill.root.innerHTML = existing;
+    // 폼 제출 시 Quill 내용 → hidden input 동기화
+    document.getElementById('communityForm').addEventListener('submit', function() {
+        document.getElementById('contentInput').value = quill.root.innerHTML;
+    });
+    initAttachUpload('attachFileInput', 'pendingList', 'communityForm');
+</script>
+</body>
+</html>

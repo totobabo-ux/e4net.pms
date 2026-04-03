@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter @Setter @NoArgsConstructor
 public class RequirementDto {
 
@@ -31,4 +33,6 @@ public class RequirementDto {
     private String sourceType;           // 요구사항 출처 선택 (제안요청서/회의록/기타)
     private String sourceContent;        // 요구사항 출처 내용
     private String acceptance = "협의중"; // 수용여부 (협의중/수용/제외)
+
+    private List<AttachFileDto> attachments; // 첨부파일 목록
 }

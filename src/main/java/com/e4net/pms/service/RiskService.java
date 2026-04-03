@@ -159,41 +159,37 @@ public class RiskService {
     }
 
     /**
-     * 엑셀 업로드 — upsert 처리
-     * 위험코드 기준으로 현재 사업 내 기존 데이터 수정, 없으면 신규 등록
+     * 엑셀 업로드 — 기존 데이터 전체 삭제 후 재등록
      * 컬럼 순서: 위험코드(0) 위험명(1) 위험유형(2) 식별일자(3) 발생가능성(4) 영향도(5) 위험등급(6) 대응전략(7) 담당자(8) 위험상태(9) 대응계획(10) 활동결과(11)
      *
-     * @return int[] { 신규등록 수, 수정 수, 건너뜀 수 }
+     * @return int[] { 신규등록 수, 0(수정없음), 건너뜀 수 }
      */
     @Transactional
     public int[] upsertFromExcel(List<String[]> rows, Long projectId, String userId) {
-        int inserted = 0, updated = 0, skipped = 0;
+        @SuppressWarnings("null")
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("사업을 찾을 수 없습니다."));
+
+        // 기존 위험 전체 삭제 (첨부파일 포함)
+        List<Risk> existingRisks = riskRepository.findAllByProject_IdOrderByIdAsc(projectId);
+        if (!existingRisks.isEmpty()) {
+            List<Long> riskIds = existingRisks.stream().map(Risk::getId).toList();
+            List<AttachFile> attachments = attachFileRepository.findByEntityTypeAndEntityIdIn(ENTITY_TYPE, riskIds);
+            attachments.forEach(a -> deletePhysicalFile(a.getFilePath()));
+            attachFileRepository.deleteByEntityTypeAndEntityIdIn(ENTITY_TYPE, riskIds);
+            riskRepository.deleteAll(existingRisks);
+        }
+
+        int inserted = 0, skipped = 0;
 
         for (String[] cells : rows) {
-            String riskCodeVal = getCell(cells, 0);
             String riskNameVal = getCell(cells, 1);
-            if (riskCodeVal.isBlank() || riskNameVal.isBlank()) {
-                skipped++;
-                continue;
-            }
+            if (riskNameVal.isBlank()) { skipped++; continue; }
 
-            Risk entity;
-            boolean isNew;
-            var existing = riskRepository.findFirstByProject_IdAndRiskCode(projectId, riskCodeVal);
-            if (existing.isPresent()) {
-                entity = existing.get();
-                isNew = false;
-            } else {
-                entity = new Risk();
-                @SuppressWarnings("null")
-                Project project = projectRepository.findById(projectId)
-                        .orElseThrow(() -> new IllegalArgumentException("사업을 찾을 수 없습니다."));
-                entity.setProject(project);
-                entity.setRegId(userId);
-                isNew = true;
-            }
-
-            entity.setRiskCode(riskCodeVal);
+            Risk entity = new Risk();
+            entity.setProject(project);
+            entity.setRegId(userId);
+            entity.setRiskCode(getCell(cells, 0));
             entity.setRiskName(riskNameVal);
             entity.setRiskType(getCell(cells, 2));
             String identifiedDateVal = getCell(cells, 3);
@@ -214,9 +210,9 @@ public class RiskService {
             entity.setUpdId(userId);
 
             riskRepository.save(entity);
-            if (isNew) inserted++; else updated++;
+            inserted++;
         }
-        return new int[]{ inserted, updated, skipped };
+        return new int[]{ inserted, 0, skipped };
     }
 
     /** 엑셀 워크북 생성 (다운로드용) */

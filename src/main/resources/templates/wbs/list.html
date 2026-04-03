@@ -34,7 +34,7 @@
         /* ── 좌측 그리드 ── */
         .wbs-left         { display:flex; flex-direction:column; width:58%; min-width:260px; overflow:hidden; border-right:3px solid #2980b9; }
         .wbs-left-header  { flex-shrink:0; overflow:hidden; }
-        .wbs-left-body    { flex:1; overflow:auto; }
+        .wbs-left-body    { flex:1; overflow:auto; scrollbar-gutter:stable; }
 
         /* ── 드래그 리사이저 ── */
         .wbs-resizer { width:5px; background:#2980b9; cursor:col-resize; flex-shrink:0; }
@@ -57,6 +57,28 @@
         .wbs-tbl tr.selected td { background:#bee3f8 !important; }
         .wbs-tbl tr.selected:hover td { background:#90cdf4 !important; }
         .wbs-tbl tr.new-row td { background:#fffde7; }
+
+        /* ── WBS 레벨별 행 색상 (Level 4+ 는 기본 흰색) ── */
+        .wbs-tbl tr.level-1 td                { background:#82b8de; }
+        .wbs-tbl tr.level-2 td                { background:#b4d4ec; }
+        .wbs-tbl tr.level-3 td                { background:#d6ebf7; }
+        /* Level 행 내부 input/select: 배경 투명으로 td 색상 표시 */
+        .wbs-tbl tr.level-1 td input,
+        .wbs-tbl tr.level-1 td select         { font-weight:700; color:#0d2840; background:transparent !important; }
+        .wbs-tbl tr.level-2 td input,
+        .wbs-tbl tr.level-2 td select         { font-weight:600; color:#1a3a5c; background:transparent !important; }
+        .wbs-tbl tr.level-3 td input,
+        .wbs-tbl tr.level-3 td select         { font-weight:500; color:#253f58; background:transparent !important; }
+        /* readonly 셀은 반투명 어둠으로 비편집 구분 */
+        .wbs-tbl tr.level-1 td.td-id input,
+        .wbs-tbl tr.level-1 td.td-ro input    { background:rgba(0,0,0,0.07) !important; }
+        .wbs-tbl tr.level-2 td.td-id input,
+        .wbs-tbl tr.level-2 td.td-ro input    { background:rgba(0,0,0,0.07) !important; }
+        .wbs-tbl tr.level-3 td.td-id input,
+        .wbs-tbl tr.level-3 td.td-ro input    { background:rgba(0,0,0,0.07) !important; }
+        .wbs-tbl tr.level-1:hover td          { background:#6aaad5; }
+        .wbs-tbl tr.level-2:hover td          { background:#9fc8e4; }
+        .wbs-tbl tr.level-3:hover td          { background:#c4e0f2; }
         .wbs-tbl td input[type="text"],
         .wbs-tbl td input[type="number"] {
             width:100%; height:100%; border:none; background:transparent;
@@ -88,10 +110,17 @@
         .gantt-hdr-tbl th.today-col { background:#e74c3c !important; }
 
         .gantt-body        { position:relative; width:max-content; }
-        .gantt-row         { height:34px; position:relative; border-bottom:1px solid #e8ecf0; box-sizing:border-box; overflow:hidden; }
-        .gantt-row:hover   { background:#f0f7ff; }
+        .gantt-row          { height:34px; position:relative; border-bottom:1px solid #e8ecf0; box-sizing:border-box; overflow:hidden; }
+        .gantt-row:hover    { background:#f0f7ff; }
         .gantt-row.selected { background:#bee3f8 !important; }
         .gantt-row.new-row  { background:#fffde7; }
+        /* 간트 레벨 색상 (좌측 그리드와 동일) */
+        .gantt-row.level-1  { background:#82b8de; }
+        .gantt-row.level-2  { background:#b4d4ec; }
+        .gantt-row.level-3  { background:#d6ebf7; }
+        .gantt-row.level-1:hover { background:#6aaad5; }
+        .gantt-row.level-2:hover { background:#9fc8e4; }
+        .gantt-row.level-3:hover { background:#c4e0f2; }
 
         .gantt-grid-line    { position:absolute; top:0; bottom:0; width:1px; background:#eef0f3; pointer-events:none; }
         .gantt-grid-weekend { position:absolute; top:0; bottom:0; background:rgba(0,0,0,0.04); pointer-events:none; }
@@ -123,6 +152,10 @@
             <span class="sep">/</span><span class="current">사업일정(WBS)</span>
         </div>
 
+        <!-- 플래시 메시지 -->
+        <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+        <div class="alert alert-danger"  th:if="${errorMessage}"   th:text="${errorMessage}"></div>
+
         <!-- 알림 -->
         <div id="wbsMsg" class="wbs-msg"></div>
 
@@ -134,6 +167,12 @@
             <span class="page-title" style="color:#a0aec0; font-size:11px; margin-left:4px;">/ 사업일정(WBS)</span>
             <!-- 우측: 조작 버튼 -->
             <div style="margin-left:auto; display:flex; align-items:center; gap:6px;">
+                <a class="btn btn-secondary" th:href="@{/wbs/excel/download}"
+                   style="padding:5px 10px; font-size:12px;">&#11015; 엑셀 다운로드</a>
+                <button type="button" class="btn btn-secondary"
+                        style="padding:5px 10px; font-size:12px;"
+                        onclick="openUploadModal()">&#11014; 엑셀 업로드</button>
+                <div class="op-sep" style="height:18px; width:1px; background:#cbd5e0; margin:0 2px;"></div>
                 <span style="font-size:11px; color:#a0aec0;">줌:</span>
                 <button class="zoom-btn" onclick="changeZoom(-2)">－</button>
                 <button class="zoom-btn" onclick="changeZoom(2)">＋</button>
@@ -179,6 +218,32 @@
     </div>
 </div>
 
+<!-- 엑셀 업로드 모달 -->
+<div id="uploadModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <span class="modal-title">&#11014; 엑셀 업로드</span>
+            <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom:12px; color:#4a5568; font-size:13px;">
+                다운로드한 엑셀 파일의 데이터를 수정 후 업로드하세요.<br>
+                <strong style="color:#2980b9;">TASK ID</strong> 기준으로 기존 데이터는 수정, 신규 데이터는 등록됩니다.
+            </p>
+            <form id="uploadForm" th:action="@{/wbs/excel/upload}" method="post" enctype="multipart/form-data">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="file" name="excelFile" accept=".xlsx,.xls"
+                           class="form-control" style="flex:1;">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" form="uploadForm" class="btn btn-primary">업로드</button>
+            <button type="button" class="btn btn-cancel" onclick="closeUploadModal()">취소</button>
+        </div>
+    </div>
+</div>
+
 <script th:src="@{/js/common.js}"></script>
 <script th:inline="javascript">
 /*<![CDATA[*/
@@ -206,7 +271,7 @@ const COLS = [
     { key:'planStartDate',  label:'계획시작일',  w:96,  type:'date_g' },
     { key:'planEndDate',    label:'계획종료일',  w:96,  type:'date_g' },
     { key:'planDuration',   label:'계획기간',   w:53,  type:'num_ro' },
-    { key:'planRate',        label:'계획진척률',  w:58,  type:'num_ro' },
+    { key:'planRate',        label:'계획진척율',  w:58,  type:'num_ro' },
     { key:'actualStartDate', label:'실제시작일',  w:96,  type:'date'   },
     { key:'actualEndDate',   label:'실제종료일',  w:96,  type:'date'   },
     { key:'actualDuration',  label:'실제기간',    w:53,  type:'num_ro' },
@@ -279,6 +344,20 @@ function hasChildren(i) {
     return (rows[i + 1]._level || 1) > (rows[i]._level || 1);
 }
 
+/* 직계 자녀 행 인덱스 목록 (level+1인 행만, 서브트리 경계 내) */
+function getDirectChildren(i) {
+    const lvl = rows[i]._level || 1;
+    const result = [];
+    let j = i + 1;
+    while (j < rows.length) {
+        const cLvl = rows[j]._level || 1;
+        if (cLvl <= lvl) break;
+        if (cLvl === lvl + 1) result.push(j);
+        j++;
+    }
+    return result;
+}
+
 function getDescendants(i) {
     const lvl = rows[i]._level || 1;
     const result = [];
@@ -290,7 +369,7 @@ function getDescendants(i) {
     return result;
 }
 
-/* 현재일 기준 계획진척률 계산 */
+/* 현재일 기준 계획진척율 계산 */
 function calcPlanRate(startStr, endStr) {
     if (!startStr || !endStr) return null;
     const s = new Date(startStr), e = new Date(endStr);
@@ -311,7 +390,7 @@ function calcRowDerived(i) {
         const s = new Date(row.planStartDate), e = new Date(row.planEndDate);
         row.planDuration = e >= s ? daysBetween(s, e) + 1 : null;
     } else { row.planDuration = null; }
-    /* 계획진척률 (현재일 기준) */
+    /* 계획진척율 (현재일 기준) */
     row.planRate = calcPlanRate(row.planStartDate, row.planEndDate);
     /* 실제기간 */
     if (row.actualStartDate && row.actualEndDate) {
@@ -351,6 +430,19 @@ function calcAllDerived() {
 
         calcRowDerived(i);
     });
+
+    /* Step 3: Level 1-3 계획진척율·실제진척율
+       = 직계(-1) 하위 Level 진척율 합계 / 직계 하위 row 수  (bottom-up) */
+    [...Array(rows.length).keys()].reverse().forEach(i => {
+        const row = rows[i];
+        if ((row._level || 1) > 3 || !hasChildren(i)) return;
+        const children = getDirectChildren(i);
+        if (children.length === 0) return;
+        const planSum   = children.reduce((s, ci) => s + (rows[ci].planRate   || 0), 0);
+        const actualSum = children.reduce((s, ci) => s + (rows[ci].actualRate || 0), 0);
+        row.planRate   = Math.round(planSum   / children.length);
+        row.actualRate = Math.round(actualSum / children.length);
+    });
 }
 
 /* 계산된 readonly 필드 DOM 갱신 (전체 재렌더 없이) */
@@ -389,7 +481,7 @@ function renderHeader() {
     const ths = COLS.map(c => `<th style="width:${c.w}px">${c.label}</th>`).join('');
 
     document.getElementById('wbsLeftHeader').innerHTML =
-        `<table class="wbs-tbl"><colgroup>${cg}</colgroup>` +
+        `<table class="wbs-tbl" style="width:${TABLE_W}px"><colgroup>${cg}</colgroup>` +
         `<thead><tr>${groupHtml}</tr><tr>${ths}</tr></thead></table>`;
 }
 
@@ -409,7 +501,7 @@ function renderBody() {
 
     const cg = COLS.map(c => `<col style="width:${c.w}px">`).join('');
     const tbodyHtml = rows.map((row, i) => buildRowHtml(row, i)).join('');
-    bodyEl.innerHTML = `<table class="wbs-tbl"><colgroup>${cg}</colgroup><tbody>${tbodyHtml}</tbody></table>`;
+    bodyEl.innerHTML = `<table class="wbs-tbl" style="width:${TABLE_W}px"><colgroup>${cg}</colgroup><tbody>${tbodyHtml}</tbody></table>`;
 
     bodyEl.scrollTop  = scrollT;
     bodyEl.scrollLeft = scrollL;
@@ -426,10 +518,12 @@ function renderBody() {
 }
 
 function buildRowHtml(row, i) {
-    const isSel = i === selectedRow ? ' selected' : '';
-    const isNew = !row.id        ? ' new-row'  : '';
-    const cells = COLS.map(c => buildCell(c, row, i)).join('');
-    return `<tr data-row="${i}" class="${isSel}${isNew}" onclick="selectRow(${i})">${cells}</tr>`;
+    const isSel  = i === selectedRow ? ' selected' : '';
+    const isNew  = !row.id          ? ' new-row'  : '';
+    const lvl    = row._level || 1;
+    const lvlCls = lvl <= 3         ? ` level-${lvl}` : '';
+    const cells  = COLS.map(c => buildCell(c, row, i)).join('');
+    return `<tr data-row="${i}" class="${isSel}${isNew}${lvlCls}" onclick="selectRow(${i})">${cells}</tr>`;
 }
 
 function buildCell(col, row, i) {
@@ -466,6 +560,9 @@ function buildCell(col, row, i) {
         return `<td><input type="date" value="${safe}" data-field="${col.key}" data-row="${i}" oninput="onDateChange(this,${i})"></td>`;
     }
     if (col.type === 'status') {
+        if ((row._level || 1) <= 3) {
+            return `<td class="td-ro"></td>`;
+        }
         const opts = STATUS_OPTS.map(s =>
             `<option value="${s}" ${row.status === s ? 'selected' : ''}>${s}</option>`
         ).join('');
@@ -736,8 +833,9 @@ function calcGanttRange() {
     if (!minD) { const now = new Date(); minD = new Date(now.getFullYear(), now.getMonth(), 1); }
     if (!maxD) { maxD = new Date(minD.getFullYear(), minD.getMonth() + 3, 0); }
 
-    minD = new Date(minD.getFullYear(), minD.getMonth() - 1, 1);
-    maxD = new Date(maxD.getFullYear(), maxD.getMonth() + 2, 0);
+    /* 일정의 시작월 첫 날 ~ 끝월 마지막 날 */
+    minD = new Date(minD.getFullYear(), minD.getMonth(), 1);
+    maxD = new Date(maxD.getFullYear(), maxD.getMonth() + 1, 0);
 
     ganttStart = minD;
     ganttDays  = daysBetween(minD, maxD) + 1;
@@ -801,9 +899,11 @@ function renderGanttBody() {
         html += `<div class="gantt-empty">일정 데이터를 입력하면 간트차트가 표시됩니다.</div>`;
     } else {
         rows.forEach((row, i) => {
-            const isSel = i === selectedRow ? ' selected' : '';
-            const isNew = !row.id           ? ' new-row'  : '';
-            html += `<div class="gantt-row${isSel}${isNew}" onclick="selectRow(${i})">`;
+            const isSel  = i === selectedRow ? ' selected' : '';
+            const isNew  = !row.id           ? ' new-row'  : '';
+            const lvl    = row._level || 1;
+            const lvlCls = lvl <= 3 ? ` level-${lvl}` : '';
+            html += `<div class="gantt-row${isSel}${isNew}${lvlCls}" onclick="selectRow(${i})">`;
 
             for (let d = 0; d < ganttDays; d++) {
                 const dt = addDays(ganttStart, d);
@@ -945,6 +1045,14 @@ function showMsg(msg, type) {
 }
 
 window.addEventListener('DOMContentLoaded', () => init(INITIAL_DATA));
+
+function openUploadModal()  { document.getElementById('uploadModal').classList.add('open'); }
+function closeUploadModal() { document.getElementById('uploadModal').classList.remove('open'); }
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('uploadModal').addEventListener('click', function(e) {
+        if (e.target === this) closeUploadModal();
+    });
+});
 /*]]>*/
 </script>
 

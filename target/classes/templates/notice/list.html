@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공지사항 - e4net PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+    <aside th:replace="~{layout/fragments :: sidebar('community-notice-list')}"></aside>
+
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>커뮤니티</span>
+            <span class="sep">/</span><span class="current">공지사항</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">공지사항</div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="location.href='/notice/new'">&#43; 공지사항 등록</button>
+                </div>
+            </div>
+
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="alert alert-danger"  th:if="${errorMessage}"   th:text="${errorMessage}"></div>
+
+            <!-- 검색 -->
+            <form th:action="@{/notice}" method="get">
+                <div class="search-box">
+                    <div class="search-row">
+                        <span class="search-label">제목</span>
+                        <input type="text" name="title" class="search-input w-lg"
+                               th:value="${search.title}" placeholder="제목 검색">
+                        <div class="divider"></div>
+                        <span class="search-label">작성자</span>
+                        <input type="text" name="writer" class="search-input w-md"
+                               th:value="${search.writer}" placeholder="작성자 검색">
+                        <button type="submit" class="btn-search">&#128269; 검색</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- 목록 -->
+            <div class="table-card">
+                <div class="table-card-header">
+                    <span class="table-card-title">공지사항 목록</span>
+                    <span class="table-count">총 <span th:text="${page.totalElements}">0</span>건</span>
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="width:60px;">번호</th>
+                            <th>제목</th>
+                            <th style="width:100px;">작성자</th>
+                            <th style="width:110px;">작성일</th>
+                            <th style="width:60px;">첨부</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(communityList)}">
+                            <td colspan="5" class="td-empty">등록된 공지사항이 없습니다.</td>
+                        </tr>
+                        <tr th:each="item, stat : ${communityList}">
+                            <td class="td-center" th:text="${page.totalElements - page.number * page.size - stat.index}">-</td>
+                            <td class="td-left">
+                                <a th:href="@{/notice/{id}(id=${item.id})}" class="td-link" th:text="${item.title}">-</a>
+                            </td>
+                            <td class="td-center" th:text="${item.writer ?: '-'}">-</td>
+                            <td class="td-center" th:text="${item.postDate ?: '-'}">-</td>
+                            <td class="td-center">
+                                <span style="color:#2980b9; font-size:13px;">&#128206;</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 페이징 -->
+            <div class="pagination" th:if="${page.totalPages > 1}">
+                <a th:if="${!page.first}" th:href="@{/notice(page=${page.number - 1}, title=${search.title}, writer=${search.writer})}">&laquo;</a>
+                <a th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
+                   th:href="@{/notice(page=${i}, title=${search.title}, writer=${search.writer})}"
+                   th:text="${i + 1}"
+                   th:classappend="${i == page.number} ? 'active'"></a>
+                <a th:if="${!page.last}" th:href="@{/notice(page=${page.number + 1}, title=${search.title}, writer=${search.writer})}">&raquo;</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+</body>
+</html>

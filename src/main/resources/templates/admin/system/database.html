@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>테이블 목록 - e4net PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        /* 좌우 분할 레이아웃 */
+        .db-layout { display: flex; gap: 20px; align-items: flex-start; }
+        .db-left  { flex: 0 0 440px; min-width: 380px; }
+        .db-right { flex: 1; min-width: 0; }
+
+        /* 접속 정보 패널 */
+        .conn-panel {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        .conn-panel-title {
+            font-size: 14px; font-weight: 700; color: #2c3e50;
+            margin-bottom: 16px; padding-bottom: 10px;
+            border-bottom: 2px solid #2980b9;
+        }
+        /* DBMS 라디오 선택 */
+        .dbms-selector {
+            display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px;
+        }
+        .dbms-opt {
+            display: flex; align-items: center; gap: 4px; cursor: pointer;
+            background: #f7fafc; border: 1px solid #cbd5e0; border-radius: 4px;
+            padding: 5px 10px; font-size: 12px; font-weight: 500; color: #4a5568;
+            transition: all 0.15s; user-select: none;
+        }
+        .dbms-opt:hover { border-color: #2980b9; color: #2980b9; background: #ebf8ff; }
+        .dbms-opt input[type=radio] { display: none; }
+        .dbms-opt:has(input:checked) {
+            background: #2980b9; border-color: #2980b9; color: #fff; font-weight: 700;
+        }
+
+        .conn-field { display: flex; flex-direction: column; margin-bottom: 12px; }
+        .conn-field label { font-size: 12px; font-weight: 600; color: #4a5568; margin-bottom: 4px; }
+        .conn-field input {
+            padding: 7px 10px; border: 1px solid #cbd5e0; border-radius: 4px;
+            font-size: 13px; color: #2d3748; outline: none; transition: border-color 0.15s;
+        }
+        .conn-field input:focus { border-color: #2980b9; }
+        .conn-row { display: flex; gap: 10px; }
+        .conn-row .conn-field { flex: 1; }
+        .btn-connect {
+            width: 100%; margin-top: 8px; padding: 9px 0;
+            background: #2980b9; color: #fff; border: none; border-radius: 4px;
+            font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s;
+        }
+        .btn-connect:hover { background: #1a6fa1; }
+        .btn-connect:disabled { background: #90cdf4; cursor: not-allowed; }
+        .conn-status {
+            margin-top: 12px; padding: 8px 12px; border-radius: 4px;
+            font-size: 12px; display: none;
+        }
+        .conn-status.success { background: #c6f6d5; color: #276749; border: 1px solid #9ae6b4; display: block; }
+        .conn-status.error   { background: #fed7d7; color: #9b2c2c; border: 1px solid #feb2b2; display: block; }
+
+        /* 우측 안내 */
+        .right-empty {
+            background: #f7fafc; border: 2px dashed #cbd5e0; border-radius: 6px;
+            padding: 60px 20px; text-align: center; color: #a0aec0; font-size: 13px;
+        }
+        .right-empty .icon { font-size: 36px; margin-bottom: 12px; }
+
+        /* 테이블 목록 영역 */
+        #tableArea { display: none; }
+        .table-area-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+        }
+        .table-area-title { font-size: 14px; font-weight: 700; color: #2c3e50; }
+        .btn-group { display: flex; gap: 8px; }
+        .btn-download {
+            padding: 7px 16px; color: #fff; border: none;
+            border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer;
+            text-decoration: none; transition: background 0.15s; white-space: nowrap;
+        }
+        .btn-download.dark  { background: #2c3e50; }
+        .btn-download.dark:hover  { background: #1a252f; }
+        .btn-download.blue  { background: #2980b9; }
+        .btn-download.blue:hover  { background: #1a6fa1; }
+        .table-search { margin-bottom: 10px; }
+        .table-search input {
+            width: 100%; padding: 7px 10px; border: 1px solid #cbd5e0; border-radius: 4px;
+            font-size: 13px; box-sizing: border-box; outline: none;
+        }
+        .table-search input:focus { border-color: #2980b9; }
+
+        /* 테이블 그리드 */
+        .db-table-wrap {
+            max-height: calc(100vh - 280px); overflow-y: auto;
+            border: 1px solid #e2e8f0; border-radius: 6px;
+        }
+        .db-table-wrap table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .db-table-wrap thead th {
+            position: sticky; top: 0; background: #2c3e50; color: #fff;
+            padding: 9px 12px; text-align: left; font-weight: 600; z-index: 1;
+        }
+        .db-table-wrap tbody tr:nth-child(even) { background: #eaf4fb; }
+        .db-table-wrap tbody tr:hover { background: #bee3f8; }
+        .db-table-wrap tbody td {
+            padding: 7px 12px; border-bottom: 1px solid #e2e8f0;
+            color: #2d3748; text-align: left;
+        }
+        .db-table-wrap tbody tr:last-child td { border-bottom: none; }
+        /* 테이블명 링크 스타일 */
+        .tbl-link {
+            color: #2980b9; font-weight: 600; cursor: pointer;
+            text-decoration: none; border-bottom: 1px dashed #2980b9;
+        }
+        .tbl-link:hover { color: #1a6fa1; border-bottom-style: solid; }
+        .comment-cell { color: #718096; }
+        .table-count-badge {
+            display: inline-block; background: #2980b9; color: #fff;
+            font-size: 11px; font-weight: 600; padding: 2px 8px;
+            border-radius: 10px; margin-left: 8px;
+        }
+        .loading-overlay {
+            display: none; text-align: center; padding: 40px;
+            color: #4a5568; font-size: 13px;
+        }
+
+        /* ── 컬럼 상세 모달 ──────────────────────────────────────── */
+        .col-modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 1000;
+            align-items: center; justify-content: center;
+        }
+        .col-modal-overlay.open { display: flex; }
+        .col-modal {
+            background: #fff; border-radius: 8px; width: 880px; max-width: 95vw;
+            max-height: 85vh; display: flex; flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+        }
+        .col-modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 20px; background: #2c3e50; border-radius: 8px 8px 0 0;
+            color: #fff; flex-shrink: 0;
+        }
+        .col-modal-title { font-size: 14px; font-weight: 700; }
+        .col-modal-subtitle { font-size: 12px; color: #90cdf4; margin-top: 2px; }
+        .col-modal-close {
+            background: none; border: none; color: #fff; font-size: 20px;
+            cursor: pointer; line-height: 1; padding: 0 4px;
+        }
+        .col-modal-close:hover { color: #fed7d7; }
+        .col-modal-body { overflow-y: auto; flex: 1; }
+        .col-modal-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .col-modal-table thead th {
+            position: sticky; top: 0; background: #2980b9; color: #fff;
+            padding: 8px 12px; text-align: left; font-weight: 600; z-index: 1;
+        }
+        .col-modal-table tbody tr:nth-child(even) { background: #eaf4fb; }
+        .col-modal-table tbody tr:hover { background: #bee3f8; }
+        .col-modal-table tbody td {
+            padding: 7px 12px; border-bottom: 1px solid #e2e8f0;
+            text-align: left; color: #2d3748;
+        }
+        .col-modal-table tbody tr:last-child td { border-bottom: none; }
+        .badge-pk  { display:inline-block; background:#e53e3e; color:#fff; font-size:10px; padding:1px 6px; border-radius:3px; font-weight:700; }
+        .badge-uni { display:inline-block; background:#2980b9; color:#fff; font-size:10px; padding:1px 6px; border-radius:3px; font-weight:700; }
+        .badge-mul { display:inline-block; background:#718096; color:#fff; font-size:10px; padding:1px 6px; border-radius:3px; font-weight:700; }
+        .col-modal-loading {
+            text-align: center; padding: 40px; color: #718096; font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+    <aside th:replace="~{layout/fragments :: sidebar('exec-design-table')}"></aside>
+
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업수행</span>
+            <span class="sep">/</span><span>설계</span>
+            <span class="sep">/</span><span class="current">테이블목록</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">테이블 목록</div>
+            </div>
+
+            <div class="db-layout">
+
+                <!-- ── 좌측: DB 접속 정보 입력 ──────────────────── -->
+                <div class="db-left">
+                    <div class="conn-panel">
+                        <div class="conn-panel-title">&#128274; 데이터베이스 접속 정보</div>
+
+                        <!-- DBMS 종류 -->
+                        <div class="conn-field">
+                            <label>DBMS 종류</label>
+                            <div class="dbms-selector">
+                                <label class="dbms-opt"><input type="radio" name="dbmsType" value="MYSQL"     checked onchange="onDbmsChange(this)"><span>MySQL</span></label>
+                                <label class="dbms-opt"><input type="radio" name="dbmsType" value="MARIADB"         onchange="onDbmsChange(this)"><span>MariaDB</span></label>
+                                <label class="dbms-opt"><input type="radio" name="dbmsType" value="ORACLE"          onchange="onDbmsChange(this)"><span>Oracle</span></label>
+                                <label class="dbms-opt"><input type="radio" name="dbmsType" value="SQLSERVER"       onchange="onDbmsChange(this)"><span>SQL Server</span></label>
+                                <label class="dbms-opt"><input type="radio" name="dbmsType" value="TIBERO"          onchange="onDbmsChange(this)"><span>Tibero</span></label>
+                            </div>
+                        </div>
+
+                        <div class="conn-row">
+                            <div class="conn-field">
+                                <label>호스트</label>
+                                <input type="text" id="host" value="localhost" placeholder="localhost">
+                            </div>
+                            <div class="conn-field" style="flex:0 0 86px;">
+                                <label>포트</label>
+                                <input type="number" id="port" value="3306" placeholder="3306">
+                            </div>
+                        </div>
+
+                        <div class="conn-field">
+                            <label id="dbLabel">데이터베이스명</label>
+                            <input type="text" id="database" placeholder="데이터베이스명">
+                        </div>
+
+                        <!-- Oracle·Tibero 전용: 스키마 -->
+                        <div class="conn-field" id="schemaField" style="display:none">
+                            <label>스키마 (Owner)</label>
+                            <input type="text" id="schema" placeholder="비워두면 사용자명으로 접속">
+                        </div>
+
+                        <div class="conn-field">
+                            <label>사용자명</label>
+                            <input type="text" id="username" placeholder="사용자명">
+                        </div>
+
+                        <div class="conn-field">
+                            <label>비밀번호</label>
+                            <input type="password" id="password" placeholder="비밀번호">
+                        </div>
+
+                        <button class="btn-connect" id="btnConnect" onclick="connectDb()">
+                            &#128268; 연결
+                        </button>
+
+                        <div class="conn-status" id="connStatus"></div>
+                    </div>
+                </div>
+
+                <!-- ── 우측: 테이블 목록 ───────────────────────── -->
+                <div class="db-right">
+
+                    <div class="right-empty" id="emptyArea">
+                        <div class="icon">&#128450;</div>
+                        <div>좌측에서 데이터베이스 접속 정보를 입력하고<br><strong>연결</strong> 버튼을 클릭하세요.</div>
+                    </div>
+
+                    <div class="loading-overlay" id="loadingArea">
+                        &#9203; 테이블 목록을 불러오는 중...
+                    </div>
+
+                    <div id="tableArea">
+                        <div class="table-area-header">
+                            <div class="table-area-title">
+                                테이블 목록
+                                <span class="table-count-badge" id="tableCount">0</span>
+                            </div>
+                            <div class="btn-group">
+                                <a class="btn-download blue" href="/admin/system/database/download-list" target="_blank">
+                                    &#128196; 테이블 목록
+                                </a>
+                                <a class="btn-download dark" href="/admin/system/database/download" target="_blank">
+                                    &#128190; 테이블설계서 다운로드
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="table-search">
+                            <input type="text" id="tableSearch"
+                                   placeholder="&#128269; 테이블명 또는 설명 검색..."
+                                   oninput="filterTable(this.value)">
+                        </div>
+
+                        <div class="db-table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width:42px;text-align:center">NO</th>
+                                        <th>테이블명</th>
+                                        <th>설명 (Comment)</th>
+                                        <th style="width:72px;text-align:center">엔진</th>
+                                        <th style="width:84px;text-align:right;padding-right:16px">행 수</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── 컬럼 상세 모달 ──────────────────────────────────────────── -->
+<div class="col-modal-overlay" id="colModal" onclick="closeColModal(event)">
+    <div class="col-modal">
+        <div class="col-modal-header">
+            <div>
+                <div class="col-modal-title" id="colModalTitle">컬럼 정보</div>
+                <div class="col-modal-subtitle" id="colModalSubtitle"></div>
+            </div>
+            <button class="col-modal-close" onclick="closeColModal()">&times;</button>
+        </div>
+        <div class="col-modal-body" id="colModalBody">
+            <div class="col-modal-loading">&#9203; 불러오는 중...</div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    let allTableData = [];
+
+    /* DBMS별 기본 포트 및 UI 레이블 설정 */
+    const DBMS_META = {
+        MYSQL:     { port: 3306, dbLabel: '데이터베이스명',     dbPlaceholder: '데이터베이스명', schema: false },
+        MARIADB:   { port: 3306, dbLabel: '데이터베이스명',     dbPlaceholder: '데이터베이스명', schema: false },
+        ORACLE:    { port: 1521, dbLabel: '서비스명 / SID',     dbPlaceholder: 'orcl',          schema: true  },
+        SQLSERVER: { port: 1433, dbLabel: '데이터베이스명',     dbPlaceholder: 'master',        schema: false },
+        TIBERO:    { port: 8629, dbLabel: '서비스명 / SID',     dbPlaceholder: 'tibero',        schema: true  },
+    };
+
+    /* DBMS 라디오 변경 시 */
+    function onDbmsChange(radio) {
+        const meta = DBMS_META[radio.value] || DBMS_META['MYSQL'];
+        document.getElementById('port').value       = meta.port;
+        document.getElementById('dbLabel').textContent  = meta.dbLabel;
+        document.getElementById('database').placeholder = meta.dbPlaceholder;
+        document.getElementById('schemaField').style.display = meta.schema ? '' : 'none';
+    }
+
+    /* ── DB 연결 ──────────────────────────────────────────────── */
+    function connectDb() {
+        const dbmsType = document.querySelector('input[name="dbmsType"]:checked')?.value || 'MYSQL';
+        const host     = document.getElementById('host').value.trim();
+        const port     = parseInt(document.getElementById('port').value) || DBMS_META[dbmsType]?.port || 3306;
+        const database = document.getElementById('database').value.trim();
+        const schema   = document.getElementById('schema')?.value.trim() || '';
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!host || !database || !username) {
+            showStatus('error', '호스트, 데이터베이스명, 사용자명을 입력하세요.');
+            return;
+        }
+
+        const btn = document.getElementById('btnConnect');
+        btn.disabled = true;
+        btn.textContent = '연결 중...';
+        document.getElementById('emptyArea').style.display  = 'none';
+        document.getElementById('tableArea').style.display  = 'none';
+        document.getElementById('loadingArea').style.display = 'block';
+        showStatus('', '');
+
+        fetch('/admin/system/database/connect', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({dbmsType, host, port, database, schema, username, password})
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.textContent = '⚡ 연결';
+            document.getElementById('loadingArea').style.display = 'none';
+
+            if (data.error) {
+                showStatus('error', data.error);
+                document.getElementById('emptyArea').style.display = 'block';
+                return;
+            }
+            allTableData = data;
+            renderTable(data);
+            document.getElementById('tableArea').style.display = 'block';
+            showStatus('success', `연결 성공 — ${data.length}개 테이블 (${database}@${host}:${port})`);
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.textContent = '⚡ 연결';
+            document.getElementById('loadingArea').style.display = 'none';
+            document.getElementById('emptyArea').style.display = 'block';
+            showStatus('error', '서버 오류: ' + err.message);
+        });
+    }
+
+    /* ── 테이블 목록 렌더링 ──────────────────────────────────── */
+    function renderTable(tables) {
+        document.getElementById('tableCount').textContent = tables.length;
+        document.getElementById('tableTbody').innerHTML = tables.map((t, i) => `
+            <tr>
+                <td style="text-align:center">${i + 1}</td>
+                <td><span class="tbl-link" onclick="openColModal('${esc(t.tableName)}', '${esc(t.comment || '')}')">${esc(t.tableName)}</span></td>
+                <td class="comment-cell">${esc(t.comment || '')}</td>
+                <td style="text-align:center">${esc(t.engine || '')}</td>
+                <td style="text-align:right;padding-right:16px">${(t.tableRows || 0).toLocaleString()}</td>
+            </tr>
+        `).join('');
+    }
+
+    /* ── 검색 필터 ────────────────────────────────────────────── */
+    function filterTable(keyword) {
+        const kw = keyword.toLowerCase();
+        renderTable(allTableData.filter(t =>
+            t.tableName.toLowerCase().includes(kw) ||
+            (t.comment || '').toLowerCase().includes(kw)
+        ));
+    }
+
+    /* ── 컬럼 모달 열기 ──────────────────────────────────────── */
+    function openColModal(tableName, comment) {
+        document.getElementById('colModalTitle').textContent   = tableName;
+        document.getElementById('colModalSubtitle').textContent = comment || '';
+        document.getElementById('colModalBody').innerHTML =
+            '<div class="col-modal-loading">&#9203; 컬럼 정보를 불러오는 중...</div>';
+        document.getElementById('colModal').classList.add('open');
+
+        fetch('/admin/system/database/columns', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({tableName})
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('colModalBody').innerHTML =
+                    `<div class="col-modal-loading" style="color:#e53e3e">${esc(data.error)}</div>`;
+                return;
+            }
+            renderColModal(data);
+        })
+        .catch(err => {
+            document.getElementById('colModalBody').innerHTML =
+                `<div class="col-modal-loading" style="color:#e53e3e">서버 오류: ${esc(err.message)}</div>`;
+        });
+    }
+
+    /* ── 컬럼 목록 렌더링 ─────────────────────────────────────── */
+    function renderColModal(columns) {
+        const rows = columns.map(c => {
+            const keyBadge = c.columnKey === 'PRI' ? '<span class="badge-pk">PK</span>'
+                           : c.columnKey === 'UNI' ? '<span class="badge-uni">UNI</span>'
+                           : c.columnKey === 'MUL' ? '<span class="badge-mul">IDX</span>'
+                           : '';
+            const nullable = c.isNullable === 'YES'
+                ? '<span style="color:#718096">Y</span>'
+                : '<span style="color:#e53e3e;font-weight:600">N</span>';
+            return `<tr>
+                <td style="text-align:center">${c.ordinalPosition}</td>
+                <td><strong>${esc(c.columnName)}</strong></td>
+                <td>${esc(c.columnType)}</td>
+                <td style="text-align:center">${nullable}</td>
+                <td>${esc(c.columnDefault || '')}</td>
+                <td style="text-align:center">${keyBadge}</td>
+                <td>${esc(c.extra || '')}</td>
+                <td class="comment-cell">${esc(c.columnComment || '')}</td>
+            </tr>`;
+        }).join('');
+
+        document.getElementById('colModalBody').innerHTML = `
+            <table class="col-modal-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px;text-align:center">NO</th>
+                        <th>컬럼명</th>
+                        <th>데이터 타입</th>
+                        <th style="width:60px;text-align:center">NULL</th>
+                        <th>기본값</th>
+                        <th style="width:52px;text-align:center">키</th>
+                        <th>EXTRA</th>
+                        <th>설명 (Comment)</th>
+                    </tr>
+                </thead>
+                <tbody>${rows || '<tr><td colspan="8" style="text-align:center;padding:20px;color:#a0aec0">컬럼이 없습니다.</td></tr>'}</tbody>
+            </table>`;
+    }
+
+    /* ── 모달 닫기 ────────────────────────────────────────────── */
+    function closeColModal(e) {
+        if (e && e.target !== document.getElementById('colModal')) return;
+        document.getElementById('colModal').classList.remove('open');
+    }
+
+    /* ── 연결 상태 메시지 ─────────────────────────────────────── */
+    function showStatus(type, msg) {
+        const el = document.getElementById('connStatus');
+        el.className = 'conn-status ' + type;
+        el.textContent = msg;
+        if (!type) el.style.display = 'none';
+    }
+
+    /* ── XSS 방지 이스케이프 ──────────────────────────────────── */
+    function esc(str) {
+        return String(str)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    /* Enter 키 연결 */
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && ['host','port','database','username','password'].includes(e.target.id))
+            connectDb();
+        if (e.key === 'Escape')
+            document.getElementById('colModal').classList.remove('open');
+    });
+</script>
+</body>
+</html>

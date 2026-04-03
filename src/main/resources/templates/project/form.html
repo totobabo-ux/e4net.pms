@@ -59,9 +59,8 @@
                             <label class="form-label">구분</label>
                             <select th:field="*{category}" class="form-control">
                                 <option value="">선택</option>
-                                <option value="SL">SL</option>
-                                <option value="SM">SM</option>
-                                <option value="서비스">서비스</option>
+                                <option th:each="c : ${codes['PROJECT_CATEGORY']}"
+                                        th:value="${c.code}" th:text="${c.codeName}"></option>
                             </select>
                         </div>
                         <div class="form-group">
