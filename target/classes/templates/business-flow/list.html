@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>업무흐름 목록 - e4net PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+    <aside th:replace="~{layout/fragments :: sidebar('exec-analysis-flow')}"></aside>
+
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업수행</span>
+            <span class="sep">/</span><span>분석</span>
+            <span class="sep">/</span><span class="current">업무흐름</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">
+                    업무흐름 목록
+                    <span th:if="${selectedProject != null}"
+                          style="font-size:13px;font-weight:normal;color:#2980b9;margin-left:10px;"
+                          th:text="'[ ' + ${selectedProject.projectName} + ' ]'"></span>
+                </div>
+                <div class="btn-group">
+                    <a class="btn btn-primary" href="/business-flow/new">&#43; 등록</a>
+                </div>
+            </div>
+
+            <!-- 알림 메시지 -->
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="alert alert-danger"  th:if="${errorMessage}"   th:text="${errorMessage}"></div>
+
+            <!-- 검색 폼 -->
+            <form method="get" action="/business-flow" class="search-bar">
+                <input type="text" name="systemCategory" class="form-control search-input"
+                       placeholder="시스템구분" th:value="${search.systemCategory}">
+                <input type="text" name="bizCategory" class="form-control search-input"
+                       placeholder="업무구분" th:value="${search.bizCategory}">
+                <input type="text" name="processName" class="form-control search-input"
+                       placeholder="프로세스명" th:value="${search.processName}">
+                <button type="submit" class="btn btn-search">&#128269; 검색</button>
+                <a href="/business-flow" class="btn btn-cancel">초기화</a>
+            </form>
+
+            <!-- 목록 테이블 -->
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px;">No</th>
+                        <th>시스템구분</th>
+                        <th>업무구분</th>
+                        <th>프로세스ID</th>
+                        <th>프로세스명</th>
+                        <th style="width:60px;">첨부</th>
+                        <th style="width:100px;">관리</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(flowList)}">
+                        <td colspan="7" class="empty-row">등록된 업무흐름이 없습니다.</td>
+                    </tr>
+                    <tr th:each="flow, stat : ${flowList}">
+                        <td th:text="${page.number * page.size + stat.index + 1}"></td>
+                        <td th:text="${flow.systemCategory ?: '-'}"></td>
+                        <td th:text="${flow.bizCategory ?: '-'}"></td>
+                        <td th:text="${flow.processId ?: '-'}"></td>
+                        <td>
+                            <a th:href="@{/business-flow/{id}(id=${flow.id})}"
+                               class="td-link" th:text="${flow.processName}"></a>
+                        </td>
+                        <td style="text-align:center;">
+                            <!-- 첨부파일 유무 표시는 서비스 레이어에서 처리하므로 아이콘 없음 -->
+                            &#128196;
+                        </td>
+                        <td>
+                            <button class="btn-sm-edit"
+                                    th:onclick="|location.href='/business-flow/' + ${flow.id}|">상세</button>
+                            <button class="btn-sm-del"
+                                    th:onclick="|openDeleteModal(${flow.id}, '[[${flow.processName}]]')|">삭제</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- 페이지네이션 -->
+            <div class="pagination" th:if="${page.totalPages > 1}">
+                <a th:if="${!page.first}"
+                   th:href="@{/business-flow(page=${page.number - 1}, size=${page.size},
+                       systemCategory=${search.systemCategory}, bizCategory=${search.bizCategory},
+                       processName=${search.processName})}"
+                   class="page-btn">&laquo;</a>
+                <span th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}">
+                    <a th:href="@{/business-flow(page=${i}, size=${page.size},
+                        systemCategory=${search.systemCategory}, bizCategory=${search.bizCategory},
+                        processName=${search.processName})}"
+                       class="page-btn" th:classappend="${i == page.number} ? 'active'"
+                       th:text="${i + 1}"></a>
+                </span>
+                <a th:if="${!page.last}"
+                   th:href="@{/business-flow(page=${page.number + 1}, size=${page.size},
+                       systemCategory=${search.systemCategory}, bizCategory=${search.bizCategory},
+                       processName=${search.processName})}"
+                   class="page-btn">&raquo;</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header red">
+            <span class="modal-title">&#128465; 삭제 확인</span>
+            <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><strong id="deleteTargetName"></strong> 을(를) 삭제하시겠습니까?</p>
+            <p style="margin-top:8px;color:#718096;font-size:12px;">삭제된 데이터는 복구할 수 없습니다.</p>
+        </div>
+        <div class="modal-footer">
+            <form id="deleteForm" method="post">
+                <button type="submit" class="btn btn-delete">삭제</button>
+            </form>
+            <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">취소</button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    function openDeleteModal(id, name) {
+        document.getElementById('deleteTargetName').textContent = name;
+        document.getElementById('deleteForm').action = '/business-flow/' + id + '/delete';
+        document.getElementById('deleteModal').classList.add('open');
+    }
+    function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('open'); }
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+</script>
+</body>
+</html>

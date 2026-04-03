@@ -132,7 +132,7 @@
                     th:classappend="${activePage != null and activePage.startsWith('exec-analysis')} ? 'open'">
                     <div class="menu-group-header">분석<span class="arrow-sm">&#9660;</span></div>
                     <ul class="submenu">
-                        <li th:classappend="${activePage == 'exec-analysis-flow'} ? 'active'"><a href="#">업무흐름</a></li>
+                        <li th:classappend="${activePage == 'exec-analysis-flow'} ? 'active'"><a href="/business-flow">업무흐름</a></li>
                         <li th:classappend="${activePage == 'exec-analysis-menu'} ? 'active'"><a href="/menu-structure">메뉴구조</a></li>
                     </ul>
                 </li>

@@ -9,6 +9,11 @@
 - [ ] `detail.html`: 삭제 확인 모달 포함
 - [ ] `fragments.html` sidebar에 신규 메뉴 링크 추가 (activePage 키 목록 §8 참조)
 
+### 2열 그리드 구분선 체크 (§3 parity flip 규칙)
+- [ ] `form.html` / `detail.html` viewSection / `detail.html` editSection — 모든 섹션에서 `grid-column: 1/-1` 전체 너비 셀의 **홀짝 DOM 위치** 확인
+- [ ] 전체 너비 셀 이후 첫 번째 2열 쌍: 왼쪽 셀에 `style="border-right: 1px solid #f0f2f5;"` (form) 또는 `#d0d8e4` (detail-view), 오른쪽 셀에 `style="border-right: none;"` 명시
+- [ ] 다중 행 셀(`align-items: flex-start`)이 있으면 인라인 스타일 형태(`style="align-items: flex-start"`) 유지 — CSS 속성 선택자가 이 형태를 요구함
+
 ### 컨트롤러 URL 매핑
 - [ ] `GET /{resource}` → 목록
 - [ ] `GET /{resource}/new` + `POST /{resource}` → 등록

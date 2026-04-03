@@ -136,6 +136,23 @@ function switchToView() {
 - **목록 페이지:** 검색 폼 + 페이징 처리된 테이블. 테이블 상단에 검색 바 배치.
 - **Badge 상태 표시:** `<span class="badge" th:classappend="'badge-' + ${r.status}" th:text="${r.status}">` 패턴 사용.
 
+### 2열 그리드 구분선 — parity flip 문제 (중요!)
+`form-grid-2col` / `detail-grid`에서 `grid-column: 1 / -1` 전체 너비 셀이 **홀수 번째 DOM 위치**에 오면, 이후 2열 셀들의 좌/우 구분선이 뒤집힌다. 반드시 `border-right`를 인라인으로 명시한다.
+
+```html
+<!-- 조회 섹션 (detail-cell) -->
+<div class="detail-cell" style="border-right: 1px solid #d0d8e4;"><!-- 왼쪽 --></div>
+<div class="detail-cell" style="border-right: none;"><!-- 오른쪽 --></div>
+
+<!-- 등록/수정 섹션 (form-cell) -->
+<div class="form-cell" style="border-right: 1px solid #f0f2f5;"><!-- 왼쪽 --></div>
+<div class="form-cell" style="border-right: none;"><!-- 오른쪽 --></div>
+```
+> detail.html의 viewSection/editSection **양쪽**과 form.html 모두 적용. 전체 너비 셀이 2개 연속이면 parity가 복원되어 이후 셀은 인라인 스타일 불필요.
+
+### 다중 행 셀 레이블 배경색 — common.css 자동 처리
+`align-items: flex-start` 인라인 스타일 셀의 `.detail-label` / `.form-label` 배경은 `common.css`의 속성 선택자가 자동으로 `align-self: stretch`를 적용한다. HTML 별도 처리 불필요. 단, 인라인 스타일(`style="align-items: flex-start"`)이 있어야 CSS 선택자가 동작한다.
+
 ## 4. 데이터베이스 및 코딩 컨벤션
 
 ### 공통 컬럼 (모든 테이블 필수)

@@ -120,3 +120,71 @@ function switchToView() {
 - **필수 항목:** 레이블 옆에 `<span class="req">※</span>` 표시. 서버(Bean Validation) + 클라이언트(JS) 양쪽 검증.
 - **목록 페이지:** 검색 폼 + 페이징 처리된 테이블. 테이블 상단에 검색 바 배치.
 - **Badge 상태 표시:** `<span class="badge" th:classappend="'badge-' + ${r.status}" th:text="${r.status}">` 패턴 사용.
+
+---
+
+### 2열 그리드 구분선 — parity flip 문제와 해결 패턴 (중요!)
+
+#### 문제 원인
+`form-grid-2col` / `detail-grid` 내에서 `grid-column: 1 / -1` (전체 너비) 셀이 **홀수 번째(odd) DOM 위치**에 오면, 이후 2열 셀들의 좌/우 열 배정이 뒤집혀 왼쪽 셀의 구분선이 사라진다.
+
+> CSS `nth-child(odd)`가 전체 너비 셀도 카운트하기 때문에 홀짝 순서가 어긋난다.
+
+#### 해결 규칙
+전체 너비 셀(`grid-column: 1 / -1`) 이후에 오는 2열 셀 쌍은 **`border-right`를 인라인으로 명시**한다.
+
+```html
+<!-- 조회 섹션 (detail-grid) — 전체 너비 셀 이후 2열 배치 -->
+<div class="detail-cell" style="border-right: 1px solid #d0d8e4;">  <!-- 왼쪽 셀 -->
+    <span class="detail-label">항목A</span>
+    <span class="detail-value" th:text="${dto.fieldA}">-</span>
+</div>
+<div class="detail-cell" style="border-right: none;">              <!-- 오른쪽 셀 -->
+    <span class="detail-label">항목B</span>
+    <span class="detail-value" th:text="${dto.fieldB}">-</span>
+</div>
+```
+
+```html
+<!-- 등록/수정 섹션 (form-grid-2col) — 색상만 다름 -->
+<div class="form-cell" style="border-right: 1px solid #f0f2f5;">   <!-- 왼쪽 셀 -->
+    <label class="form-label">항목A</label>
+    <input type="text" class="form-control" th:field="*{fieldA}">
+</div>
+<div class="form-cell" style="border-right: none;">               <!-- 오른쪽 셀 -->
+    <label class="form-label">항목B</label>
+    <input type="text" class="form-control" th:field="*{fieldB}">
+</div>
+```
+
+#### 예외 — 전체 너비 셀 2개 연속
+홀수 위치 전체 너비 셀 바로 다음에 또 전체 너비 셀이 오면(짝수 위치) parity가 복원되므로, 이후 2열 셀들은 인라인 스타일 없이도 정상 동작한다.
+
+#### 적용 범위
+- `detail.html`: `viewSection`과 `editSection` **양쪽** 모두 적용
+- `form.html`: 등록 폼도 동일하게 적용
+- 구분선 색상: `detail-cell` → `#d0d8e4` / `form-cell` → `#f0f2f5`
+
+---
+
+### 다중 행 셀 레이블 배경색 — align-self: stretch 처리
+
+`align-items: flex-start` 인라인 스타일이 붙은 셀에서 `.detail-label` / `.form-label`의 회색 배경이 셀 높이 전체를 채우지 못하는 문제는 `common.css`에서 자동으로 처리된다.
+
+```css
+/* common.css — 이미 적용됨 (HTML 별도 처리 불필요) */
+.detail-cell[style*="align-items: flex-start"] .detail-label,
+.detail-cell[style*="align-items:flex-start"] .detail-label {
+    align-self: stretch;
+    align-items: flex-start;
+    padding-top: 10px;
+}
+.form-cell[style*="align-items: flex-start"] .form-label,
+.form-cell[style*="align-items:flex-start"] .form-label {
+    align-self: stretch;
+    align-items: flex-start;
+    padding-top: 10px;
+}
+```
+
+> **주의:** CSS 속성 선택자가 동작하려면 셀에 `style="align-items: flex-start"` (공백 있음) 또는 `style="align-items:flex-start"` (공백 없음) 형태의 **인라인 스타일이 반드시 있어야** 한다.

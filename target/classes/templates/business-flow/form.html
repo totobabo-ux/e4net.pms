@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>업무흐름 등록 - e4net PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+    <aside th:replace="~{layout/fragments :: sidebar('exec-analysis-flow')}"></aside>
+
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업수행</span>
+            <span class="sep">/</span><span>분석</span>
+            <span class="sep">/</span><a href="/business-flow">업무흐름</a>
+            <span class="sep">/</span><span class="current">업무흐름 등록</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">업무흐름 등록</div>
+                <div class="btn-group">
+                    <button type="submit" form="flowForm" class="btn btn-primary">&#10003; 저장</button>
+                    <a class="btn btn-cancel" href="/business-flow">&#10005; 취소</a>
+                </div>
+            </div>
+
+            <form id="flowForm"
+                  th:action="@{/business-flow}"
+                  method="post"
+                  enctype="multipart/form-data"
+                  th:object="${flow}">
+
+                <div class="form-card">
+                    <div class="form-card-header">&#128203; 업무흐름 정보</div>
+                    <div class="form-card-body">
+                        <div class="form-grid-2col">
+
+                            <!-- 사업명 (전체 너비, position 1 — ODD) -->
+                            <div class="form-cell" style="grid-column: 1 / -1;">
+                                <label class="form-label">사업명</label>
+                                <input type="hidden" th:field="*{projectId}">
+                                <span th:text="${session.selectedProject != null ? session.selectedProject.projectName : ''}"
+                                      style="font-weight:bold; color:#2c3e50;"></span>
+                            </div>
+
+                            <!-- 시스템구분 / 업무구분 (position 2,3 — parity 뒤집힘, border-right 명시) -->
+                            <div class="form-cell" style="border-right: 1px solid #f0f2f5;">
+                                <label class="form-label">시스템구분</label>
+                                <input type="text" class="form-control" th:field="*{systemCategory}"
+                                       placeholder="예: 인사시스템">
+                            </div>
+                            <div class="form-cell" style="border-right: none;">
+                                <label class="form-label">업무구분</label>
+                                <input type="text" class="form-control" th:field="*{bizCategory}"
+                                       placeholder="예: 급여관리">
+                            </div>
+
+                            <!-- 프로세스ID / 프로세스명 (position 4,5) -->
+                            <div class="form-cell" style="border-right: 1px solid #f0f2f5;">
+                                <label class="form-label">프로세스ID</label>
+                                <input type="text" class="form-control" th:field="*{processId}"
+                                       placeholder="예: BF-001">
+                            </div>
+                            <div class="form-cell" style="border-right: none;">
+                                <label class="form-label">프로세스명<span class="req">※</span></label>
+                                <input type="text" class="form-control" th:field="*{processName}"
+                                       placeholder="프로세스명을 입력하세요">
+                            </div>
+
+                            <!-- 첨부파일 (전체 너비) -->
+                            <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                                <label class="form-label">첨부파일</label>
+                                <div class="attach-zone">
+                                    <div id="pendingList_label" class="attach-section-label" style="display:none;">추가할 파일</div>
+                                    <div id="pendingList"></div>
+                                    <div class="attach-add-area">
+                                        <button type="button" class="btn-attach-add"
+                                                onclick="document.getElementById('fileInput').click()">
+                                            &#128206; 파일 추가
+                                        </button>
+                                        <span class="attach-hint">여러 파일 동시 선택 가능</span>
+                                    </div>
+                                    <input type="file" id="fileInput" name="attachFiles" multiple style="display:none;">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    initAttachUpload('fileInput', 'pendingList', 'flowForm');
+</script>
+</body>
+</html>
