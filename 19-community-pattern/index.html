@@ -779,12 +779,12 @@
   <a href="#19" class="md-nav__link">
     <span class="md-ellipsis">
       
-        19. 커뮤니티(공지사항/자료실) 패턴 — 로그인 전용, 사업 무관
+        19. 커뮤니티(공지사항/자료실) 패턴
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="19. 커뮤니티(공지사항/자료실) 패턴 — 로그인 전용, 사업 무관">
+    <nav class="md-nav" aria-label="19. 커뮤니티(공지사항/자료실) 패턴">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -843,10 +843,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#dto" class="md-nav__link">
+  <a href="#dto-communitydtojava" class="md-nav__link">
     <span class="md-ellipsis">
       
-        DTO
+        DTO — CommunityDto.java
       
     </span>
   </a>
@@ -902,14 +902,15 @@
 
   <h1>19 community pattern</h1>
 
-<h2 id="19">19. 커뮤니티(공지사항/자료실) 패턴 — 로그인 전용, 사업 무관<a class="headerlink" href="#19" title="Permanent link">&para;</a></h2>
+<h2 id="19">19. 커뮤니티(공지사항/자료실) 패턴<a class="headerlink" href="#19" title="Permanent link">&para;</a></h2>
 <h3 id="_1">설계 원칙<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li>단일 <code>community</code> 테이블을 <code>community_type</code> 컬럼으로 구분 (§11 공유 테이블 패턴 응용)</li>
-<li>커뮤니티는 <strong>사업(Project)에 귀속되지 않음</strong> → <code>selectedProject</code> 세션 불필요</li>
+<li>커뮤니티는 <strong>사업(Project)에 선택적 귀속</strong> — <code>project_id</code> FK nullable, null이면 전체 공통 글</li>
 <li>세션 체크: <code>loginUser</code>만 확인 (<code>isNotLogin()</code>), <code>isNotReady()</code> 사용 금지</li>
 <li>컨트롤러 2개(<code>NoticeController</code>, <code>ArchiveController</code>) → 서비스 1개(<code>CommunityService</code>) 공유</li>
 <li>각 컨트롤러에서 <code>COMMUNITY_TYPE</code> 상수로 타입 고정 후 서비스에 전달</li>
+<li>세션에 <code>selectedProject</code>가 있으면 해당 사업 글만 필터링</li>
 </ul>
 <h3 id="entity-communityjava">Entity — Community.java<a class="headerlink" href="#entity-communityjava" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="nd">@Entity</span>
@@ -917,6 +918,10 @@
 <span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">Community</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nd">@Id</span><span class="w"> </span><span class="nd">@GeneratedValue</span><span class="p">(</span><span class="n">strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GenerationType</span><span class="p">.</span><span class="na">IDENTITY</span><span class="p">)</span>
 <span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">Long</span><span class="w"> </span><span class="n">id</span><span class="p">;</span>
+
+<span class="w">    </span><span class="nd">@ManyToOne</span><span class="p">(</span><span class="n">fetch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FetchType</span><span class="p">.</span><span class="na">LAZY</span><span class="p">)</span>
+<span class="w">    </span><span class="nd">@JoinColumn</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;project_id&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">Project</span><span class="w"> </span><span class="n">project</span><span class="p">;</span><span class="w">   </span><span class="c1">// nullable — null이면 전체 공통 글</span>
 
 <span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;community_type&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
 <span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">communityType</span><span class="p">;</span><span class="w">   </span><span class="c1">// &quot;공지사항&quot; / &quot;자료실&quot;</span>
@@ -930,16 +935,24 @@
 <span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;post_date&quot;</span><span class="p">)</span>
 <span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">LocalDate</span><span class="w"> </span><span class="n">postDate</span><span class="p">;</span>
 
-<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;content&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">columnDefinition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;TEXT&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="nd">@Column</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;content&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">columnDefinition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;LONGTEXT&quot;</span><span class="p">)</span><span class="w">   </span><span class="c1">// ← TEXT(64KB)가 아닌 LONGTEXT 필수</span>
 <span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">content</span><span class="p">;</span>
 
 <span class="w">    </span><span class="c1">// reg_dt, reg_id, upd_dt, upd_id (공통 감사 컬럼)</span>
 <span class="p">}</span>
 </code></pre></div>
 
+<blockquote>
+<p><strong>중요:</strong> <code>content</code> 컬럼은 반드시 <code>LONGTEXT</code>로 선언. 웹에디터(Quill)에서 이미지를 Base64로 삽입하면 64KB를 초과하여 <code>TEXT</code>로는 500 오류 발생.
+기존 테이블 변경: <code>ALTER TABLE community MODIFY content LONGTEXT;</code></p>
+</blockquote>
 <h3 id="repository-spec">Repository / Spec<a class="headerlink" href="#repository-spec" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c1">// CommunityRepository: JpaRepository + JpaSpecificationExecutor</span>
-<span class="c1">// CommunitySpec: communityType 동등 비교 + title/writer LIKE 조건</span>
+<span class="c1">// CommunitySpec: communityType 동등 비교 + title/writer LIKE 조건 + projectId 동등 비교</span>
+<span class="kd">static</span><span class="w"> </span><span class="n">Specification</span><span class="o">&lt;</span><span class="n">Community</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">eqProject</span><span class="p">(</span><span class="n">Long</span><span class="w"> </span><span class="n">projectId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">query</span><span class="p">,</span><span class="w"> </span><span class="n">cb</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">projectId</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="kc">null</span>
+<span class="w">        </span><span class="p">:</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="na">equal</span><span class="p">(</span><span class="n">root</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="s">&quot;project&quot;</span><span class="p">).</span><span class="na">get</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">projectId</span><span class="p">);</span>
+<span class="p">}</span>
 </code></pre></div>
 
 <h3 id="urltype">컨트롤러 패턴 (공지사항 예시 — 자료실은 URL/TYPE만 다름)<a class="headerlink" href="#urltype" title="Permanent link">&para;</a></h3>
@@ -949,15 +962,31 @@
 <span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">COMMUNITY_TYPE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;공지사항&quot;</span><span class="p">;</span>
 <span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">ACTIVE_PAGE</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;community-notice-list&quot;</span><span class="p">;</span>
 
-<span class="w">    </span><span class="c1">// 세션 체크: loginUser만 확인</span>
 <span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">isNotLogin</span><span class="p">(</span><span class="n">HttpSession</span><span class="w"> </span><span class="n">session</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">session</span><span class="p">.</span><span class="na">getAttribute</span><span class="p">(</span><span class="s">&quot;loginUser&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">Project</span><span class="w"> </span><span class="nf">getSelectedProject</span><span class="p">(</span><span class="n">HttpSession</span><span class="w"> </span><span class="n">session</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">Project</span><span class="p">)</span><span class="w"> </span><span class="n">session</span><span class="p">.</span><span class="na">getAttribute</span><span class="p">(</span><span class="s">&quot;selectedProject&quot;</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="nd">@GetMapping</span>
 <span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">list</span><span class="p">(...)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isNotLogin</span><span class="p">(</span><span class="n">session</span><span class="p">))</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;redirect:/login&quot;</span><span class="p">;</span>
-<span class="w">        </span><span class="n">search</span><span class="p">.</span><span class="na">setCommunityType</span><span class="p">(</span><span class="n">COMMUNITY_TYPE</span><span class="p">);</span><span class="w">   </span><span class="c1">// 타입 고정</span>
+<span class="w">        </span><span class="n">search</span><span class="p">.</span><span class="na">setCommunityType</span><span class="p">(</span><span class="n">COMMUNITY_TYPE</span><span class="p">);</span>
+<span class="w">        </span><span class="n">Project</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getSelectedProject</span><span class="p">(</span><span class="n">session</span><span class="p">);</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="n">search</span><span class="p">.</span><span class="na">setProjectId</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="na">getId</span><span class="p">());</span><span class="w">   </span><span class="c1">// 사업 필터</span>
+<span class="w">        </span><span class="n">model</span><span class="p">.</span><span class="na">addAttribute</span><span class="p">(</span><span class="s">&quot;selectedProject&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">);</span>
+<span class="w">        </span><span class="p">...</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nd">@GetMapping</span><span class="p">(</span><span class="s">&quot;/new&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">createForm</span><span class="p">(...)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">CommunityDto</span><span class="w"> </span><span class="n">dto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CommunityDto</span><span class="p">();</span>
+<span class="w">        </span><span class="n">dto</span><span class="p">.</span><span class="na">setCommunityType</span><span class="p">(</span><span class="n">COMMUNITY_TYPE</span><span class="p">);</span>
+<span class="w">        </span><span class="n">dto</span><span class="p">.</span><span class="na">setWriter</span><span class="p">(</span><span class="n">getLoginUserName</span><span class="p">(</span><span class="n">session</span><span class="p">));</span>
+<span class="w">        </span><span class="n">dto</span><span class="p">.</span><span class="na">setPostDate</span><span class="p">(</span><span class="n">LocalDate</span><span class="p">.</span><span class="na">now</span><span class="p">());</span><span class="w">   </span><span class="c1">// 작성일 오늘 날짜 기본값</span>
+<span class="w">        </span><span class="n">Project</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getSelectedProject</span><span class="p">(</span><span class="n">session</span><span class="p">);</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="n">dto</span><span class="p">.</span><span class="na">setProjectId</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="na">getId</span><span class="p">());</span>
 <span class="w">        </span><span class="p">...</span>
 <span class="w">    </span><span class="p">}</span>
 
@@ -975,14 +1004,19 @@
 <li><code>ENTITY_TYPE = "COMMUNITY"</code></li>
 <li>업로드 경로: <code>uploads/community/{communityType}/{entityId}/</code></li>
 <li><code>AttachFileRepository</code> 동일하게 재사용 (<code>findByEntityTypeAndEntityIdOrderByRegDtAsc</code> 등)</li>
+<li><code>mapDtoToEntity()</code>: <code>dto.getProjectId()</code>로 <code>entity.setProject()</code> 처리 (ProjectRepository 의존)</li>
+<li><code>toDto()</code>: <code>entity.getProject()</code>에서 <code>dto.setProjectId()</code> / <code>dto.setProjectName()</code> 채움</li>
 </ul>
-<h3 id="dto">DTO<a class="headerlink" href="#dto" title="Permanent link">&para;</a></h3>
+<h3 id="dto-communitydtojava">DTO — CommunityDto.java<a class="headerlink" href="#dto-communitydtojava" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CommunityDto</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">Long</span><span class="w">   </span><span class="n">id</span><span class="p">;</span>
-<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">communityType</span><span class="p">;</span><span class="w">   </span><span class="c1">// 컨트롤러에서 주입, 폼 필드 아님</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">Long</span><span class="w">   </span><span class="n">projectId</span><span class="p">;</span><span class="w">     </span><span class="c1">// 선택된 사업 ID (nullable)</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">projectName</span><span class="p">;</span><span class="w">   </span><span class="c1">// 화면 표시용</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">communityType</span><span class="p">;</span><span class="w"> </span><span class="c1">// 컨트롤러에서 주입, 폼 필드 아님</span>
 <span class="w">    </span><span class="nd">@NotBlank</span><span class="p">(</span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;제목을 입력해주세요.&quot;</span><span class="p">)</span>
 <span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">title</span><span class="p">;</span>
 <span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">writer</span><span class="p">;</span>
+<span class="w">    </span><span class="nd">@DateTimeFormat</span><span class="p">(</span><span class="n">pattern</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;yyyy-MM-dd&quot;</span><span class="p">)</span><span class="w">   </span><span class="c1">// th:field 바인딩 필수</span>
 <span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">LocalDate</span><span class="w"> </span><span class="n">postDate</span><span class="p">;</span>
 <span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">content</span><span class="p">;</span>
 <span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">AttachFileDto</span><span class="o">&gt;</span><span class="w"> </span><span class="n">attachments</span><span class="p">;</span>
@@ -1010,9 +1044,12 @@
 </table>
 <h3 id="_2">체크리스트<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[ ] <code>isNotLogin(session)</code> 사용 (isNotReady 금지 — selectedProject 없음)</li>
+<li>[ ] <code>isNotLogin(session)</code> 사용 (isNotReady 금지 — selectedProject는 optional)</li>
 <li>[ ] 컨트롤러에서 <code>dto.setCommunityType(COMMUNITY_TYPE)</code> 반드시 호출 (폼 바인딩 없음)</li>
 <li>[ ] 작성자 기본값: <code>dto.setWriter(getLoginUserName(session))</code></li>
+<li>[ ] 작성일 기본값: <code>dto.setPostDate(LocalDate.now())</code> — 등록 폼 초기화 시</li>
+<li>[ ] <code>CommunityDto.postDate</code>에 <code>@DateTimeFormat(pattern = "yyyy-MM-dd")</code> 선언</li>
+<li>[ ] <code>content</code> 컬럼 LONGTEXT — 웹에디터 이미지 저장 시 필수</li>
 <li>[ ] 폼에 <code>enctype="multipart/form-data"</code> + <code>initAttachUpload()</code> 호출</li>
 <li>[ ] fragments.html sidebar에 href 연결 확인</li>
 </ul>

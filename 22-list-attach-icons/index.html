@@ -8,13 +8,9 @@
       
       
       
-        <link rel="canonical" href="https://example.com/08-activepage-sidebar/">
+        <link rel="canonical" href="https://example.com/22-list-attach-icons/">
       
       
-        <link rel="prev" href="../07-project-structure/">
-      
-      
-        <link rel="next" href="../09-session-user-info/">
       
       
         
@@ -25,7 +21,7 @@
     
     
       
-        <title>ActivePage 메뉴 - e4net PMS Documentation</title>
+        <title>22 list attach icons - e4net PMS Documentation</title>
       
     
     
@@ -66,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#8-activepage" class="md-skip">
+        <a href="#22" class="md-skip">
           콘텐츠로 이동
         </a>
       
@@ -102,7 +98,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ActivePage 메뉴
+              22 list attach icons
             
           </span>
         </div>
@@ -462,35 +458,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ActivePage 메뉴
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../08-activepage-sidebar/" class="md-nav__link">
         
   
   
@@ -506,35 +477,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="목차">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      목차
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#8-activepage" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        8. activePage 키 목록 (사이드바 메뉴 활성화)
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -834,13 +776,124 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#8-activepage" class="md-nav__link">
+  <a href="#22" class="md-nav__link">
     <span class="md-ellipsis">
       
-        8. activePage 키 목록 (사이드바 메뉴 활성화)
+        22. 목록 화면 첨부파일 아이콘 패턴
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="22. 목록 화면 첨부파일 아이콘 패턴">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        설계 원칙
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        구성 요소
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="구성 요소">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-rest-api-attachmentapicontroller" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. REST API — AttachmentApiController
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-html-listhtml-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. HTML — list.html 수정 방법 (3곳)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-entitytype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. entityType 값 목록
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-commonjs-loadattachicons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. common.js — loadAttachIcons() 동작
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-commoncss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. common.css — 관련 클래스
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#url" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        다운로드 URL 패턴
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        새 모듈에 적용 시 체크리스트
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -864,136 +917,166 @@
   
 
 
-  <h1>ActivePage 메뉴</h1>
+  <h1>22 list attach icons</h1>
 
-<h2 id="8-activepage">8. activePage 키 목록 (사이드바 메뉴 활성화)<a class="headerlink" href="#8-activepage" title="Permanent link">&para;</a></h2>
-<p><code>fragments.html</code>의 <code>sidebar(activePage)</code> 프래그먼트에 전달하는 키 값. prefix 일치 시 상위 메뉴 자동 펼침.</p>
+<h2 id="22">22. 목록 화면 첨부파일 아이콘 패턴<a class="headerlink" href="#22" title="Permanent link">&para;</a></h2>
+<h3 id="_1">설계 원칙<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>목록 테이블에서 첨부파일 유무를 아이콘 1개로 표시 (파일이 없으면 아무것도 표시 안 함)</li>
+<li>파일이 2개 이상이면 아이콘 우상단에 빨간 배지로 수량 표시</li>
+<li>아이콘 클릭 시 공통 모달에서 파일 목록 확인 및 다운로드</li>
+<li>인프라는 <code>common.js</code> + <code>common.css</code>에 통합 — 각 list.html에 data 속성만 추가하면 자동 동작</li>
+</ul>
+<h3 id="_2">구성 요소<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<h4 id="1-rest-api-attachmentapicontroller">1. REST API — AttachmentApiController<a class="headerlink" href="#1-rest-api-attachmentapicontroller" title="Permanent link">&para;</a></h4>
+<div class="codehilite"><pre><span></span><code>GET /api/attachments?entityType=ISSUE&amp;ids=1,2,3,4
+응답: Map&lt;Long(entityId), List&lt;{id, fileName, fileSize}&gt;&gt;
+</code></pre></div>
+
+<ul>
+<li>미로그인 시 빈 맵 반환</li>
+<li>쉼표 구분 ID 파싱, 일괄 조회 후 entityId 기준 그룹핑</li>
+</ul>
+<h4 id="2-html-listhtml-3">2. HTML — list.html 수정 방법 (3곳)<a class="headerlink" href="#2-html-listhtml-3" title="Permanent link">&para;</a></h4>
+<div class="codehilite"><pre><span></span><code><span class="cm">&lt;!-- ① table 태그에 data 속성 추가 --&gt;</span>
+<span class="p">&lt;</span><span class="nt">table</span> <span class="na">data-entity-type</span><span class="o">=</span><span class="s">&quot;ISSUE&quot;</span> <span class="na">data-base-url</span><span class="o">=</span><span class="s">&quot;/issue&quot;</span><span class="p">&gt;</span>
+
+<span class="cm">&lt;!-- ② thead에 첨부 컬럼 헤더 추가 (관리 th 앞) --&gt;</span>
+<span class="p">&lt;</span><span class="nt">th</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;width:80px;&quot;</span><span class="p">&gt;</span>첨부<span class="p">&lt;/</span><span class="nt">th</span><span class="p">&gt;</span>
+
+<span class="cm">&lt;!-- ③ tbody 각 행에 attach-icons-cell td 추가 (관리 td 앞) --&gt;</span>
+<span class="p">&lt;</span><span class="nt">td</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;td-center attach-icons-cell&quot;</span> <span class="na">th:data-entity-id</span><span class="o">=</span><span class="s">&quot;${r.id}&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+
+<span class="cm">&lt;!-- ④ empty-row colspan 1 증가 --&gt;</span>
+<span class="p">&lt;</span><span class="nt">td</span> <span class="na">colspan</span><span class="o">=</span><span class="s">&quot;N+1&quot;</span><span class="p">&gt;</span>...<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<h4 id="3-entitytype">3. entityType 값 목록<a class="headerlink" href="#3-entitytype" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
-<th>키 값</th>
-<th>메뉴 경로</th>
-<th>URL</th>
+<th>모듈</th>
+<th>entityType</th>
+<th>base-url</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>home</code></td>
-<td>사업 Home</td>
-<td><code>/home</code></td>
-</tr>
-<tr>
-<td><code>biz-standard-output</code></td>
-<td>사업관리 &gt; 표준관리 &gt; 산출물 관리</td>
-<td><code>/deliverable</code></td>
-</tr>
-<tr>
-<td><code>biz-manpower-input</code></td>
-<td>사업관리 &gt; 인력관리 &gt; 투입인력 관리</td>
-<td><code>/manpower</code></td>
-</tr>
-<tr>
-<td><code>biz-scope-requirement</code></td>
-<td>사업관리 &gt; 범위관리 &gt; 요구사항 관리</td>
-<td><code>/requirement</code></td>
-</tr>
-<tr>
-<td><code>biz-scope-wbs</code></td>
-<td>사업관리 &gt; 범위관리 &gt; 사업일정(WBS)</td>
-<td><code>/wbs</code></td>
-</tr>
-<tr>
-<td><code>biz-report-regular</code></td>
-<td>사업관리 &gt; 보고관리 &gt; 정기보고</td>
-<td><code>/regular-report</code></td>
-</tr>
-<tr>
-<td><code>biz-report-weekly</code></td>
-<td>사업관리 &gt; 보고관리 &gt; 주간보고</td>
-<td><code>/weekly-report</code></td>
-</tr>
-<tr>
-<td><code>biz-report-monthly</code></td>
-<td>사업관리 &gt; 보고관리 &gt; 월간보고</td>
-<td><code>/monthly-report</code></td>
-</tr>
-<tr>
-<td><code>biz-report-meeting</code></td>
-<td>사업관리 &gt; 보고관리 &gt; 회의록</td>
-<td><code>/meeting-report</code></td>
-</tr>
-<tr>
-<td><code>biz-risk-issue</code></td>
-<td>사업관리 &gt; 위험관리 &gt; 이슈관리</td>
+<td>이슈관리</td>
+<td><code>ISSUE</code></td>
 <td><code>/issue</code></td>
 </tr>
 <tr>
-<td><code>biz-risk-risk</code></td>
-<td>사업관리 &gt; 위험관리 &gt; 위험관리</td>
+<td>위험관리</td>
+<td><code>RISK</code></td>
 <td><code>/risk</code></td>
 </tr>
 <tr>
-<td><code>exec-analysis-flow</code></td>
-<td>사업수행 &gt; 분석 &gt; 업무흐름</td>
-<td>(미구현)</td>
+<td>요구사항</td>
+<td><code>REQUIREMENT</code></td>
+<td><code>/requirement</code></td>
 </tr>
 <tr>
-<td><code>exec-analysis-menu</code></td>
-<td>사업수행 &gt; 분석 &gt; 메뉴구조</td>
-<td><code>/menu-structure</code></td>
+<td>정기보고</td>
+<td><code>CUSTOMER_REPORT</code></td>
+<td><code>/regular-report</code></td>
 </tr>
 <tr>
-<td><code>exec-design-interface</code></td>
-<td>사업수행 &gt; 설계 &gt; 인터페이스 목록</td>
-<td>(미구현)</td>
+<td>주간보고</td>
+<td><code>CUSTOMER_REPORT</code></td>
+<td><code>/weekly-report</code></td>
 </tr>
 <tr>
-<td><code>exec-design-screen</code></td>
-<td>사업수행 &gt; 설계 &gt; 화면목록</td>
-<td><code>/screen-list</code></td>
+<td>월간보고</td>
+<td><code>CUSTOMER_REPORT</code></td>
+<td><code>/monthly-report</code></td>
 </tr>
 <tr>
-<td><code>exec-design-program</code></td>
-<td>사업수행 &gt; 설계 &gt; 프로그램목록</td>
-<td>(미구현)</td>
+<td>회의록</td>
+<td><code>CUSTOMER_REPORT</code></td>
+<td><code>/meeting-report</code></td>
 </tr>
 <tr>
-<td><code>exec-impl-unit</code></td>
-<td>사업수행 &gt; 구현 &gt; 단위테스트 목록</td>
-<td>(미구현)</td>
-</tr>
-<tr>
-<td><code>exec-test-integration</code></td>
-<td>사업수행 &gt; 시험 &gt; 통합테스트 목록</td>
-<td>(미구현)</td>
-</tr>
-<tr>
-<td><code>community-notice-list</code></td>
-<td>커뮤니티 &gt; 공지사항</td>
+<td>공지사항</td>
+<td><code>COMMUNITY</code></td>
 <td><code>/notice</code></td>
 </tr>
 <tr>
-<td><code>community-archive-list</code></td>
-<td>커뮤니티 &gt; 자료실</td>
+<td>자료실</td>
+<td><code>COMMUNITY</code></td>
 <td><code>/archive</code></td>
-</tr>
-<tr>
-<td><code>admin-project-list</code></td>
-<td>관리자 &gt; 사업 관리 &gt; 사업 목록</td>
-<td><code>/project/list</code></td>
-</tr>
-<tr>
-<td><code>admin-user-list</code></td>
-<td>관리자 &gt; 사용자 관리 &gt; 사용자 목록</td>
-<td><code>/admin/users</code></td>
-</tr>
-<tr>
-<td><code>admin-system-code</code></td>
-<td>관리자 &gt; 시스템 관리 &gt; 공통코드 관리</td>
-<td><code>/admin/common-code</code></td>
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>주의:</strong> 보고관리 4종은 entityType이 모두 <code>CUSTOMER_REPORT</code>로 동일하지만 <code>base-url</code>이 달라 다운로드 URL이 정확히 생성됨.</p>
+</blockquote>
+<h4 id="4-commonjs-loadattachicons">4. common.js — loadAttachIcons() 동작<a class="headerlink" href="#4-commonjs-loadattachicons" title="Permanent link">&para;</a></h4>
+<div class="codehilite"><pre><span></span><code><span class="c1">// DOMContentLoaded 시 자동 실행 (IIFE)</span>
+<span class="c1">// 1. 공통 첨부 모달(#attachModal) body에 동적 생성</span>
+<span class="c1">// 2. table[data-entity-type] 찾아 attach-icons-cell 수집</span>
+<span class="c1">// 3. /api/attachments?entityType=X&amp;ids=1,2,3 일괄 fetch</span>
+<span class="c1">// 4. 파일 있는 셀에만 .btn-attach-icon 버튼 렌더링</span>
+<span class="c1">//    - 파일 2개 이상: .attach-badge 배지 표시</span>
+<span class="c1">//    - 클릭 시 openAttachModal(files, baseUrl, entityId) 호출</span>
+</code></pre></div>
+
+<p>전역 함수:
+- <code>openAttachModal(files, baseUrl, entityId)</code> — 모달에 파일 목록 채우고 open
+- <code>closeAttachModal()</code> — 모달 닫기</p>
+<h4 id="5-commoncss">5. common.css — 관련 클래스<a class="headerlink" href="#5-commoncss" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>클래스</th>
+<th>용도</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.btn-attach-icon</code></td>
+<td>아이콘 버튼 (📄)</td>
+</tr>
+<tr>
+<td><code>.attach-badge</code></td>
+<td>파일 수 배지 (빨간 원)</td>
+</tr>
+<tr>
+<td><code>.attach-file-list</code></td>
+<td>모달 내 파일 ul</td>
+</tr>
+<tr>
+<td><code>.attach-file-item</code></td>
+<td>모달 내 파일 li (flex 행)</td>
+</tr>
+<tr>
+<td><code>.attach-file-icon</code></td>
+<td>모달 내 파일 아이콘</td>
+</tr>
+<tr>
+<td><code>.attach-file-name</code></td>
+<td>모달 내 파일명 링크 (클릭 → 다운로드)</td>
+</tr>
+<tr>
+<td><code>.attach-file-size</code></td>
+<td>모달 내 파일 크기</td>
+</tr>
+</tbody>
+</table>
+<h3 id="url">다운로드 URL 패턴<a class="headerlink" href="#url" title="Permanent link">&para;</a></h3>
+<p>모달에서 파일명 클릭 시:</p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span><span class="n">baseUrl</span><span class="p">}</span><span class="o">/</span><span class="p">{</span><span class="n">entityId</span><span class="p">}</span><span class="o">/</span><span class="n">attachment</span><span class="o">/</span><span class="p">{</span><span class="n">fileId</span><span class="p">}</span><span class="o">/</span><span class="n">download</span>
+<span class="err">예</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">issue</span><span class="o">/</span><span class="mi">42</span><span class="o">/</span><span class="n">attachment</span><span class="o">/</span><span class="mi">7</span><span class="o">/</span><span class="n">download</span>
+</code></pre></div>
+
+<p>이 URL은 각 모듈 컨트롤러의 <code>@GetMapping("/{id}/attachment/{attId}/download")</code> 엔드포인트로 연결됨 (§16 참조).</p>
+<h3 id="_3">새 모듈에 적용 시 체크리스트<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] 해당 모듈 컨트롤러에 <code>/attachment/{attId}/download</code> 엔드포인트 존재 확인 (§16)</li>
+<li>[ ] <code>AttachFileRepository.findByEntityTypeAndEntityIdIn()</code> 존재 확인 (§16)</li>
+<li>[ ] list.html에 table data 속성, 첨부 th, attach-icons-cell td, colspan 수정</li>
+<li>[ ] entityType 문자열이 서비스의 <code>ENTITY_TYPE</code> 상수와 일치하는지 확인</li>
+</ul>
 
 
 

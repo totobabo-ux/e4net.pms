@@ -886,10 +886,32 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        엑셀 업로드 — 모듈별 전략 정리
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#delete-all-insert-wbs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        엑셀 업로드 — delete-all + insert 패턴 (WBS/이슈/위험 등 순서 의존 데이터)
+        엑셀 업로드 — delete-all + insert 패턴 (WBS — 순서 의존 데이터)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wbs-replace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WBS 업로드 경고 모달 패턴 (파괴적 replace 전 확인)
       
     </span>
   </a>
@@ -1083,10 +1105,32 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        엑셀 업로드 — 모듈별 전략 정리
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#delete-all-insert-wbs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        엑셀 업로드 — delete-all + insert 패턴 (WBS/이슈/위험 등 순서 의존 데이터)
+        엑셀 업로드 — delete-all + insert 패턴 (WBS — 순서 의존 데이터)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wbs-replace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WBS 업로드 경고 모달 패턴 (파괴적 replace 전 확인)
       
     </span>
   </a>
@@ -1333,15 +1377,99 @@
 <span class="p">}</span>
 </code></pre></div>
 
-<h3 id="delete-all-insert-wbs">엑셀 업로드 — delete-all + insert 패턴 (WBS/이슈/위험 등 순서 의존 데이터)<a class="headerlink" href="#delete-all-insert-wbs" title="Permanent link">&para;</a></h3>
-<p>기존 upsert 대신 전체 삭제 후 재삽입하는 패턴.
-사용 시점: 행 순서(sortOrder)가 의미 있거나 모든 데이터를 교체해야 할 때.</p>
+<h3 id="_4">엑셀 업로드 — 모듈별 전략 정리<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>모듈</th>
+<th>전략</th>
+<th>식별키</th>
+<th>이유</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>위험관리</td>
+<td><strong>upsert</strong></td>
+<td><code>riskCode</code></td>
+<td>행 순서 무관, 부분 수정 가능</td>
+</tr>
+<tr>
+<td>이슈관리</td>
+<td><strong>upsert</strong></td>
+<td><code>issueNo</code></td>
+<td>행 순서 무관, 부분 수정 가능</td>
+</tr>
+<tr>
+<td>요구사항</td>
+<td><strong>upsert</strong></td>
+<td><code>reqCode</code></td>
+<td>행 순서 무관, 부분 수정 가능</td>
+</tr>
+<tr>
+<td>공통코드</td>
+<td><strong>upsert</strong></td>
+<td><code>groupCode + code</code></td>
+<td>그룹-코드 복합키</td>
+</tr>
+<tr>
+<td>산출물</td>
+<td><strong>upsert</strong></td>
+<td><code>deliverableId</code></td>
+<td>행 순서 무관</td>
+</tr>
+<tr>
+<td>WBS</td>
+<td><strong>delete-all + insert</strong></td>
+<td>없음 (순서 중요)</td>
+<td>sortOrder 의존, 전체 교체</td>
+</tr>
+</tbody>
+</table>
+<h3 id="delete-all-insert-wbs">엑셀 업로드 — delete-all + insert 패턴 (WBS — 순서 의존 데이터)<a class="headerlink" href="#delete-all-insert-wbs" title="Permanent link">&para;</a></h3>
+<p>전체 삭제 후 재삽입. <strong>업로드 전 경고 모달 필수</strong> — 되돌릴 수 없는 파괴적 작업.</p>
 <ol>
 <li>첨부파일이 있는 경우: <code>findByEntityTypeAndEntityIdIn</code> → 물리 파일 삭제 → <code>deleteByEntityTypeAndEntityIdIn</code></li>
 <li>전체 엔티티 삭제: <code>repository.deleteAll(repository.findAll...)</code></li>
 <li>엑셀 행 순서대로 신규 INSERT (<code>sortOrder = 1</code>부터 순번 부여)</li>
 <li>반환: <code>int[]{ inserted, 0, skipped }</code> (updated 항상 0)</li>
 </ol>
+<h3 id="wbs-replace">WBS 업로드 경고 모달 패턴 (파괴적 replace 전 확인)<a class="headerlink" href="#wbs-replace" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="cm">&lt;!-- 경고 모달 (먼저 표시) --&gt;</span>
+<span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;uploadWarnModal&quot;</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-overlay&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal modal-sm&quot;</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-header red&quot;</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-title&quot;</span><span class="p">&gt;</span><span class="ni">&amp;#9888;</span> 업로드 주의<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="nt">button</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-close&quot;</span> <span class="na">onclick</span><span class="o">=</span><span class="s">&quot;document.getElementById(&#39;uploadWarnModal&#39;).classList.remove(&#39;open&#39;)&quot;</span><span class="p">&gt;</span><span class="ni">&amp;times;</span><span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+        <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-body&quot;</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>입력된 전체 사업일정이 제거된 후 업로드된 엑셀 정보로 대체됩니다.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="nt">p</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;margin-top:8px; color:#e74c3c; font-size:12px;&quot;</span><span class="p">&gt;</span>이 작업은 되돌릴 수 없습니다.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+        <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-footer&quot;</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="nt">button</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;button&quot;</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;btn btn-delete&quot;</span> <span class="na">onclick</span><span class="o">=</span><span class="s">&quot;confirmUpload()&quot;</span><span class="p">&gt;</span>계속<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="nt">button</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;button&quot;</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;btn btn-cancel&quot;</span> <span class="na">onclick</span><span class="o">=</span><span class="s">&quot;document.getElementById(&#39;uploadWarnModal&#39;).classList.remove(&#39;open&#39;)&quot;</span><span class="p">&gt;</span>취소<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+        <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+
+<span class="cm">&lt;!-- 파일 선택 모달 (경고 확인 후 표시) --&gt;</span>
+<span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;uploadModal&quot;</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-overlay&quot;</span><span class="p">&gt;</span> ... <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+
+<span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">openUploadModal</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;uploadWarnModal&#39;</span><span class="p">).</span><span class="nx">classList</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="s1">&#39;open&#39;</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">confirmUpload</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;uploadWarnModal&#39;</span><span class="p">).</span><span class="nx">classList</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="s1">&#39;open&#39;</span><span class="p">);</span>
+<span class="w">    </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;uploadModal&#39;</span><span class="p">).</span><span class="nx">classList</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="s1">&#39;open&#39;</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">closeUploadModal</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;uploadModal&#39;</span><span class="p">).</span><span class="nx">classList</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="s1">&#39;open&#39;</span><span class="p">);</span>
+<span class="w">    </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;uploadForm&#39;</span><span class="p">).</span><span class="nx">reset</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</code></pre></div>
 
 
 
