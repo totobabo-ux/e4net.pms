@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>업무흐름 목록 - e4net PMS</title>
+    <title>업무흐름 목록 - E4NET PMS</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -30,7 +30,9 @@
                           th:text="'[ ' + ${selectedProject.projectName} + ' ]'"></span>
                 </div>
                 <div class="btn-group">
-                    <a class="btn btn-primary" href="/business-flow/new">&#43; 등록</a>
+                    <a class="btn btn-secondary" th:href="@{/business-flow/excel/download}">&#11015; 엑셀 다운로드</a>
+                    <button type="button" class="btn btn-secondary" th:if="${isPrivileged}" onclick="openUploadModal()">&#11014; 엑셀 업로드</button>
+                    <a class="btn btn-primary" th:if="${isPrivileged}" href="/business-flow/new">&#43; 등록</a>
                 </div>
             </div>
 
@@ -69,12 +71,12 @@
                         <thead>
                             <tr>
                                 <th style="width:44px;">No.</th>
-                                <th style="width:120px;">시스템구분</th>
-                                <th style="width:120px;">업무구분</th>
-                                <th style="width:100px;">프로세스ID</th>
-                                <th>프로세스명</th>
+                                <th style="width:140px;">시스템구분</th>
+                                <th style="width:160px;">업무구분</th>
+                                <th style="width:120px;">프로세스ID</th>
+                                <th style="width:300px;">프로세스명</th>
                                 <th style="width:50px;">첨부</th>
-                                <th style="width:80px;">관리</th>
+                                <th style="width:90px;">관리</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -96,7 +98,7 @@
                                     <button class="btn-sm-edit"
                                             th:data-href="@{/business-flow/{id}(id=${flow.id})}"
                                             onclick="location.href=this.dataset.href">상세</button>
-                                    <button class="btn-sm-del"
+                                    <button class="btn-sm-del" th:if="${isPrivileged}"
                                             th:data-id="${flow.id}"
                                             th:data-name="${flow.processName}"
                                             onclick="openDeleteModal(this.dataset.id, this.dataset.name)">삭제</button>
@@ -131,6 +133,29 @@
     </div>
 </div>
 
+<!-- 엑셀 업로드 모달 -->
+<div id="uploadModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <span class="modal-title">&#11014; 엑셀 업로드</span>
+            <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom:12px; color:#4a5568; font-size:13px;">
+                다운로드한 엑셀 파일의 데이터를 수정 후 업로드하세요.<br>
+                <strong style="color:#2980b9;">프로세스ID</strong> 기준으로 기존 데이터는 수정, 신규 데이터는 등록됩니다.
+            </p>
+            <form id="uploadForm" th:action="@{/business-flow/excel/upload}" method="post" enctype="multipart/form-data">
+                <input type="file" name="excelFile" accept=".xlsx,.xls" class="form-control">
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" form="uploadForm" class="btn btn-primary">업로드</button>
+            <button type="button" class="btn btn-cancel" onclick="closeUploadModal()">취소</button>
+        </div>
+    </div>
+</div>
+
 <!-- 삭제 확인 모달 -->
 <div id="deleteModal" class="modal-overlay">
     <div class="modal modal-sm">
@@ -161,6 +186,12 @@
     function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('open'); }
     document.getElementById('deleteModal').addEventListener('click', function(e) {
         if (e.target === this) closeDeleteModal();
+    });
+
+    function openUploadModal()  { document.getElementById('uploadModal').classList.add('open'); }
+    function closeUploadModal() { document.getElementById('uploadModal').classList.remove('open'); }
+    document.getElementById('uploadModal').addEventListener('click', function(e) {
+        if (e.target === this) closeUploadModal();
     });
 </script>
 </body>

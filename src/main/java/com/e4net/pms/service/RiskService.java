@@ -170,26 +170,34 @@ public class RiskService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("사업을 찾을 수 없습니다."));
 
-        // 기존 위험 전체 삭제 (첨부파일 포함)
-        List<Risk> existingRisks = riskRepository.findAllByProject_IdOrderByIdAsc(projectId);
-        if (!existingRisks.isEmpty()) {
-            List<Long> riskIds = existingRisks.stream().map(Risk::getId).toList();
-            List<AttachFile> attachments = attachFileRepository.findByEntityTypeAndEntityIdIn(ENTITY_TYPE, riskIds);
-            attachments.forEach(a -> deletePhysicalFile(a.getFilePath()));
-            attachFileRepository.deleteByEntityTypeAndEntityIdIn(ENTITY_TYPE, riskIds);
-            riskRepository.deleteAll(existingRisks);
-        }
-
-        int inserted = 0, skipped = 0;
+        int inserted = 0, updated = 0, skipped = 0;
 
         for (String[] cells : rows) {
             String riskNameVal = getCell(cells, 1);
             if (riskNameVal.isBlank()) { skipped++; continue; }
 
-            Risk entity = new Risk();
-            entity.setProject(project);
-            entity.setRegId(userId);
-            entity.setRiskCode(getCell(cells, 0));
+            // riskCode 기준 upsert — 코드가 있으면 기존 데이터 수정, 없으면 신규 등록
+            String riskCodeVal = getCell(cells, 0);
+            Risk entity;
+            boolean isNew;
+            if (!riskCodeVal.isBlank()) {
+                var existing = riskRepository.findFirstByProject_IdAndRiskCode(projectId, riskCodeVal);
+                if (existing.isPresent()) {
+                    entity = existing.get();
+                    isNew  = false;
+                } else {
+                    entity = new Risk();
+                    entity.setProject(project);
+                    entity.setRegId(userId);
+                    isNew = true;
+                }
+            } else {
+                entity = new Risk();
+                entity.setProject(project);
+                entity.setRegId(userId);
+                isNew = true;
+            }
+            entity.setRiskCode(riskCodeVal.isBlank() ? null : riskCodeVal);
             entity.setRiskName(riskNameVal);
             entity.setRiskType(getCell(cells, 2));
             String identifiedDateVal = getCell(cells, 3);
@@ -210,9 +218,9 @@ public class RiskService {
             entity.setUpdId(userId);
 
             riskRepository.save(entity);
-            inserted++;
+            if (isNew) inserted++; else updated++;
         }
-        return new int[]{ inserted, 0, skipped };
+        return new int[]{ inserted, updated, skipped };
     }
 
     /** 엑셀 워크북 생성 (다운로드용) */

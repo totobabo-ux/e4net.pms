@@ -9,6 +9,7 @@ public class CommunitySpec {
     public static Specification<Community> search(CommunitySearchDto dto) {
         return Specification
             .where(eqType(dto.getCommunityType()))
+            .and(eqProject(dto.getProjectId()))
             .and(likeTitle(dto.getTitle()))
             .and(likeWriter(dto.getWriter()));
     }
@@ -16,6 +17,11 @@ public class CommunitySpec {
     private static Specification<Community> eqType(String communityType) {
         return (root, query, cb) ->
             communityType == null ? null : cb.equal(root.get("communityType"), communityType);
+    }
+
+    private static Specification<Community> eqProject(Long projectId) {
+        return (root, query, cb) ->
+            projectId == null ? null : cb.equal(root.get("project").get("id"), projectId);
     }
 
     private static Specification<Community> likeTitle(String title) {

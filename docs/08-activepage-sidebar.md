@@ -13,8 +13,8 @@
 | `biz-report-weekly` | 사업관리 > 보고관리 > 주간보고 | `/weekly-report` |
 | `biz-report-monthly` | 사업관리 > 보고관리 > 월간보고 | `/monthly-report` |
 | `biz-report-meeting` | 사업관리 > 보고관리 > 회의록 | `/meeting-report` |
-| `biz-risk-risk` | 사업관리 > 위험관리 > 위험관리 | (미구현) |
-| `biz-risk-issue` | 사업관리 > 위험관리 > 이슈관리 | (미구현) |
+| `biz-risk-issue` | 사업관리 > 위험관리 > 이슈관리 | `/issue` |
+| `biz-risk-risk` | 사업관리 > 위험관리 > 위험관리 | `/risk` |
 | `exec-analysis-flow` | 사업수행 > 분석 > 업무흐름 | (미구현) |
 | `exec-analysis-menu` | 사업수행 > 분석 > 메뉴구조 | `/menu-structure` |
 | `exec-design-interface` | 사업수행 > 설계 > 인터페이스 목록 | (미구현) |
@@ -26,4 +26,4 @@
 | `community-archive-list` | 커뮤니티 > 자료실 | `/archive` |
 | `admin-project-list` | 관리자 > 사업 관리 > 사업 목록 | `/project/list` |
 | `admin-user-list` | 관리자 > 사용자 관리 > 사용자 목록 | `/admin/users` |
-| `admin-role-list` | 관리자 > 권한 관리 > 권한 목록 | (미구현) |
+| `admin-system-code` | 관리자 > 시스템 관리 > 공통코드 관리 | `/admin/common-code` |

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로그램 상세 - E4NET PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        #editSection { display:none; }
+        #viewSection { display:block; }
+    </style>
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+    <aside th:replace="~{layout/fragments :: sidebar('exec-design-program')}"></aside>
+
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업수행</span>
+            <span class="sep">/</span><span>설계</span>
+            <span class="sep">/</span><a href="/program-list">프로그램목록</a>
+            <span class="sep">/</span><span class="current">프로그램 상세</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">프로그램 상세</div>
+                <div class="btn-group" id="viewButtons">
+                    <button type="button" class="btn btn-edit" onclick="switchToEdit()">&#9998; 수정</button>
+                    <button type="button" class="btn btn-delete" onclick="openDeleteModal()">&#128465; 삭제</button>
+                    <a class="btn btn-list" href="/program-list">&#9776; 목록</a>
+                </div>
+                <div class="btn-group" id="editButtons" style="display:none;">
+                    <button type="submit" form="programEditForm" class="btn btn-primary">&#10003; 저장</button>
+                    <button type="button" class="btn btn-cancel" onclick="switchToView()">&#10005; 취소</button>
+                </div>
+            </div>
+
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+            <!-- ───────── 조회 섹션 ───────── -->
+            <div id="viewSection">
+                <div class="detail-card">
+                    <div class="detail-card-header">&#128196; 프로그램 정보</div>
+                    <div class="detail-grid">
+
+                        <div class="detail-cell">
+                            <span class="detail-label">사업명</span>
+                            <span class="detail-value" th:text="${program.projectName}">-</span>
+                        </div>
+                        <div class="detail-cell">
+                            <span class="detail-label">시스템구분</span>
+                            <span class="detail-value" th:text="${program.systemName ?: '-'}">-</span>
+                        </div>
+
+                        <div class="detail-cell">
+                            <span class="detail-label">프로그램ID</span>
+                            <span class="detail-value" th:text="${program.programId ?: '-'}">-</span>
+                        </div>
+                        <div class="detail-cell">
+                            <span class="detail-label">프로그램명</span>
+                            <span class="detail-value" th:text="${program.programName ?: '-'}">-</span>
+                        </div>
+
+                        <div class="detail-cell">
+                            <span class="detail-label">클래스명</span>
+                            <span class="detail-value" th:text="${program.className ?: '-'}">-</span>
+                        </div>
+                        <div class="detail-cell">
+                            <span class="detail-label">클래스경로</span>
+                            <span class="detail-value" style="font-size:12px; word-break:break-all;"
+                                  th:text="${program.classPath ?: '-'}">-</span>
+                        </div>
+
+                        <div class="detail-cell">
+                            <span class="detail-label">프로그램구분</span>
+                            <span class="detail-value" th:text="${program.programType ?: '-'}">-</span>
+                        </div>
+                        <div class="detail-cell">
+                            <span class="detail-label">개발난이도</span>
+                            <span class="badge"
+                                  th:if="${program.difficulty != null}"
+                                  th:classappend="${program.difficulty == '상'} ? 'badge-완료' :
+                                                  (${program.difficulty == '중'} ? 'badge-개발중' : 'badge-미도래')"
+                                  th:text="${program.difficulty}"></span>
+                            <span class="detail-value" th:unless="${program.difficulty != null}">-</span>
+                        </div>
+
+                        <div class="detail-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                            <span class="detail-label" style="padding-top:4px;">비고</span>
+                            <span class="detail-value" style="white-space:pre-wrap;"
+                                  th:text="${program.note ?: '-'}">-</span>
+                        </div>
+
+                        <!-- 첨부파일 목록 (조회) -->
+                        <div class="detail-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                            <span class="detail-label" style="padding-top:4px;">첨부파일</span>
+                            <div style="flex:1; min-width:0;">
+                                <div th:if="${program.attachments == null or #lists.isEmpty(program.attachments)}"
+                                     class="attach-empty">첨부파일 없음</div>
+                                <div th:each="att : ${program.attachments}" class="attach-row attach-view">
+                                    <span class="attach-icon">&#128196;</span>
+                                    <a th:href="@{/program-list/{id}/attachment/{attId}/download(id=${program.id},attId=${att.id})}"
+                                       class="attach-name td-link" th:text="${att.fileName}"></a>
+                                    <span class="attach-size" th:text="${att.fileSizeDisplay}"></span>
+                                    <span style="font-size:12px; color:#2980b9;">&#11015; 다운로드</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- ───────── 수정 섹션 ───────── -->
+            <div id="editSection">
+                <form id="programEditForm"
+                      th:action="@{/program-list/{id}/edit(id=${program.id})}"
+                      method="post"
+                      enctype="multipart/form-data"
+                      th:object="${program}">
+
+                    <div class="form-card">
+                        <div class="form-card-header">&#128196; 프로그램 정보 수정</div>
+                        <div class="form-card-body">
+                            <div class="form-grid-2col">
+
+                                <div class="form-cell">
+                                    <label class="form-label">사업명</label>
+                                    <input type="hidden" th:field="*{projectId}">
+                                    <span th:text="${session.selectedProject != null ? session.selectedProject.projectName : program.projectName}"
+                                          style="font-weight:bold; color:#2c3e50;"></span>
+                                </div>
+                                <div class="form-cell">
+                                    <label class="form-label">시스템구분</label>
+                                    <input type="text" class="form-control" th:field="*{systemName}" placeholder="시스템구분 입력">
+                                </div>
+
+                                <div class="form-cell">
+                                    <label class="form-label">프로그램ID</label>
+                                    <input type="text" class="form-control" th:field="*{programId}"
+                                           placeholder="예: PGM-CMN-LGN-001">
+                                </div>
+                                <div class="form-cell">
+                                    <label class="form-label">프로그램명<span class="req">※</span></label>
+                                    <input type="text" class="form-control" th:field="*{programName}"
+                                           placeholder="프로그램명을 입력하세요">
+                                </div>
+
+                                <div class="form-cell">
+                                    <label class="form-label">클래스명</label>
+                                    <input type="text" class="form-control" th:field="*{className}"
+                                           placeholder="예: FrontLoginService">
+                                </div>
+                                <div class="form-cell">
+                                    <label class="form-label">클래스경로</label>
+                                    <input type="text" class="form-control" th:field="*{classPath}"
+                                           placeholder="예: /11.business/.../FrontLoginService.java">
+                                </div>
+
+                                <div class="form-cell">
+                                    <label class="form-label">프로그램구분</label>
+                                    <select class="form-control" th:field="*{programType}">
+                                        <option value="">선택</option>
+                                        <option th:each="c : ${codes['PROGRAM_TYPE']}"
+                                                th:value="${c.code}" th:text="${c.codeName}"></option>
+                                    </select>
+                                </div>
+                                <div class="form-cell">
+                                    <label class="form-label">개발난이도</label>
+                                    <select class="form-control" th:field="*{difficulty}">
+                                        <option value="">선택</option>
+                                        <option th:each="c : ${codes['PROGRAM_DIFFICULTY']}"
+                                                th:value="${c.code}" th:text="${c.codeName}"></option>
+                                    </select>
+                                </div>
+
+                                <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                                    <label class="form-label">비고</label>
+                                    <textarea class="form-control" th:field="*{note}"
+                                              rows="3" placeholder="비고 입력"
+                                              style="resize:vertical;"></textarea>
+                                </div>
+
+                                <!-- 첨부파일 (수정) -->
+                                <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                                    <label class="form-label">첨부파일</label>
+                                    <div class="attach-zone">
+                                        <div th:if="${program.attachments != null and not #lists.isEmpty(program.attachments)}">
+                                            <div class="attach-section-label">기존 첨부파일</div>
+                                            <div th:each="att : ${program.attachments}" class="attach-row attach-existing">
+                                                <span class="attach-icon">&#128196;</span>
+                                                <span class="attach-name" th:text="${att.fileName}"></span>
+                                                <span class="attach-size" th:text="${att.fileSizeDisplay}"></span>
+                                                <form th:action="@{/program-list/{id}/attachment/{attId}/delete(id=${program.id},attId=${att.id})}"
+                                                      method="post" style="margin:0; flex-shrink:0;">
+                                                    <button type="submit" class="btn-sm-del"
+                                                            onclick="return confirm('이 첨부파일을 삭제하시겠습니까?')">삭제</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        <div id="editPendingList_label" class="attach-section-label" style="display:none; margin-top:8px;">추가할 파일</div>
+                                        <div id="editPendingList"></div>
+                                        <div class="attach-add-area">
+                                            <button type="button" class="btn-attach-add"
+                                                    onclick="document.getElementById('editFileInput').click()">
+                                                &#128206; 파일 추가
+                                            </button>
+                                            <span class="attach-hint">여러 파일 동시 선택 가능</span>
+                                        </div>
+                                        <input type="file" id="editFileInput" name="attachFiles" multiple style="display:none;">
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header red">
+            <span class="modal-title">&#128465; 삭제 확인</span>
+            <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><strong th:text="${program.programName ?: '선택한 항목'}">프로그램</strong> 을(를) 삭제하시겠습니까?</p>
+            <p style="margin-top:8px;color:#718096;font-size:12px;">삭제된 데이터는 복구할 수 없습니다.</p>
+        </div>
+        <div class="modal-footer">
+            <form th:action="@{/program-list/{id}/delete(id=${program.id})}" method="post">
+                <button type="submit" class="btn btn-delete">삭제</button>
+            </form>
+            <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">취소</button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    function switchToEdit() {
+        document.getElementById('viewSection').style.display = 'none';
+        document.getElementById('editSection').style.display = 'block';
+        document.getElementById('viewButtons').style.display = 'none';
+        document.getElementById('editButtons').style.display = 'flex';
+    }
+    function switchToView() {
+        document.getElementById('viewSection').style.display = 'block';
+        document.getElementById('editSection').style.display = 'none';
+        document.getElementById('viewButtons').style.display = 'flex';
+        document.getElementById('editButtons').style.display = 'none';
+    }
+    function openDeleteModal()  { document.getElementById('deleteModal').classList.add('open'); }
+    function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('open'); }
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+    initAttachUpload('editFileInput', 'editPendingList', 'programEditForm');
+</script>
+</body>
+</html>

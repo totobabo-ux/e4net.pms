@@ -20,6 +20,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> searchByNameAndCompany(@Param("name") String name,
                                       @Param("company") String company);
 
+    // 권한별 사용자 목록 (권한 관리)
+    List<User> findByRoleOrderByNameAsc(String role);
+    List<User> findByRoleIsNullOrderByNameAsc();
+
     // 관리자 사용자 목록 검색 (페이징)
     @Query("SELECT u FROM User u WHERE " +
            "(:employeeNo IS NULL OR :employeeNo = '' OR u.employeeNo LIKE %:employeeNo%) AND " +

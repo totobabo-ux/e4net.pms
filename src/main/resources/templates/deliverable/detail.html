@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>산출물 상세 - e4net PMS</title>
+    <title>산출물 상세 - E4NET PMS</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <style>
         /* 조회/수정 모드 전환 */
@@ -36,12 +36,12 @@
                 <div class="page-title">산출물 상세</div>
                 <!-- 조회 모드 버튼 -->
                 <div class="btn-group" id="viewButtons">
-                    <button type="button" class="btn btn-edit" onclick="switchToEdit()">&#9998; 수정</button>
-                    <button type="button" class="btn btn-delete" onclick="openDeleteModal()">&#128465; 삭제</button>
+                    <button type="button" class="btn btn-edit" th:if="${isPrivileged}" onclick="switchToEdit()">&#9998; 수정</button>
+                    <button type="button" class="btn btn-delete" th:if="${isPrivileged}" onclick="openDeleteModal()">&#128465; 삭제</button>
                     <a class="btn btn-list" href="/deliverable">&#9776; 목록</a>
                 </div>
                 <!-- 수정 모드 버튼 -->
-                <div class="btn-group" id="editButtons" style="display:none;">
+                <div class="btn-group" id="editButtons" style="display:none;" th:if="${isPrivileged}">
                     <button type="submit" form="deliverableEditForm" class="btn btn-primary">&#10003; 저장</button>
                     <button type="button" class="btn btn-cancel" onclick="switchToView()">&#10005; 취소</button>
                 </div>

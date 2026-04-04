@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공통코드 관리 - E4NET PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        /* ── 공통코드 관리 레이아웃 ───────────────────────────── */
+        .code-layout {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            height: calc(100vh - 130px);
+        }
+
+        /* 왼쪽 그룹 패널 */
+        .code-left {
+            flex: 0 0 200px;
+            background: #fff;
+            border: 1px solid #c8d0dc;
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .code-left-header {
+            padding: 12px 14px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            background: #2c3e50;
+            border-bottom: 1px solid #c8d0dc;
+            flex-shrink: 0;
+        }
+        .group-list {
+            list-style: none;
+            overflow-y: auto;
+            flex: 1;
+            padding: 6px 0;
+        }
+        .group-item {
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #4a5568;
+            border-left: 3px solid transparent;
+            transition: all 0.15s;
+            user-select: none;
+        }
+        .group-item:hover { background: #ebf8ff; color: #2980b9; }
+        .group-item.active {
+            background: #ebf8ff;
+            color: #2980b9;
+            font-weight: 700;
+            border-left-color: #2980b9;
+        }
+        .group-count {
+            float: right;
+            background: #e2e8f0;
+            color: #718096;
+            border-radius: 10px;
+            padding: 1px 7px;
+            font-size: 11px;
+        }
+        .group-item.active .group-count {
+            background: #bee3f8;
+            color: #2980b9;
+        }
+
+        /* 오른쪽 코드 패널 */
+        .code-right {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .code-right .table-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin-bottom: 0;
+        }
+        .code-right .table-wrap {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* 필수 입력 오류 */
+        .input-inline.field-error {
+            border-color: #e53e3e !important;
+            background: #fff5f5 !important;
+        }
+        .field-error-msg {
+            display: block;
+            font-size: 11px;
+            color: #e53e3e;
+            margin-top: 3px;
+            line-height: 1.3;
+        }
+
+        /* 인라인 편집 입력 필드 */
+        .input-inline {
+            width: 100%;
+            padding: 4px 7px;
+            border: 1px solid #d1d9e0;
+            border-radius: 3px;
+            font-size: 12px;
+            color: #2d3748;
+            background: #fafbfc;
+            outline: none;
+            transition: border-color 0.15s, background 0.15s;
+            box-sizing: border-box;
+        }
+        .input-inline:focus {
+            border-color: #2980b9;
+            background: #fff;
+        }
+        .input-inline.w-sm { width: 70px; }
+        .input-inline.w-xs { width: 50px; }
+
+        /* 테이블 행 상태 */
+        tr.new-row td { background: #fffbeb !important; }
+        tr.saved-row td { background: #f0fff4 !important; }
+
+        /* 그룹코드 강조 배지 */
+        .group-badge {
+            display: inline-block;
+            background: #ebf8ff;
+            color: #2980b9;
+            border-radius: 3px;
+            padding: 2px 7px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* 현재 그룹 타이틀 */
+        #currentGroupTitle {
+            font-size: 13px;
+            color: #4a5568;
+            font-weight: normal;
+            margin-left: 8px;
+        }
+        #currentGroupTitle strong {
+            color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 상단 헤더 -->
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+
+    <!-- 좌측 사이드바 -->
+    <aside th:replace="~{layout/fragments :: sidebar('admin-system-code')}"></aside>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>관리자</span>
+            <span class="sep">/</span><span>시스템 관리</span>
+            <span class="sep">/</span><span class="current">공통코드 관리</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">공통코드 관리</div>
+                <div class="btn-group">
+                    <a class="btn btn-secondary" th:href="@{/admin/common-code/excel/download}">&#11015; 엑셀 다운로드</a>
+                    <button type="button" class="btn btn-secondary" onclick="openUploadModal()">&#11014; 엑셀 업로드</button>
+                    <button class="btn btn-primary" onclick="addNewRow()">&#43; 코드 추가</button>
+                </div>
+            </div>
+
+            <!-- 메시지 -->
+            <div class="alert alert-success" id="successAlert" style="display:none;"></div>
+            <div class="alert alert-danger"  id="errorAlert"   style="display:none;"></div>
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="alert alert-danger"  th:if="${errorMessage}"   th:text="${errorMessage}"></div>
+
+            <!-- 좌우 레이아웃 -->
+            <div class="code-layout">
+
+                <!-- 왼쪽: 그룹 목록 -->
+                <div class="code-left">
+                    <div class="code-left-header">&#128193; 그룹코드</div>
+                    <ul class="group-list" id="groupList">
+                        <li class="group-item active" data-group="ALL" onclick="selectGroup('ALL', this)">
+                            전체
+                            <span class="group-count" th:text="${allCodes.size()}">0</span>
+                        </li>
+                        <li th:each="gc : ${groupCodes}"
+                            class="group-item"
+                            th:data-group="${gc}"
+                            onclick="selectGroup(this.dataset.group, this)">
+                            <span th:text="${gc}"></span>
+                            <span class="group-count">0</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 오른쪽: 코드 목록 -->
+                <div class="code-right">
+                    <div class="table-card">
+                        <div class="table-card-header">
+                            <span class="table-card-title">
+                                코드 목록
+                                <span id="currentGroupTitle"></span>
+                            </span>
+                            <span class="table-count">총 <span id="rowCount">0</span>건</span>
+                        </div>
+                        <div class="table-wrap">
+                            <table id="codeTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width:130px;">그룹코드</th>
+                                        <th style="width:120px;">코드</th>
+                                        <th>코드명</th>
+                                        <th style="width:70px;">정렬순서</th>
+                                        <th style="width:70px;">사용여부</th>
+                                        <th style="width:110px;">관리</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="codeTableBody">
+                                    <!-- Thymeleaf로 데이터 행 렌더링 -->
+                                    <tr th:each="c : ${allCodes}"
+                                        class="code-row"
+                                        th:data-id="${c.id}"
+                                        th:data-group="${c.groupCode}">
+                                        <td>
+                                            <input type="text" class="input-inline" name="groupCode"
+                                                   th:value="${c.groupCode}" placeholder="그룹코드">
+                                        </td>
+                                        <td>
+                                            <input type="text" class="input-inline" name="code"
+                                                   th:value="${c.code}" placeholder="코드">
+                                        </td>
+                                        <td>
+                                            <input type="text" class="input-inline" name="codeName"
+                                                   th:value="${c.codeName}" placeholder="코드명">
+                                        </td>
+                                        <td>
+                                            <input type="number" class="input-inline w-sm" name="sortOrder"
+                                                   th:value="${c.sortOrder}" min="0" step="1">
+                                        </td>
+                                        <td>
+                                            <select class="input-inline w-xs" name="useYn">
+                                                <option value="Y" th:selected="${c.useYn == 'Y'}">Y</option>
+                                                <option value="N" th:selected="${c.useYn == 'N'}">N</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button class="btn-sm-edit" onclick="saveRow(this)">저장</button>
+                                            <button class="btn-sm-del"
+                                                    th:data-name="${c.code}"
+                                                    onclick="openDeleteModal(this)">삭제</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /.code-layout -->
+        </div>
+    </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header red">
+            <span class="modal-title">&#128465; 삭제 확인</span>
+            <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><strong id="deleteTargetName"></strong> 코드를 삭제하시겠습니까?</p>
+            <p style="margin-top:8px;color:#718096;font-size:12px;">삭제된 데이터는 복구할 수 없습니다.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-delete" id="deleteConfirmBtn">삭제</button>
+            <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">취소</button>
+        </div>
+    </div>
+</div>
+
+<!-- 엑셀 업로드 모달 -->
+<div id="uploadModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <span class="modal-title">&#11014; 엑셀 업로드</span>
+            <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom:12px; color:#4a5568; font-size:13px;">
+                다운로드한 엑셀 파일의 데이터를 수정 후 업로드하세요.<br>
+                <strong style="color:#2980b9;">그룹코드 + 코드</strong> 기준으로 기존 데이터는 수정, 신규 데이터는 등록됩니다.
+            </p>
+            <form id="uploadForm" th:action="@{/admin/common-code/excel/upload}"
+                  method="post" enctype="multipart/form-data">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="file" id="excelFileInput" name="excelFile" accept=".xlsx,.xls"
+                           class="form-control" style="flex:1;">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" form="uploadForm" class="btn btn-primary">업로드</button>
+            <button type="button" class="btn btn-cancel" onclick="closeUploadModal()">취소</button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    // ── 초기화 ──────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', function () {
+        refreshGroupSidebar();
+        updateRowCount('ALL');
+    });
+
+    // ── 그룹 선택 ───────────────────────────────────────────────
+    let currentGroup = 'ALL';
+
+    function selectGroup(group, el) {
+        currentGroup = group;
+
+        // 사이드 메뉴 활성화
+        document.querySelectorAll('.group-item').forEach(function(li) {
+            li.classList.remove('active');
+        });
+        el.classList.add('active');
+
+        // 그룹 타이틀 업데이트
+        const titleEl = document.getElementById('currentGroupTitle');
+        titleEl.innerHTML = group === 'ALL' ? '' : '— <strong>' + group + '</strong>';
+
+        // 행 필터링
+        const rows = document.querySelectorAll('#codeTableBody .code-row');
+        rows.forEach(function(row) {
+            if (group === 'ALL' || row.dataset.group === group) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        updateRowCount(group);
+    }
+
+    function updateRowCount(group) {
+        const rows = document.querySelectorAll('#codeTableBody .code-row');
+        let count = 0;
+        rows.forEach(function(row) {
+            if (group === 'ALL' || row.dataset.group === group) count++;
+        });
+        document.getElementById('rowCount').textContent = count;
+    }
+
+    // ── 새 행 추가 ───────────────────────────────────────────────
+    function addNewRow() {
+        const defaultGroup = currentGroup === 'ALL' ? '' : currentGroup;
+        const row = document.createElement('tr');
+        row.className = 'code-row new-row';
+        row.dataset.id = '';
+        row.dataset.group = defaultGroup;
+        row.innerHTML =
+            '<td><input type="text" class="input-inline" name="groupCode" value="' + defaultGroup + '" placeholder="그룹코드"></td>' +
+            '<td><input type="text" class="input-inline" name="code" value="" placeholder="코드"></td>' +
+            '<td><input type="text" class="input-inline" name="codeName" value="" placeholder="코드명"></td>' +
+            '<td><input type="number" class="input-inline w-sm" name="sortOrder" value="0" min="0" step="1"></td>' +
+            '<td><select class="input-inline w-xs" name="useYn"><option value="Y">Y</option><option value="N">N</option></select></td>' +
+            '<td>' +
+            '<button class="btn-sm-edit" onclick="saveRow(this)">저장</button> ' +
+            '<button class="btn-sm-del" data-name="신규코드" onclick="removeNewRow(this)">취소</button>' +
+            '</td>';
+
+        const tbody = document.getElementById('codeTableBody');
+        // 현재 그룹 필터에 맞게 맨 아래에 추가
+        tbody.appendChild(row);
+
+        // 현재 그룹이 ALL이 아니면 새 행을 보이게
+        if (currentGroup !== 'ALL' && defaultGroup !== currentGroup) {
+            row.style.display = 'none';
+        }
+
+        // 그룹코드 입력란에 포커스
+        row.querySelector('[name="groupCode"]').focus();
+        updateRowCount(currentGroup);
+    }
+
+    function removeNewRow(btn) {
+        btn.closest('tr').remove();
+        updateRowCount(currentGroup);
+    }
+
+    // ── 행 저장 (AJAX) ──────────────────────────────────────────
+    function saveRow(btn) {
+        const row = btn.closest('tr');
+        const idStr = row.dataset.id;
+        const id = idStr ? parseInt(idStr) : null;
+
+        const groupCode = row.querySelector('[name="groupCode"]').value.trim();
+        const code      = row.querySelector('[name="code"]').value.trim();
+        const codeName  = row.querySelector('[name="codeName"]').value.trim();
+        const sortOrder = parseInt(row.querySelector('[name="sortOrder"]').value) || 0;
+        const useYn     = row.querySelector('[name="useYn"]').value;
+
+        // 필수 필드 개별 검증
+        let hasError = false;
+        [
+            { el: row.querySelector('[name="groupCode"]'), val: groupCode, msg: '그룹코드를 입력하세요.' },
+            { el: row.querySelector('[name="code"]'),      val: code,      msg: '코드를 입력하세요.' },
+            { el: row.querySelector('[name="codeName"]'),  val: codeName,  msg: '코드명을 입력하세요.' }
+        ].forEach(function(f) {
+            if (!f.val) {
+                markFieldError(f.el, f.msg);
+                hasError = true;
+            } else {
+                clearFieldError(f.el);
+            }
+        });
+        if (hasError) return;
+
+        const payload = { id: id, groupCode: groupCode, code: code,
+                          codeName: codeName, sortOrder: sortOrder, useYn: useYn };
+
+        btn.disabled = true;
+        fetch('/admin/common-code/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            btn.disabled = false;
+            if (res.success) {
+                // 저장 완료 후 행 업데이트
+                row.dataset.id    = res.id;
+                row.dataset.group = groupCode;
+                row.classList.remove('new-row');
+                row.classList.add('saved-row');
+                // 삭제 버튼 data-name 업데이트 (취소 → 삭제)
+                const delBtn = row.querySelector('.btn-sm-del');
+                delBtn.setAttribute('data-name', code);
+                delBtn.setAttribute('onclick', 'openDeleteModal(this)');
+                delBtn.textContent = '삭제';
+
+                // 그룹 사이드 목록 갱신
+                refreshGroupSidebar();
+
+                setTimeout(function() { row.classList.remove('saved-row'); }, 1500);
+                showAlert('success', '저장되었습니다.');
+            } else {
+                showAlert('error', res.message || '저장에 실패했습니다.');
+            }
+        })
+        .catch(function() {
+            btn.disabled = false;
+            showAlert('error', '서버 오류가 발생했습니다.');
+        });
+    }
+
+    // ── 그룹 사이드바 갱신 ───────────────────────────────────────
+    function refreshGroupSidebar() {
+        // 현재 테이블 행 기준으로 그룹코드와 카운트 재계산
+        const counts = {};
+        let total = 0;
+        document.querySelectorAll('#codeTableBody .code-row').forEach(function(row) {
+            const g = row.dataset.group;
+            if (g) {
+                counts[g] = (counts[g] || 0) + 1;
+                total++;
+            }
+        });
+
+        // 전체 카운트 업데이트
+        const allItem = document.querySelector('.group-item[data-group="ALL"] .group-count');
+        if (allItem) allItem.textContent = total;
+
+        // 각 그룹 카운트 업데이트 및 신규 그룹 추가
+        const groupList = document.getElementById('groupList');
+        Object.keys(counts).sort().forEach(function(gc) {
+            let li = groupList.querySelector('.group-item[data-group="' + gc + '"]');
+            if (!li) {
+                li = document.createElement('li');
+                li.className = 'group-item';
+                li.dataset.group = gc;
+                li.setAttribute('onclick', "selectGroup('" + gc + "', this)");
+                li.innerHTML = '<span>' + gc + '</span><span class="group-count">0</span>';
+                groupList.appendChild(li);
+            }
+            li.querySelector('.group-count').textContent = counts[gc];
+        });
+    }
+
+    // ── 삭제 모달 ────────────────────────────────────────────────
+    let deleteTargetRow = null;
+
+    function openDeleteModal(btn) {
+        deleteTargetRow = btn.closest('tr');
+        document.getElementById('deleteTargetName').textContent = btn.dataset.name || '선택한';
+        document.getElementById('deleteModal').classList.add('open');
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('open');
+        deleteTargetRow = null;
+    }
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+
+    document.getElementById('deleteConfirmBtn').addEventListener('click', function() {
+        if (!deleteTargetRow) return;
+        const id = deleteTargetRow.dataset.id;
+        if (!id) {
+            // 미저장 새 행이면 그냥 제거
+            deleteTargetRow.remove();
+            closeDeleteModal();
+            updateRowCount(currentGroup);
+            return;
+        }
+
+        fetch('/admin/common-code/delete/' + id, { method: 'POST' })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.success) {
+                deleteTargetRow.remove();
+                refreshGroupSidebar();
+                updateRowCount(currentGroup);
+                showAlert('success', '삭제되었습니다.');
+            } else {
+                showAlert('error', res.message || '삭제에 실패했습니다.');
+            }
+            closeDeleteModal();
+        })
+        .catch(function() {
+            showAlert('error', '서버 오류가 발생했습니다.');
+            closeDeleteModal();
+        });
+    });
+
+    // ── 업로드 모달 ──────────────────────────────────────────────
+    function openUploadModal()  { document.getElementById('uploadModal').classList.add('open'); }
+    function closeUploadModal() { document.getElementById('uploadModal').classList.remove('open'); }
+    document.getElementById('uploadModal').addEventListener('click', function(e) {
+        if (e.target === this) closeUploadModal();
+    });
+
+    // ── 필드 오류 표시 / 해제 ────────────────────────────────────
+    function markFieldError(input, msg) {
+        input.classList.add('field-error');
+        // 기존 오류 메시지 제거 후 새로 삽입
+        const existing = input.parentElement.querySelector('.field-error-msg');
+        if (existing) existing.remove();
+        const span = document.createElement('span');
+        span.className = 'field-error-msg';
+        span.textContent = msg;
+        input.parentElement.appendChild(span);
+        // 첫 번째 오류 필드에 포커스
+        if (!input.parentElement.parentElement.querySelector('.field-error:focus')) {
+            input.focus();
+        }
+        // 값 입력 시 자동 해제
+        input.addEventListener('input', function onInput() {
+            if (input.value.trim()) {
+                clearFieldError(input);
+                input.removeEventListener('input', onInput);
+            }
+        });
+    }
+
+    function clearFieldError(input) {
+        input.classList.remove('field-error');
+        const msg = input.parentElement.querySelector('.field-error-msg');
+        if (msg) msg.remove();
+    }
+
+    // ── 알림 표시 ────────────────────────────────────────────────
+    function showAlert(type, message) {
+        const id = type === 'success' ? 'successAlert' : 'errorAlert';
+        const el = document.getElementById(id);
+        el.textContent = message;
+        el.style.display = 'block';
+        setTimeout(function() { el.style.display = 'none'; }, 3000);
+    }
+</script>
+</body>
+</html>

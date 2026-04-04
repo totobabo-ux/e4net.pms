@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 
 <!-- ============================================================
-     e4net PMS - 공통 레이아웃 프래그먼트
+     E4NET PMS - 공통 레이아웃 프래그먼트
      activePage 값 목록:
        home
        biz-standard-output
@@ -24,226 +24,84 @@
 <!-- 상단 헤더 프래그먼트 -->
 <header th:fragment="header" class="header">
     <button class="header-hamburger">&#9776;</button>
-    <div class="header-logo"><a href="/home">e4net PMS</a></div>
+    <div class="header-logo"><a href="/home">E4NET PMS</a></div>
+    <!-- 선택된 사업명 표시 (로고 우측) -->
+    <div class="selected-project" th:if="${session.selectedProject != null}">
+        <span class="project-badge" th:text="${session.selectedProject.projectName}"></span>
+        <a href="/project-select" class="btn-change-project">프로젝트 변경</a>
+    </div>
     <div class="header-right">
-        <!-- 선택된 사업명 표시 -->
-        <div class="selected-project" th:if="${session.selectedProject != null}">
-            <span class="project-badge" th:text="${session.selectedProject.projectName}"></span>
-            <a href="/project-select" class="btn-change-project">프로젝트 변경</a>
+        <div class="user-info">
+            <span th:if="${session.loginUser != null}"
+                  th:text="${session.loginUser.name + (session.loginUserRoleName != null ? '(' + session.loginUserRoleName + ')' : '') + ' 님 환영합니다.'}">
+            </span>
         </div>
-        <div class="user-info">Welcome
-            <span th:text="${session.loginUser != null ? session.loginUser.name : ''}"></span>
-        </div>
+        <a class="btn-profile" href="/admin/users/my-profile"
+           th:if="${session.loginUser != null}" title="내 정보 수정">&#128100;</a>
         <a class="btn-logout" th:href="@{/logout}">로그아웃</a>
     </div>
 </header>
 
-<!-- 좌측 사이드바 프래그먼트 -->
+<!-- 좌측 사이드바 프래그먼트 (DB 메뉴 동적 렌더링) -->
 <aside th:fragment="sidebar(activePage)" class="sidebar">
-    <div class="sidebar-logo"><a href="/home">e4net PMS</a></div>
+    <div class="sidebar-logo"><a href="/home">E4NET PMS</a></div>
     <ul class="menu-list">
 
-        <!-- 사업 Home -->
-        <li class="menu-item" th:classappend="${activePage == 'home'} ? 'active'">
+        <!-- 사업 Home (고정) -->
+        <li class="menu-item">
             <a href="/home"><span class="menu-icon">&#127968;</span> 사업 Home</a>
         </li>
 
-        <!-- ── 사업관리 ─────────────────────────────── -->
-        <li class="menu-section"
-            th:classappend="${activePage != null and activePage.startsWith('biz-')} ? 'open'">
-            <div class="menu-section-header">
-                <span class="menu-icon">&#128203;</span> 사업관리
-                <span class="arrow">&#9660;</span>
-            </div>
-            <ul class="section-body">
+        <!-- depth=1 섹션 -->
+        <th:block th:each="d1 : ${sidebarMenus}" th:if="${d1.depth == 1}">
+            <li class="menu-section">
+                <div class="menu-section-header">
+                    <th:block th:if="${d1.icon != null and !#strings.isEmpty(d1.icon)}">
+                        <span class="menu-icon" th:utext="${d1.icon}"></span>
+                    </th:block>
+                    <span th:text="${d1.menuName}">섹션</span>
+                    <span class="arrow">&#9660;</span>
+                </div>
+                <ul class="section-body">
 
-                <!-- 표준관리 -->
-                <li class="menu-group"
-                    th:classappend="${activePage != null and activePage.startsWith('biz-standard')} ? 'open'">
-                    <div class="menu-group-header">표준관리<span class="arrow-sm">&#9660;</span></div>
-                    <ul class="submenu">
-                        <li th:classappend="${activePage == 'biz-standard-output'} ? 'active'">
-                            <a href="/deliverable">산출물 관리</a>
+                    <!-- depth=2 그룹 -->
+                    <th:block th:each="d2 : ${sidebarMenus}" th:if="${d2.depth == 2 and d2.parentId == d1.id}">
+                        <li class="menu-group">
+                            <div class="menu-group-header">
+                                <span th:text="${d2.menuName}">그룹</span>
+                                <span class="arrow-sm">&#9660;</span>
+                            </div>
+                            <ul class="submenu">
+
+                                <!-- depth=3 리프 메뉴 -->
+                                <th:block th:each="d3 : ${sidebarMenus}" th:if="${d3.depth == 3 and d3.parentId == d2.id}">
+                                    <li th:classappend="${d3.contextPath != null and #strings.startsWith(currentUri, d3.contextPath)} ? 'active'">
+                                        <a th:href="${d3.contextPath}" th:text="${d3.menuName}">메뉴</a>
+                                    </li>
+                                </th:block>
+
+                            </ul>
                         </li>
-                    </ul>
-                </li>
+                    </th:block>
 
-                <!-- 인력관리 -->
-                <li class="menu-group"
-                    th:classappend="${activePage != null and activePage.startsWith('biz-manpower')} ? 'open'">
-                    <div class="menu-group-header">인력관리<span class="arrow-sm">&#9660;</span></div>
-                    <ul class="submenu">
-                        <li th:classappend="${activePage == 'biz-manpower-input'} ? 'active'">
-                            <a href="/manpower">투입인력 관리</a>
-                        </li>
-                    </ul>
-                </li>
-
-                <!-- 범위관리 -->
-                <li class="menu-group"
-                    th:classappend="${activePage != null and activePage.startsWith('biz-scope')} ? 'open'">
-                    <div class="menu-group-header">범위관리<span class="arrow-sm">&#9660;</span></div>
-                    <ul class="submenu">
-                        <li th:classappend="${activePage == 'biz-scope-requirement'} ? 'active'">
-                            <a href="/requirement">요구사항 관리</a>
-                        </li>
-                        <li th:classappend="${activePage == 'biz-scope-wbs'} ? 'active'">
-                            <a href="/wbs">사업일정(WBS)</a>
-                        </li>
-                    </ul>
-                </li>
-
-                <!-- 보고관리 -->
-                <li class="menu-group"
-                    th:classappend="${activePage != null and activePage.startsWith('biz-report')} ? 'open'">
-                    <div class="menu-group-header">보고관리<span class="arrow-sm">&#9660;</span></div>
-                    <ul class="submenu">
-                        <li th:classappend="${activePage == 'biz-report-regular'} ? 'active'"><a href="/regular-report">정기보고</a></li>
-                        <li th:classappend="${activePage == 'biz-report-weekly'} ? 'active'"><a href="/weekly-report">주간보고</a></li>
-                        <li th:classappend="${activePage == 'biz-report-monthly'} ? 'active'"><a href="/monthly-report">월간보고</a></li>
-                        <li th:classappend="${activePage == 'biz-report-meeting'} ? 'active'"><a href="/meeting-report">회의록</a></li>
-                    </ul>
-                </li>
-
-                <!-- 위험관리 -->
-                <li class="menu-group"
-                    th:classappend="${activePage != null and activePage.startsWith('biz-risk')} ? 'open'">
-                    <div class="menu-group-header">위험관리<span class="arrow-sm">&#9660;</span></div>
-                    <ul class="submenu">
-                        <li th:classappend="${activePage == 'biz-risk-risk'} ? 'active'"><a href="/risk">위험관리</a></li>
-                        <li th:classappend="${activePage == 'biz-risk-issue'} ? 'active'"><a href="/issue">이슈관리</a></li>
-                    </ul>
-                </li>
-
-            </ul>
-        </li>
-
-        <!-- ── 사업수행 ─────────────────────────────── -->
-        <li class="menu-section"
-            th:classappend="${activePage != null and activePage.startsWith('exec-')} ? 'open'">
-            <div class="menu-section-header">
-                <span class="menu-icon">&#128187;</span> 사업수행
-                <span class="arrow">&#9660;</span>
-            </div>
-            <ul class="section-body">
-
-                <!-- 분석 -->
-                <li class="menu-group"
-                    th:classappend="${activePage != null and activePage.startsWith('exec-analysis')} ? 'open'">
-                    <div class="menu-group-header">분석<span class="arrow-sm">&#9660;</span></div>
-                    <ul class="submenu">
-                        <li th:classappend="${activePage == 'exec-analysis-flow'} ? 'active'"><a href="/business-flow">업무흐름</a></li>
-                        <li th:classappend="${activePage == 'exec-analysis-menu'} ? 'active'"><a href="/menu-structure">메뉴구조</a></li>
-                    </ul>
-                </li>
-
-                <!-- 설계 -->
-                <li class="menu-group"
-                    th:classappend="${activePage != null and activePage.startsWith('exec-design')} ? 'open'">
-                    <div class="menu-group-header">설계<span class="arrow-sm">&#9660;</span></div>
-                    <ul class="submenu">
-                        <li th:classappend="${activePage == 'exec-design-interface'} ? 'active'"><a href="#">인터페이스 목록</a></li>
-                        <li th:classappend="${activePage == 'exec-design-screen'} ? 'active'"><a href="/screen-list">화면목록</a></li>
-                        <li th:classappend="${activePage == 'exec-design-program'} ? 'active'"><a href="#">프로그램목록</a></li>
-                        <li th:classappend="${activePage == 'exec-design-table'} ? 'active'"><a href="/admin/system/database">테이블목록</a></li>
-                    </ul>
-                </li>
-
-                <!-- 구현 -->
-                <li class="menu-group"
-                    th:classappend="${activePage != null and activePage.startsWith('exec-impl')} ? 'open'">
-                    <div class="menu-group-header">구현<span class="arrow-sm">&#9660;</span></div>
-                    <ul class="submenu">
-                        <li th:classappend="${activePage == 'exec-impl-unit'} ? 'active'"><a href="#">단위테스트 목록</a></li>
-                    </ul>
-                </li>
-
-                <!-- 시험 -->
-                <li class="menu-group"
-                    th:classappend="${activePage != null and activePage.startsWith('exec-test')} ? 'open'">
-                    <div class="menu-group-header">시험<span class="arrow-sm">&#9660;</span></div>
-                    <ul class="submenu">
-                        <li th:classappend="${activePage == 'exec-test-integration'} ? 'active'"><a href="#">통합테스트 목록</a></li>
-                    </ul>
-                </li>
-
-            </ul>
-        </li>
-
-        <!-- ── 커뮤니티 ─────────────────────────────── -->
-        <li class="menu-section"
-            th:classappend="${activePage != null and activePage.startsWith('community-')} ? 'open'">
-            <div class="menu-section-header">
-                <span class="menu-icon">&#128172;</span> 커뮤니티
-                <span class="arrow">&#9660;</span>
-            </div>
-            <ul class="section-body">
-
-                <!-- 공지사항 -->
-                <li class="menu-group"
-                    th:classappend="${activePage != null and activePage.startsWith('community-notice')} ? 'open'">
-                    <div class="menu-group-header">공지사항<span class="arrow-sm">&#9660;</span></div>
-                    <ul class="submenu">
-                        <li th:classappend="${activePage == 'community-notice-list'} ? 'active'"><a href="/notice">공지사항 목록</a></li>
-                    </ul>
-                </li>
-
-                <!-- 자료실 -->
-                <li class="menu-group"
-                    th:classappend="${activePage != null and activePage.startsWith('community-archive')} ? 'open'">
-                    <div class="menu-group-header">자료실<span class="arrow-sm">&#9660;</span></div>
-                    <ul class="submenu">
-                        <li th:classappend="${activePage == 'community-archive-list'} ? 'active'"><a href="/archive">자료실 목록</a></li>
-                    </ul>
-                </li>
-
-            </ul>
-        </li>
-
-        <!-- ── 관리자 ─────────────────────────────── -->
-        <li class="menu-section"
-            th:classappend="${activePage != null and activePage.startsWith('admin-')} ? 'open'">
-            <div class="menu-section-header">
-                <span class="menu-icon">&#9881;</span> 관리자
-                <span class="arrow">&#9660;</span>
-            </div>
-            <ul class="section-body">
-
-                <!-- 사업 관리 -->
-                <li class="menu-group"
-                    th:classappend="${activePage != null and activePage.startsWith('admin-project')} ? 'open'">
-                    <div class="menu-group-header">사업 관리<span class="arrow-sm">&#9660;</span></div>
-                    <ul class="submenu">
-                        <li th:classappend="${activePage == 'admin-project-list'} ? 'active'">
-                            <a href="/projects">사업 목록</a>
-                        </li>
-                    </ul>
-                </li>
-
-                <!-- 사용자 관리 -->
-                <li class="menu-group"
-                    th:classappend="${activePage != null and activePage.startsWith('admin-user')} ? 'open'">
-                    <div class="menu-group-header">사용자 관리<span class="arrow-sm">&#9660;</span></div>
-                    <ul class="submenu">
-                        <li th:classappend="${activePage == 'admin-user-list'} ? 'active'"><a href="/admin/users">사용자 목록</a></li>
-                    </ul>
-                </li>
-
-                <!-- 권한 관리 -->
-                <li class="menu-group"
-                    th:classappend="${activePage != null and activePage.startsWith('admin-role')} ? 'open'">
-                    <div class="menu-group-header">권한 관리<span class="arrow-sm">&#9660;</span></div>
-                    <ul class="submenu">
-                        <li th:classappend="${activePage == 'admin-role-list'} ? 'active'"><a href="#">권한 목록</a></li>
-                    </ul>
-                </li>
-
-
-            </ul>
-        </li>
+                </ul>
+            </li>
+        </th:block>
 
     </ul>
 
+    <script>
+    // 현재 활성 메뉴의 상위 그룹/섹션 자동 열기
+    (function() {
+        var active = document.querySelector('.submenu li.active');
+        if (active) {
+            var g = active.closest('.menu-group');
+            if (g) g.classList.add('open');
+            var s = active.closest('.menu-section');
+            if (s) s.classList.add('open');
+        }
+    })();
+    </script>
 </aside>
 
 </html>

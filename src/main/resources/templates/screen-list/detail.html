@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>화면목록 상세 - e4net PMS</title>
+    <title>화면목록 상세 - E4NET PMS</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <style>
         #editSection { display:none; }
@@ -71,7 +71,12 @@
                             <span class="detail-value" th:text="${screen.menuLevel3 ?: '-'}">-</span>
                         </div>
 
-                        <div class="detail-cell" style="grid-column: 1 / -1;">
+                        <div class="detail-cell" style="border-right: 1px solid #d0d8e4;">
+                            <span class="detail-label">화면ID</span>
+                            <span class="detail-value" style="font-family:monospace; color:#555;"
+                                  th:text="${screen.screenId ?: '-'}">-</span>
+                        </div>
+                        <div class="detail-cell" style="border-right: none;">
                             <span class="detail-label">화면명</span>
                             <span class="detail-value" style="font-weight:bold;"
                                   th:text="${screen.screenName ?: '-'}">-</span>
@@ -166,7 +171,12 @@
                                     </select>
                                 </div>
 
-                                <div class="form-cell" style="grid-column: 1 / -1;">
+                                <div class="form-cell" style="border-right: 1px solid #d0d8e4;">
+                                    <label class="form-label">화면ID</label>
+                                    <input type="text" class="form-control" th:field="*{screenId}"
+                                           placeholder="예: SCR-CMN-LGN-001">
+                                </div>
+                                <div class="form-cell" style="border-right: none;">
                                     <label class="form-label">화면명<span class="req">※</span></label>
                                     <input type="text" class="form-control" th:field="*{screenName}"
                                            placeholder="화면명을 입력하세요">

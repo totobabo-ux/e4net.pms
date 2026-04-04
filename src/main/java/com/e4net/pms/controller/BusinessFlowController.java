@@ -7,8 +7,11 @@ import com.e4net.pms.entity.BusinessFlow;
 import com.e4net.pms.entity.Project;
 import com.e4net.pms.entity.User;
 import com.e4net.pms.service.BusinessFlowService;
+import com.e4net.pms.util.ExcelUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -28,7 +31,9 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/business-flow")
@@ -163,6 +168,44 @@ public class BusinessFlowController {
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    /** 엑셀 다운로드 */
+    @GetMapping("/excel/download")
+    public void excelDownload(HttpSession session, HttpServletResponse response) throws IOException {
+        if (isNotReady(session)) { response.sendRedirect("/project-select"); return; }
+
+        Project project = getSelectedProject(session);
+        List<BusinessFlow> list = businessFlowService.findAllByProject(project.getId());
+
+        String[] headers = { "시스템구분", "업무구분", "프로세스ID", "프로세스명" };
+        List<Object[]> rows = list.stream().map(f -> new Object[]{
+            f.getSystemCategory(), f.getBizCategory(), f.getProcessId(), f.getProcessName()
+        }).collect(Collectors.toList());
+
+        XSSFWorkbook wb = ExcelUtil.createWorkbook("업무흐름", headers, rows);
+        String fileName = project.getProjectName() + "_업무흐름_" + LocalDate.now() + ".xlsx";
+        ExcelUtil.writeToResponse(wb, fileName, response);
+    }
+
+    /** 엑셀 업로드 */
+    @PostMapping("/excel/upload")
+    public String excelUpload(@RequestParam("excelFile") MultipartFile file,
+                              HttpSession session, RedirectAttributes ra) throws IOException {
+        if (isNotReady(session)) return "redirect:/project-select";
+        if (file.isEmpty()) {
+            ra.addFlashAttribute("errorMessage", "업로드할 파일을 선택해주세요.");
+            return "redirect:/business-flow";
+        }
+
+        List<String[]> rows = ExcelUtil.parseRows(file, 1);
+        Long projectId = getSelectedProject(session).getId();
+        int[] result = businessFlowService.upsertFromExcel(rows, projectId, getLoginUserId(session));
+
+        ra.addFlashAttribute("successMessage",
+            String.format("엑셀 업로드 완료 — 신규: %d건, 수정: %d건, 건너뜀: %d건",
+                result[0], result[1], result[2]));
+        return "redirect:/business-flow";
     }
 
     /** 예외 처리 */

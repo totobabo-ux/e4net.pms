@@ -1,8 +1,13 @@
 package com.e4net.pms.controller;
 
+import com.e4net.pms.entity.CommonCode;
 import com.e4net.pms.entity.Project;
 import com.e4net.pms.entity.User;
+import com.e4net.pms.repository.CommunityRepository;
+import com.e4net.pms.repository.IssueRepository;
+import com.e4net.pms.repository.RiskRepository;
 import com.e4net.pms.repository.UserRepository;
+import com.e4net.pms.service.CommonCodeService;
 import com.e4net.pms.service.ProjectService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +26,12 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class HomeController {
 
-    private final ProjectService projectService;
-    private final UserRepository userRepository;
+    private final ProjectService      projectService;
+    private final UserRepository      userRepository;
+    private final IssueRepository     issueRepository;
+    private final RiskRepository      riskRepository;
+    private final CommunityRepository communityRepository;
+    private final CommonCodeService   commonCodeService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     /** 로그인 페이지 */
@@ -44,7 +53,17 @@ public class HomeController {
             return "redirect:/";
         }
 
-        session.setAttribute("loginUser", userOpt.get());
+        User loginUser = userOpt.get();
+        session.setAttribute("loginUser", loginUser);
+
+        // role 코드명 세션 저장 (헤더 표시용)
+        String roleName = (loginUser.getRole() == null) ? null :
+                commonCodeService.getByGroup("ROLE_CODE").stream()
+                        .filter(c -> loginUser.getRole().equals(c.getCode()))
+                        .map(CommonCode::getCodeName)
+                        .findFirst().orElse(null);
+        session.setAttribute("loginUserRoleName", roleName);
+
         return "redirect:/project-select";
     }
 
@@ -83,11 +102,26 @@ public class HomeController {
         if (session.getAttribute("loginUser") == null) return "redirect:/";
         if (session.getAttribute("selectedProject") == null) return "redirect:/project-select";
 
-        List<Project> allProjects = projectService.findAll();
-        List<Project> recent = allProjects.stream().limit(5).toList();
+        Project project = (Project) session.getAttribute("selectedProject");
+        Long projectId  = project.getId();
 
-        model.addAttribute("totalProjects", allProjects.size());
-        model.addAttribute("recentProjects", recent);
+        // 공지사항 최근 5건
+        model.addAttribute("notices",
+            communityRepository.findTop5ByCommunityTypeOrderByPostDateDescIdDesc("공지사항"));
+
+        // 자료실 최근 5건
+        model.addAttribute("archives",
+            communityRepository.findTop5ByCommunityTypeOrderByPostDateDescIdDesc("자료실"));
+
+        // 이슈 현황 — 조치완료 제외 최근 3건
+        model.addAttribute("openIssues",
+            issueRepository.findTop3ByProject_IdAndActionStatusNotOrderByRaisedDateDesc(projectId, "조치완료"));
+
+        // 위험 현황 — 종료 제외 최근 3건
+        model.addAttribute("openRisks",
+            riskRepository.findTop3ByProject_IdAndStatusNotOrderByIdentifiedDateDesc(projectId, "종료"));
+
+        model.addAttribute("selectedProject", project);
         return "home";
     }
 }

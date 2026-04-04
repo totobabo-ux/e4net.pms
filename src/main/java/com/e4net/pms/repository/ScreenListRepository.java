@@ -12,6 +12,9 @@ public interface ScreenListRepository extends JpaRepository<ScreenList, Long>,
     /** 사업 ID 기준 전체 조회 (엑셀 다운로드용) */
     List<ScreenList> findAllByProject_IdOrderByIdAsc(Long projectId);
 
+    /** 사업별 화면목록 (추적성 탭용) */
+    List<ScreenList> findByProject_IdOrderByMenuLevel1AscMenuLevel2AscScreenNameAsc(Long projectId);
+
     /** 사업 ID + URL 기준 단건 조회 (엑셀 업로드 upsert용) */
     java.util.Optional<ScreenList> findByProject_IdAndUrl(Long projectId, String url);
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사업 선택 - e4net PMS</title>
+    <title>사업 선택 - E4NET PMS</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <style>
         body {
@@ -74,7 +74,7 @@
 </head>
 <body>
     <div class="login-header">
-        <span>e4net PMS</span>
+        <span>E4NET PMS</span>
         <a th:href="@{/logout}">로그아웃</a>
     </div>
 
@@ -91,23 +91,16 @@
                 <table class="project-table" th:unless="${#lists.isEmpty(projects)}">
                     <thead>
                         <tr>
-                            <th>NO.</th>
-                            <th style="min-width:280px; text-align:left;">사업명</th>
+                            <th style="text-align:left;">사업명</th>
                             <th>구분</th>
-                            <th>회사</th>
-                            <th>계약기간</th>
                             <th>PM</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:each="p, stat : ${projects}"
                             th:onclick="|document.getElementById('form-${p.id}').submit()|">
-                            <td style="text-align:center" th:text="${stat.count}"></td>
                             <td class="td-name" th:text="${p.projectName}"></td>
                             <td style="text-align:center" th:text="${p.category ?: '-'}"></td>
-                            <td style="text-align:center" th:text="${p.company ?: '-'}"></td>
-                            <td style="text-align:center"
-                                th:text="${p.contractStart != null ? #temporals.format(p.contractStart,'yy/MM/dd') : ''} + ' ~ ' + ${p.contractEnd != null ? #temporals.format(p.contractEnd,'yy/MM/dd') : ''}"></td>
                             <td style="text-align:center" th:text="${p.pm ?: '-'}"></td>
                             <!-- 숨김 폼: 행 클릭 시 해당 프로젝트 ID 제출 -->
                             <td style="display:none">
@@ -123,7 +116,7 @@
     </div>
 
     <div class="footer-bar">
-        Copyright &copy; 2024 e4net Co., Ltd. All Rights Reserved.
+        Copyright &copy; 2024 E4NET Co., Ltd. All Rights Reserved.
     </div>
 </body>
 </html>

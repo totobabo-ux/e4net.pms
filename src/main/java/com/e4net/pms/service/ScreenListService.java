@@ -110,6 +110,7 @@ public class ScreenListService {
         dto.setMenuLevel1(entity.getMenuLevel1());
         dto.setMenuLevel2(entity.getMenuLevel2());
         dto.setMenuLevel3(entity.getMenuLevel3());
+        dto.setScreenId(entity.getScreenId());
         dto.setCategory(entity.getCategory());
         dto.setScreenName(entity.getScreenName());
         dto.setScreenDesc(entity.getScreenDesc());
@@ -152,21 +153,21 @@ public class ScreenListService {
 
     /**
      * 엑셀 업로드 — upsert 처리
-     * 컬럼 순서: 메뉴Level1(0) 메뉴Level2(1) 메뉴Level3(2) 분류(3)
-     *            화면명(4) 화면설명(5) URL(6) 템플릿파일(7) 비고(8)
+     * 컬럼 순서: 화면ID(0) 메뉴Level1(1) 메뉴Level2(2) 메뉴Level3(3) 분류(4)
+     *            화면명(5) 화면설명(6) URL(7) 템플릿파일(8) 비고(9)
      */
     @Transactional
     public int[] upsertFromExcel(List<String[]> rows, Long projectId, String userId) {
         int inserted = 0, updated = 0, skipped = 0;
 
         for (String[] cells : rows) {
-            String screenNameVal = getCell(cells, 4);
+            String screenNameVal = getCell(cells, 5);
             if (screenNameVal.isBlank()) {
                 skipped++;
                 continue;
             }
 
-            String urlVal = getCell(cells, 6);
+            String urlVal = getCell(cells, 7);
 
             // URL 기준으로 기존 데이터 탐색, 없으면 신규
             ScreenList entity;
@@ -189,15 +190,16 @@ public class ScreenListService {
                 isNew = true;
             }
 
-            entity.setMenuLevel1(getCell(cells, 0));
-            entity.setMenuLevel2(getCell(cells, 1));
-            entity.setMenuLevel3(getCell(cells, 2));
-            entity.setCategory(getCell(cells, 3));
+            entity.setScreenId(getCell(cells, 0));
+            entity.setMenuLevel1(getCell(cells, 1));
+            entity.setMenuLevel2(getCell(cells, 2));
+            entity.setMenuLevel3(getCell(cells, 3));
+            entity.setCategory(getCell(cells, 4));
             entity.setScreenName(screenNameVal);
-            entity.setScreenDesc(getCell(cells, 5));
+            entity.setScreenDesc(getCell(cells, 6));
             entity.setUrl(urlVal);
-            entity.setTemplateFile(getCell(cells, 7));
-            entity.setNote(getCell(cells, 8));
+            entity.setTemplateFile(getCell(cells, 8));
+            entity.setNote(getCell(cells, 9));
             entity.setUpdId(userId);
 
             screenListRepository.save(entity);
@@ -213,6 +215,7 @@ public class ScreenListService {
         entity.setMenuLevel1(dto.getMenuLevel1());
         entity.setMenuLevel2(dto.getMenuLevel2());
         entity.setMenuLevel3(dto.getMenuLevel3());
+        entity.setScreenId(dto.getScreenId());
         entity.setCategory(dto.getCategory());
         entity.setScreenName(dto.getScreenName());
         entity.setScreenDesc(dto.getScreenDesc());

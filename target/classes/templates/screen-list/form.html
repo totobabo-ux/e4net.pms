@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${mode == 'create'} ? '화면목록 등록 - e4net PMS' : '화면목록 수정 - e4net PMS'">화면목록 폼</title>
+    <title th:text="${mode == 'create'} ? '화면목록 등록 - E4NET PMS' : '화면목록 수정 - E4NET PMS'">화면목록 폼</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -84,8 +84,13 @@
                                 </select>
                             </div>
 
-                            <!-- 화면명 -->
-                            <div class="form-cell" style="grid-column: 1 / -1;">
+                            <!-- 화면ID / 화면명 -->
+                            <div class="form-cell" style="border-right: 1px solid #d0d8e4;">
+                                <label class="form-label">화면ID</label>
+                                <input type="text" class="form-control" th:field="*{screenId}"
+                                       placeholder="예: SCR-CMN-LGN-001">
+                            </div>
+                            <div class="form-cell" style="border-right: none;">
                                 <label class="form-label">화면명<span class="req">※</span></label>
                                 <input type="text" class="form-control" th:field="*{screenName}"
                                        placeholder="화면명을 입력하세요">

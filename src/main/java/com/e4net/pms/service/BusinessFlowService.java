@@ -131,6 +131,60 @@ public class BusinessFlowService {
         return dto;
     }
 
+    /** 사업 전체 목록 (엑셀 다운로드용) */
+    public List<BusinessFlow> findAllByProject(Long projectId) {
+        return businessFlowRepository.findAllByProject_IdOrderBySystemCategoryAscBizCategoryAscProcessIdAsc(projectId);
+    }
+
+    /**
+     * 엑셀 업로드 — upsert 처리 (프로세스ID 기준)
+     * 컬럼 순서: 시스템구분(0) 업무구분(1) 프로세스ID(2) 프로세스명(3)
+     */
+    @Transactional
+    public int[] upsertFromExcel(List<String[]> rows, Long projectId, String userId) {
+        int inserted = 0, updated = 0, skipped = 0;
+
+        for (String[] cells : rows) {
+            String processNameVal = getCell(cells, 3);
+            if (processNameVal.isBlank()) {
+                skipped++;
+                continue;
+            }
+
+            String processIdVal = getCell(cells, 2);
+
+            BusinessFlow entity;
+            boolean isNew;
+            if (!processIdVal.isBlank()) {
+                var existing = businessFlowRepository.findByProject_IdAndProcessId(projectId, processIdVal);
+                if (existing.isPresent()) {
+                    entity = existing.get();
+                    isNew  = false;
+                } else {
+                    entity = new BusinessFlow();
+                    setProject(entity, projectId);
+                    entity.setRegId(userId);
+                    isNew = true;
+                }
+            } else {
+                entity = new BusinessFlow();
+                setProject(entity, projectId);
+                entity.setRegId(userId);
+                isNew = true;
+            }
+
+            entity.setSystemCategory(getCell(cells, 0));
+            entity.setBizCategory(getCell(cells, 1));
+            entity.setProcessId(processIdVal);
+            entity.setProcessName(processNameVal);
+            entity.setUpdId(userId);
+
+            businessFlowRepository.save(entity);
+            if (isNew) inserted++; else updated++;
+        }
+        return new int[]{ inserted, updated, skipped };
+    }
+
     /** 다운로드용 파일 경로 조회 */
     public Path getAttachmentFilePath(@NonNull Long attachmentId) {
         AttachFile attachment = findAttachmentById(attachmentId);
@@ -184,6 +238,10 @@ public class BusinessFlowService {
             attachment.setRegId(userId);
             attachFileRepository.save(attachment);
         }
+    }
+
+    private String getCell(String[] cells, int idx) {
+        return (cells != null && idx < cells.length && cells[idx] != null) ? cells[idx].trim() : "";
     }
 
     private void deletePhysicalFile(String filePath) {

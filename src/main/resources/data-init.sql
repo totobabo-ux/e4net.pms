@@ -27,3 +27,11 @@ INSERT INTO users (employee_no, name, company, department, position, phone, emai
 ('E004', '최수진', '(주)파트너스', '개발팀', '수석연구원', '010-7777-8888', 'choi@partner.com'),
 ('E005', '정대현', '(주)파트너스', 'PM팀',   '책임연구원', '010-9999-0000', 'jung@partner.com')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
+
+-- 공통 코드: 권한 코드 (ROLE_CODE)
+INSERT INTO common_code (group_code, code, code_name, sort_order, use_yn) VALUES
+('ROLE_CODE', 'ROLE_ADMIN', '관리자',     1, 'Y'),
+('ROLE_CODE', 'ROLE_PM',    'PM',         2, 'Y'),
+('ROLE_CODE', 'ROLE_PL',    'PL',         3, 'Y'),
+('ROLE_CODE', 'ROLE_USER',  '일반사용자', 4, 'Y')
+ON DUPLICATE KEY UPDATE code_name = VALUES(code_name);

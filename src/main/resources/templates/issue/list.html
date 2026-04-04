@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>이슈관리 - e4net PMS</title>
+    <title>이슈관리 - E4NET PMS</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -71,7 +71,7 @@
                     <span class="table-count">총 <span th:text="${page.totalElements}">0</span>건</span>
                 </div>
                 <div class="table-wrap">
-                    <table>
+                    <table data-entity-type="ISSUE" data-base-url="/issue">
                         <thead>
                             <tr>
                                 <th>NO.</th>
@@ -81,12 +81,13 @@
                                 <th>제기일자</th>
                                 <th>조치상태</th>
                                 <th>조치일자</th>
+                                <th style="width:80px;">첨부</th>
                                 <th>관리</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr class="empty-row" th:if="${page.content.isEmpty()}">
-                                <td colspan="8">등록된 이슈가 없습니다.</td>
+                                <td colspan="9">등록된 이슈가 없습니다.</td>
                             </tr>
                             <tr th:each="r, stat : ${page.content}">
                                 <td th:text="${page.number * page.size + stat.count}"></td>
@@ -102,6 +103,7 @@
                                           th:text="${r.actionStatus ?: '-'}"></span>
                                 </td>
                                 <td th:text="${r.actionDate ?: '-'}"></td>
+                                <td class="td-center attach-icons-cell" th:data-entity-id="${r.id}"></td>
                                 <td>
                                     <button class="btn-sm-del"
                                             th:data-id="${r.id}"

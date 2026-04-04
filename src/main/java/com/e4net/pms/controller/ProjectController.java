@@ -99,13 +99,5 @@ public class ProjectController {
         return "redirect:/projects";
     }
 
-    /** 삭제 처리 */
-    @SuppressWarnings("null")
-    @PostMapping("/{id}/delete")
-    public String delete(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
-        if (isNotLoggedIn(session)) return "redirect:/";
-        projectService.delete(id);
-        redirectAttributes.addFlashAttribute("successMessage", "프로젝트가 삭제되었습니다.");
-        return "redirect:/projects";
-    }
+
 }

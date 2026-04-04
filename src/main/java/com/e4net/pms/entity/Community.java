@@ -21,6 +21,11 @@ public class Community {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // ── 사업 연관 (nullable — 전체 공지는 project 없이 등록 가능) ────
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id")
+    private Project project;
+
     // ── 구분 ─────────────────────────────────────────────────────
     @Column(name = "community_type", length = 20, nullable = false)
     private String communityType;   // 공지사항 / 자료실
@@ -35,7 +40,7 @@ public class Community {
     @Column(name = "post_date")
     private LocalDate postDate;
 
-    @Column(name = "content", columnDefinition = "TEXT")
+    @Column(name = "content", columnDefinition = "LONGTEXT")
     private String content;
 
     // ── 공통 감사 컬럼 ─────────────────────────────────────────────

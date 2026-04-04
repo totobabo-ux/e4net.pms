@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인터페이스 목록 - E4NET PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+    <aside th:replace="~{layout/fragments :: sidebar('exec-design-interface')}"></aside>
+
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업수행</span>
+            <span class="sep">/</span><span>설계</span>
+            <span class="sep">/</span><span class="current">인터페이스 목록</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">
+                    인터페이스 목록
+                    <span th:if="${selectedProject != null}"
+                          style="font-size:13px;font-weight:normal;color:#2980b9;margin-left:10px;"
+                          th:text="'[ ' + ${selectedProject.projectName} + ' ]'"></span>
+                </div>
+                <div class="btn-group">
+                    <a class="btn btn-secondary" th:href="@{/interface-list/excel/download}">&#11015; 엑셀 다운로드</a>
+                    <button type="button" class="btn btn-secondary" onclick="openUploadModal()">&#11014; 엑셀 업로드</button>
+                    <button class="btn btn-primary" onclick="location.href='/interface-list/new'">&#43; 등록</button>
+                </div>
+            </div>
+
+            <!-- 메시지 -->
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="alert alert-danger"  th:if="${errorMessage}"   th:text="${errorMessage}"></div>
+
+            <!-- 검색 폼 -->
+            <form th:action="@{/interface-list}" method="get">
+                <div class="search-box">
+                    <div class="search-row">
+                        <span class="search-label">연계구분</span>
+                        <select name="linkType" class="search-select w-sm">
+                            <option value="">전체</option>
+                            <option th:each="c : ${codes['INTERFACE_LINK_TYPE']}"
+                                    th:value="${c.code}" th:text="${c.codeName}"
+                                    th:selected="${search.linkType == c.code}"></option>
+                        </select>
+                        <div class="divider"></div>
+                        <span class="search-label">인터페이스방식</span>
+                        <select name="interfaceMethod" class="search-select w-md">
+                            <option value="">전체</option>
+                            <option th:each="c : ${codes['INTERFACE_METHOD']}"
+                                    th:value="${c.code}" th:text="${c.codeName}"
+                                    th:selected="${search.interfaceMethod == c.code}"></option>
+                        </select>
+                        <div class="divider"></div>
+                        <span class="search-label">인터페이스명</span>
+                        <input type="text" name="interfaceName" class="search-input w-lg"
+                               th:value="${search.interfaceName}" placeholder="인터페이스명 검색">
+                        <button type="submit" class="btn-search">&#128269; 검색</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- 목록 테이블 -->
+            <div class="table-card">
+                <div class="table-card-header">
+                    <span class="table-card-title">인터페이스 목록</span>
+                    <span class="table-count">총 <span th:text="${page.totalElements}">0</span>건</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:44px;">No.</th>
+                                <th style="width:110px;">인터페이스ID</th>
+                                <th style="width:240px;">인터페이스명</th>
+                                <th style="width:70px;">연계구분</th>
+                                <th style="width:160px;">송신시스템(Source)</th>
+                                <th style="width:160px;">수신시스템(Target)</th>
+                                <th style="width:110px;">인터페이스방식</th>
+                                <th style="width:80px;">발생주기</th>
+                                <th style="width:80px;">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="empty-row" th:if="${page.content.isEmpty()}">
+                                <td colspan="9">등록된 인터페이스목록이 없습니다.</td>
+                            </tr>
+                            <tr th:each="i, stat : ${page.content}">
+                                <td th:text="${page.number * page.size + stat.count}"></td>
+                                <td style="font-size:12px; color:#555;" th:text="${i.interfaceId ?: '-'}"></td>
+                                <td class="td-left">
+                                    <a class="td-link"
+                                       th:href="@{/interface-list/{id}(id=${i.id})}"
+                                       th:text="${i.interfaceName}"></a>
+                                </td>
+                                <td>
+                                    <span class="badge badge-default" th:text="${i.linkType ?: '-'}"></span>
+                                </td>
+                                <td class="td-left" style="font-size:12px; white-space:pre-line;" th:text="${i.sourceSystem ?: '-'}"></td>
+                                <td class="td-left" style="font-size:12px; white-space:pre-line;" th:text="${i.targetSystem ?: '-'}"></td>
+                                <td th:text="${i.interfaceMethod ?: '-'}"></td>
+                                <td th:text="${i.occurrenceCycle ?: '-'}"></td>
+                                <td>
+                                    <button class="btn-sm-edit"
+                                            th:data-href="@{/interface-list/{id}/edit(id=${i.id})}"
+                                            onclick="location.href=this.dataset.href">수정</button>
+                                    <button class="btn-sm-del"
+                                            th:data-id="${i.id}"
+                                            th:data-name="${i.interfaceName}"
+                                            onclick="openDeleteModal(this.dataset.id, this.dataset.name)">삭제</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 페이지네이션 -->
+            <div class="pagination" th:if="${page.totalPages > 1}">
+                <a th:if="${!page.first}"
+                   th:href="@{/interface-list(page=${page.number - 1}, linkType=${search.linkType}, interfaceMethod=${search.interfaceMethod}, interfaceName=${search.interfaceName})}">&laquo;</a>
+                <th:block th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}">
+                    <span th:if="${i == page.number}" class="active" th:text="${i + 1}"></span>
+                    <a th:unless="${i == page.number}"
+                       th:href="@{/interface-list(page=${i}, linkType=${search.linkType}, interfaceMethod=${search.interfaceMethod}, interfaceName=${search.interfaceName})}"
+                       th:text="${i + 1}"></a>
+                </th:block>
+                <a th:if="${!page.last}"
+                   th:href="@{/interface-list(page=${page.number + 1}, linkType=${search.linkType}, interfaceMethod=${search.interfaceMethod}, interfaceName=${search.interfaceName})}">&raquo;</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header red">
+            <span class="modal-title">&#128465; 삭제 확인</span>
+            <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><strong id="deleteTargetName"></strong> 을(를) 삭제하시겠습니까?</p>
+            <p style="margin-top:8px;color:#718096;font-size:12px;">삭제된 데이터는 복구할 수 없습니다.</p>
+        </div>
+        <div class="modal-footer">
+            <form id="deleteForm" method="post">
+                <button type="submit" class="btn btn-delete">삭제</button>
+            </form>
+            <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">취소</button>
+        </div>
+    </div>
+</div>
+
+<!-- 엑셀 업로드 모달 -->
+<div id="uploadModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <span class="modal-title">&#11014; 엑셀 업로드</span>
+            <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom:12px; color:#4a5568; font-size:13px;">
+                다운로드한 엑셀 파일의 데이터를 수정 후 업로드하세요.<br>
+                <strong style="color:#2980b9;">인터페이스ID</strong> 기준으로 기존 데이터는 수정, 신규 데이터는 등록됩니다.
+            </p>
+            <form id="uploadForm" th:action="@{/interface-list/excel/upload}" method="post" enctype="multipart/form-data">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="file" id="excelFileInput" name="excelFile" accept=".xlsx,.xls"
+                           class="form-control" style="flex:1;">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" form="uploadForm" class="btn btn-primary">업로드</button>
+            <button type="button" class="btn btn-cancel" onclick="closeUploadModal()">취소</button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    function openDeleteModal(id, name) {
+        document.getElementById('deleteTargetName').textContent = name;
+        document.getElementById('deleteForm').action = '/interface-list/' + id + '/delete';
+        document.getElementById('deleteModal').classList.add('open');
+    }
+    function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('open'); }
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+
+    function openUploadModal()  { document.getElementById('uploadModal').classList.add('open'); }
+    function closeUploadModal() { document.getElementById('uploadModal').classList.remove('open'); }
+    document.getElementById('uploadModal').addEventListener('click', function(e) {
+        if (e.target === this) closeUploadModal();
+    });
+</script>
+</body>
+</html>

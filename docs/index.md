@@ -24,3 +24,4 @@ Generated from instructions.md
 - [19. 커뮤니티(공지사항/자료실) 패턴](19-community-pattern.md)
 - [20. AJAX/JSON 기반 컨트롤러 패턴](20-ajax-json-pattern.md)
 - [21. jsTree 기반 트리뷰 분할 패널 패턴](21-jstree-pattern.md)
+- [22. 목록 화면 첨부파일 아이콘 패턴](22-list-attach-icons.md)

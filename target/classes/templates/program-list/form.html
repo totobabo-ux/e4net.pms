@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${mode == 'create'} ? '프로그램 등록 - E4NET PMS' : '프로그램 수정 - E4NET PMS'">프로그램 폼</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+    <aside th:replace="~{layout/fragments :: sidebar('exec-design-program')}"></aside>
+
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업수행</span>
+            <span class="sep">/</span><span>설계</span>
+            <span class="sep">/</span><a href="/program-list">프로그램목록</a>
+            <span class="sep">/</span>
+            <span class="current" th:text="${mode == 'create'} ? '프로그램 등록' : '프로그램 수정'">등록</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title" th:text="${mode == 'create'} ? '프로그램 등록' : '프로그램 수정'">프로그램 등록</div>
+                <div class="btn-group">
+                    <button type="submit" form="programForm" class="btn btn-primary">
+                        &#10003; <span th:text="${mode == 'create'} ? '등록' : '저장'">등록</span>
+                    </button>
+                    <button type="button" class="btn btn-cancel" onclick="location.href='/program-list'">&#10005; 취소</button>
+                </div>
+            </div>
+
+            <form id="programForm"
+                  th:action="${mode == 'create'} ? @{/program-list} : @{/program-list/{id}/edit(id=${program.id})}"
+                  method="post"
+                  enctype="multipart/form-data"
+                  th:object="${program}">
+
+                <div class="form-card">
+                    <div class="form-card-header">&#128196; 프로그램 정보</div>
+                    <div class="form-card-body">
+                        <div class="form-grid-2col">
+
+                            <div class="form-cell">
+                                <label class="form-label">사업명</label>
+                                <input type="hidden" th:field="*{projectId}">
+                                <span th:text="${session.selectedProject != null ? session.selectedProject.projectName : ''}"
+                                      style="font-weight:bold; color:#2c3e50;"></span>
+                            </div>
+                            <div class="form-cell">
+                                <label class="form-label">시스템구분</label>
+                                <input type="text" class="form-control" th:field="*{systemName}" placeholder="시스템구분 입력">
+                            </div>
+
+                            <div class="form-cell">
+                                <label class="form-label">프로그램ID</label>
+                                <input type="text" class="form-control" th:field="*{programId}"
+                                       placeholder="예: PGM-CMN-LGN-001">
+                            </div>
+                            <div class="form-cell">
+                                <label class="form-label">프로그램명<span class="req">※</span></label>
+                                <input type="text" class="form-control" th:field="*{programName}"
+                                       placeholder="프로그램명을 입력하세요">
+                                <span class="field-error"
+                                      th:if="${#fields.hasErrors('programName')}"
+                                      th:errors="*{programName}"></span>
+                            </div>
+
+                            <div class="form-cell">
+                                <label class="form-label">클래스명</label>
+                                <input type="text" class="form-control" th:field="*{className}"
+                                       placeholder="예: FrontLoginService">
+                            </div>
+                            <div class="form-cell">
+                                <label class="form-label">클래스경로</label>
+                                <input type="text" class="form-control" th:field="*{classPath}"
+                                       placeholder="예: /11.business/.../FrontLoginService.java">
+                            </div>
+
+                            <div class="form-cell">
+                                <label class="form-label">프로그램구분</label>
+                                <select class="form-control" th:field="*{programType}">
+                                    <option value="">선택</option>
+                                    <option th:each="c : ${codes['PROGRAM_TYPE']}"
+                                            th:value="${c.code}" th:text="${c.codeName}"></option>
+                                </select>
+                            </div>
+                            <div class="form-cell">
+                                <label class="form-label">개발난이도</label>
+                                <select class="form-control" th:field="*{difficulty}">
+                                    <option value="">선택</option>
+                                    <option th:each="c : ${codes['PROGRAM_DIFFICULTY']}"
+                                            th:value="${c.code}" th:text="${c.codeName}"></option>
+                                </select>
+                            </div>
+
+                            <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                                <label class="form-label">비고</label>
+                                <textarea class="form-control" th:field="*{note}"
+                                          rows="3" placeholder="비고 입력"
+                                          style="resize:vertical;"></textarea>
+                            </div>
+
+                            <!-- 첨부파일 -->
+                            <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                                <label class="form-label">첨부파일</label>
+                                <div class="attach-zone">
+                                    <div th:if="${program.attachments != null and not #lists.isEmpty(program.attachments)}">
+                                        <div class="attach-section-label">기존 첨부파일</div>
+                                        <div th:each="att : ${program.attachments}" class="attach-row attach-existing">
+                                            <span class="attach-icon">&#128196;</span>
+                                            <span class="attach-name" th:text="${att.fileName}"></span>
+                                            <span class="attach-size" th:text="${att.fileSizeDisplay}"></span>
+                                            <form th:action="@{/program-list/{id}/attachment/{attId}/delete(id=${program.id},attId=${att.id})}"
+                                                  method="post" style="margin:0; flex-shrink:0;">
+                                                <button type="submit" class="btn-sm-del"
+                                                        onclick="return confirm('이 첨부파일을 삭제하시겠습니까?')">삭제</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div id="pendingList_label" class="attach-section-label" style="display:none; margin-top:8px;">추가할 파일</div>
+                                    <div id="pendingList"></div>
+                                    <div class="attach-add-area">
+                                        <button type="button" class="btn-attach-add"
+                                                onclick="document.getElementById('attachFileInput').click()">
+                                            &#128206; 파일 추가
+                                        </button>
+                                        <span class="attach-hint">여러 파일 동시 선택 가능</span>
+                                    </div>
+                                    <input type="file" id="attachFileInput" name="attachFiles" multiple style="display:none;">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    initAttachUpload('attachFileInput', 'pendingList', 'programForm');
+</script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 package com.e4net.pms.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,6 +24,7 @@ public class User {
     @Column(name = "employee_no", nullable = false, unique = true, length = 50)
     private String employeeNo;          // 사번 (회원 ID, 유니크)
 
+    @JsonIgnore
     @Column(name = "password", nullable = false, length = 255)
     private String password;            // 비밀번호 (BCrypt 해시)
 
@@ -43,6 +45,9 @@ public class User {
 
     @Column(name = "email", length = 100)
     private String email;               // 이메일
+
+    @Column(name = "role", length = 50)
+    private String role;                // 권한 (ROLE_CODE)
 
     @Column(name = "reg_id", length = 50, updatable = false)
     private String regId;               // 등록자 ID

@@ -157,6 +157,25 @@ VALUES
   ('SCREEN_MENU_LEVEL1', '커뮤니티', '커뮤니티', 4, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
   ('SCREEN_MENU_LEVEL1', '관리자',   '관리자',   5, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW());
 
+-- ── PROGRAM_TYPE : 프로그램 구분 ─────────────────────────
+INSERT INTO common_code (group_code, code, code_name, sort_order, use_yn, reg_id, upd_id, reg_dt, upd_dt)
+VALUES
+  ('PROGRAM_TYPE', 'Controller', 'Controller', 1, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('PROGRAM_TYPE', 'Service',    'Service',    2, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('PROGRAM_TYPE', 'Entity',     'Entity',     3, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('PROGRAM_TYPE', 'Repository', 'Repository', 4, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('PROGRAM_TYPE', 'DTO',        'DTO',        5, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('PROGRAM_TYPE', 'Util',       'Util',       6, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('PROGRAM_TYPE', 'Config',     'Config',     7, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('PROGRAM_TYPE', '기타',        '기타',        8, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW());
+
+-- ── PROGRAM_DIFFICULTY : 개발난이도 ──────────────────────
+INSERT INTO common_code (group_code, code, code_name, sort_order, use_yn, reg_id, upd_id, reg_dt, upd_dt)
+VALUES
+  ('PROGRAM_DIFFICULTY', '상', '상', 1, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('PROGRAM_DIFFICULTY', '중', '중', 2, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('PROGRAM_DIFFICULTY', '하', '하', 3, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW());
+
 -- ── SCREEN_CATEGORY : 화면목록 화면유형 ──────────────────
 INSERT INTO common_code (group_code, code, code_name, sort_order, use_yn, reg_id, upd_id, reg_dt, upd_dt)
 VALUES
@@ -165,3 +184,30 @@ VALUES
   ('SCREEN_CATEGORY', '상세', '상세', 3, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
   ('SCREEN_CATEGORY', '수정', '수정', 4, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
   ('SCREEN_CATEGORY', '조회', '조회', 5, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW());
+
+-- ── INTERFACE_LINK_TYPE : 인터페이스 연계구분 ─────────────
+INSERT INTO common_code (group_code, code, code_name, sort_order, use_yn, reg_id, upd_id, reg_dt, upd_dt)
+VALUES
+  ('INTERFACE_LINK_TYPE', '자기관', '자기관', 1, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('INTERFACE_LINK_TYPE', '타기관', '타기관', 2, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('INTERFACE_LINK_TYPE', '기타',   '기타',   3, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW());
+
+-- ── INTERFACE_METHOD : 인터페이스방식 ────────────────────
+INSERT INTO common_code (group_code, code, code_name, sort_order, use_yn, reg_id, upd_id, reg_dt, upd_dt)
+VALUES
+  ('INTERFACE_METHOD', '공동이용API', '공동이용API', 1, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('INTERFACE_METHOD', 'REST API',   'REST API',   2, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('INTERFACE_METHOD', 'SOAP',       'SOAP',       3, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('INTERFACE_METHOD', '파일전송',    '파일전송',    4, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('INTERFACE_METHOD', 'DB Link',    'DB Link',    5, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('INTERFACE_METHOD', '기타',        '기타',        6, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW());
+
+-- ── INTERFACE_CYCLE : 인터페이스 발생주기 ────────────────
+INSERT INTO common_code (group_code, code, code_name, sort_order, use_yn, reg_id, upd_id, reg_dt, upd_dt)
+VALUES
+  ('INTERFACE_CYCLE', '실시간',     '실시간',     1, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('INTERFACE_CYCLE', '배치(일별)', '배치(일별)', 2, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('INTERFACE_CYCLE', '배치(주별)', '배치(주별)', 3, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('INTERFACE_CYCLE', '배치(월별)', '배치(월별)', 4, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('INTERFACE_CYCLE', '수동',       '수동',       5, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW()),
+  ('INTERFACE_CYCLE', '기타',       '기타',       6, 'Y', 'SYSTEM', 'SYSTEM', NOW(), NOW());

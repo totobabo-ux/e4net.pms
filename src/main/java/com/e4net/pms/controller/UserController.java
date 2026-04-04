@@ -61,6 +61,7 @@ public class UserController {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRegId(user.getEmployeeNo());  // 자기 등록 시 본인 사번
         user.setUpdId(user.getEmployeeNo());
+        user.setRole("ROLE_USER");            // 기본 권한: 일반사용자
         userRepository.save(user);
 
         return "redirect:/?registerSuccess=true";

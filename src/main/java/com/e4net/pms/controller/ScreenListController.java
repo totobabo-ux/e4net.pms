@@ -192,10 +192,10 @@ public class ScreenListController {
         Project project = getSelectedProject(session);
         List<ScreenList> list = screenListService.findAllByProject(project.getId());
 
-        String[] headers = { "메뉴Level1", "메뉴Level2", "메뉴Level3", "분류",
+        String[] headers = { "화면ID", "메뉴Level1", "메뉴Level2", "메뉴Level3", "분류",
                               "화면명", "화면설명", "URL", "템플릿 파일", "비고" };
         List<Object[]> rows = list.stream().map(s -> new Object[]{
-            s.getMenuLevel1(), s.getMenuLevel2(), s.getMenuLevel3(), s.getCategory(),
+            s.getScreenId(), s.getMenuLevel1(), s.getMenuLevel2(), s.getMenuLevel3(), s.getCategory(),
             s.getScreenName(), s.getScreenDesc(), s.getUrl(), s.getTemplateFile(), s.getNote()
         }).collect(Collectors.toList());
 

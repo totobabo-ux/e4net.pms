@@ -196,27 +196,35 @@ public class IssueService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("사업을 찾을 수 없습니다."));
 
-        // 기존 이슈 전체 삭제 (첨부파일 포함)
-        List<Issue> existingIssues = issueRepository.findAllByProject_IdOrderByIdAsc(projectId);
-        if (!existingIssues.isEmpty()) {
-            List<Long> issueIds = existingIssues.stream().map(Issue::getId).toList();
-            List<AttachFile> attachments = attachFileRepository.findByEntityTypeAndEntityIdIn(ENTITY_TYPE, issueIds);
-            attachments.forEach(a -> deletePhysicalFile(a.getFilePath()));
-            attachFileRepository.deleteByEntityTypeAndEntityIdIn(ENTITY_TYPE, issueIds);
-            issueRepository.deleteAll(existingIssues);
-        }
-
-        int inserted = 0, skipped = 0;
+        int inserted = 0, updated = 0, skipped = 0;
 
         for (String[] cells : rows) {
             String issueNameVal = getCell(cells, 1);
             if (issueNameVal.isBlank()) { skipped++; continue; }
 
-            Issue entity = new Issue();
-            entity.setProject(project);
-            entity.setRegId(userId);
+            // issueNo 기준 upsert — 번호가 있으면 기존 데이터 수정, 없으면 신규 등록
+            String issueNoVal = getCell(cells, 0);
+            Issue entity;
+            boolean isNew;
+            if (!issueNoVal.isBlank()) {
+                var existing = issueRepository.findFirstByProject_IdAndIssueNo(projectId, issueNoVal);
+                if (existing.isPresent()) {
+                    entity = existing.get();
+                    isNew  = false;
+                } else {
+                    entity = new Issue();
+                    entity.setProject(project);
+                    entity.setRegId(userId);
+                    isNew = true;
+                }
+            } else {
+                entity = new Issue();
+                entity.setProject(project);
+                entity.setRegId(userId);
+                isNew = true;
+            }
             // [이슈정보]
-            entity.setIssueNo(getCell(cells, 0));
+            entity.setIssueNo(issueNoVal.isBlank() ? null : issueNoVal);
             entity.setIssueName(issueNameVal);
             entity.setRaiser(getCell(cells, 2));
             parseDate(getCell(cells, 3), entity::setRaisedDate);
@@ -233,9 +241,9 @@ public class IssueService {
             entity.setUpdId(userId);
 
             issueRepository.save(entity);
-            inserted++;
+            if (isNew) inserted++; else updated++;
         }
-        return new int[]{ inserted, 0, skipped };
+        return new int[]{ inserted, updated, skipped };
     }
 
     // ── private ───────────────────────────────────────────────────

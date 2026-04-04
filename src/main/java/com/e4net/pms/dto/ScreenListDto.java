@@ -25,6 +25,8 @@ public class ScreenListDto {
     private String menuLevel3;      // 메뉴Level3
 
     // ── 화면 정보 ─────────────────────────────────────────────
+    private String screenId;         // 화면ID
+
     private String category;        // 분류
 
     @NotBlank(message = "화면명을 입력해주세요.")

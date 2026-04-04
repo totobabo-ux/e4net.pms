@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>업무흐름 상세 - e4net PMS</title>
+    <title>업무흐름 상세 - E4NET PMS</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <style>
         #editSection { display:none; }
@@ -30,11 +30,11 @@
             <div class="page-header">
                 <div class="page-title">업무흐름 상세</div>
                 <div class="btn-group" id="viewButtons">
-                    <button type="button" class="btn btn-edit" onclick="switchToEdit()">&#9998; 수정</button>
-                    <button type="button" class="btn btn-delete" onclick="openDeleteModal()">&#128465; 삭제</button>
+                    <button type="button" class="btn btn-edit" th:if="${isPrivileged}" onclick="switchToEdit()">&#9998; 수정</button>
+                    <button type="button" class="btn btn-delete" th:if="${isPrivileged}" onclick="openDeleteModal()">&#128465; 삭제</button>
                     <a class="btn btn-list" href="/business-flow">&#9776; 목록</a>
                 </div>
-                <div class="btn-group" id="editButtons" style="display:none;">
+                <div class="btn-group" id="editButtons" style="display:none;" th:if="${isPrivileged}">
                     <button type="submit" form="flowEditForm" class="btn btn-primary">&#10003; 저장</button>
                     <button type="button" class="btn btn-cancel" onclick="switchToView()">&#10005; 취소</button>
                 </div>

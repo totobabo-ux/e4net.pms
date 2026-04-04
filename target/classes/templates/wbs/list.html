@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사업일정(WBS) - e4net PMS</title>
+    <title>사업일정(WBS) - E4NET PMS</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <style>
         /* ── WBS 레이아웃 ── */
@@ -218,7 +218,28 @@
     </div>
 </div>
 
-<!-- 엑셀 업로드 모달 -->
+<!-- 엑셀 업로드 모달 — 1단계: 경고 확인 -->
+<div id="uploadWarnModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header red">
+            <span class="modal-title">&#9888; 업로드 전 확인</span>
+            <button class="modal-close" onclick="closeUploadWarnModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="color:#2d3748; font-size:13px; line-height:1.7;">
+                입력된 <strong>전체 사업일정이 제거</strong>된 후<br>
+                업로드된 엑셀 정보로 대체됩니다.<br>
+                <span style="color:#e53e3e; font-weight:bold;">계속하시겠습니까?</span>
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-delete" onclick="confirmUpload()">계속</button>
+            <button type="button" class="btn btn-cancel" onclick="closeUploadWarnModal()">취소</button>
+        </div>
+    </div>
+</div>
+
+<!-- 엑셀 업로드 모달 — 2단계: 파일 선택 -->
 <div id="uploadModal" class="modal-overlay">
     <div class="modal modal-sm">
         <div class="modal-header">
@@ -227,8 +248,8 @@
         </div>
         <div class="modal-body">
             <p style="margin-bottom:12px; color:#4a5568; font-size:13px;">
-                다운로드한 엑셀 파일의 데이터를 수정 후 업로드하세요.<br>
-                <strong style="color:#2980b9;">TASK ID</strong> 기준으로 기존 데이터는 수정, 신규 데이터는 등록됩니다.
+                업로드할 엑셀 파일을 선택하세요.<br>
+                기존 사업일정은 <strong style="color:#e53e3e;">모두 삭제</strong>되고 엑셀 내용으로 대체됩니다.
             </p>
             <form id="uploadForm" th:action="@{/wbs/excel/upload}" method="post" enctype="multipart/form-data">
                 <div style="display:flex; align-items:center; gap:8px;">
@@ -1046,9 +1067,22 @@ function showMsg(msg, type) {
 
 window.addEventListener('DOMContentLoaded', () => init(INITIAL_DATA));
 
-function openUploadModal()  { document.getElementById('uploadModal').classList.add('open'); }
-function closeUploadModal() { document.getElementById('uploadModal').classList.remove('open'); }
+// 엑셀 업로드 — 1단계: 경고 모달 열기
+function openUploadModal() { document.getElementById('uploadWarnModal').classList.add('open'); }
+function closeUploadWarnModal() { document.getElementById('uploadWarnModal').classList.remove('open'); }
+// 경고 확인 → 2단계: 파일 선택 모달
+function confirmUpload() {
+    closeUploadWarnModal();
+    document.getElementById('uploadModal').classList.add('open');
+}
+function closeUploadModal() {
+    document.getElementById('uploadModal').classList.remove('open');
+    document.getElementById('uploadForm').reset();
+}
 document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('uploadWarnModal').addEventListener('click', function(e) {
+        if (e.target === this) closeUploadWarnModal();
+    });
     document.getElementById('uploadModal').addEventListener('click', function(e) {
         if (e.target === this) closeUploadModal();
     });

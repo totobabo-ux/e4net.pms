@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -172,6 +174,27 @@ public class MenuController {
         XSSFWorkbook wb = ExcelUtil.createWorkbook("메뉴구조", headers, rows);
         String fileName = project.getProjectName() + "_메뉴구조_" + LocalDate.now() + ".xlsx";
         ExcelUtil.writeToResponse(wb, fileName, response);
+    }
+
+    /** 엑셀 업로드 — 메뉴코드 기준 upsert */
+    @PostMapping("/excel/upload")
+    public String excelUpload(@RequestParam("excelFile") MultipartFile file,
+                              HttpSession session,
+                              RedirectAttributes ra) throws java.io.IOException {
+        if (isNotReady(session)) return "redirect:/project-select";
+        if (file.isEmpty()) {
+            ra.addFlashAttribute("errorMessage", "업로드할 파일을 선택해주세요.");
+            return "redirect:/menu-structure";
+        }
+
+        List<String[]> rows = ExcelUtil.parseRows(file, 1);
+        Long projectId = getSelectedProject(session).getId();
+        int[] result = menuService.upsertFromExcel(rows, projectId, getLoginUserId(session));
+
+        ra.addFlashAttribute("successMessage",
+            String.format("엑셀 업로드 완료 — 신규: %d건, 수정: %d건, 건너뜀: %d건",
+                result[0], result[1], result[2]));
+        return "redirect:/menu-structure";
     }
 
     /** 예외 처리 */

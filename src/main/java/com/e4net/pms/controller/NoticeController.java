@@ -56,6 +56,10 @@ public class NoticeController {
         return user != null ? user.getName() : "";
     }
 
+    private com.e4net.pms.entity.Project getSelectedProject(HttpSession session) {
+        return (com.e4net.pms.entity.Project) session.getAttribute("selectedProject");
+    }
+
     /** 목록 */
     @GetMapping
     public String list(@ModelAttribute("search") CommunitySearchDto search,
@@ -64,10 +68,14 @@ public class NoticeController {
                        HttpSession session, Model model) {
         if (isNotLogin(session)) return "redirect:/login";
         search.setCommunityType(COMMUNITY_TYPE);
+        // 선택된 사업이 있으면 해당 사업 게시글만 조회
+        com.e4net.pms.entity.Project selectedProject = getSelectedProject(session);
+        if (selectedProject != null) search.setProjectId(selectedProject.getId());
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
         Page<Community> result = communityService.search(search, pageable);
         model.addAttribute("page", result);
         model.addAttribute("communityList", result.getContent());
+        model.addAttribute("selectedProject", selectedProject);
         model.addAttribute("activePage", ACTIVE_PAGE);
         return "notice/list";
     }
@@ -76,12 +84,15 @@ public class NoticeController {
     @GetMapping("/new")
     public String createForm(HttpSession session, Model model) {
         if (isNotLogin(session)) return "redirect:/login";
+        com.e4net.pms.entity.Project selectedProject = getSelectedProject(session);
         CommunityDto dto = new CommunityDto();
         dto.setCommunityType(COMMUNITY_TYPE);
         dto.setWriter(getLoginUserName(session));
         dto.setPostDate(LocalDate.now());
+        if (selectedProject != null) dto.setProjectId(selectedProject.getId());
         model.addAttribute("community", dto);
         model.addAttribute("mode", "create");
+        model.addAttribute("selectedProject", selectedProject);
         model.addAttribute("activePage", ACTIVE_PAGE);
         return "notice/form";
     }
@@ -96,6 +107,10 @@ public class NoticeController {
                          Model model) throws IOException {
         if (isNotLogin(session)) return "redirect:/login";
         dto.setCommunityType(COMMUNITY_TYPE);
+        if (dto.getProjectId() == null) {
+            com.e4net.pms.entity.Project p = getSelectedProject(session);
+            if (p != null) dto.setProjectId(p.getId());
+        }
         if (result.hasErrors()) {
             model.addAttribute("mode", "create");
             model.addAttribute("activePage", ACTIVE_PAGE);

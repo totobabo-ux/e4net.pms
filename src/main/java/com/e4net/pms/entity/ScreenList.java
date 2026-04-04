@@ -40,6 +40,9 @@ public class ScreenList {
     private String menuLevel3;          // 메뉴Level3 (예: 산출물 관리)
 
     // ── 화면 정보 ──────────────────────────────────────────────
+    @Column(name = "screen_id", length = 50)
+    private String screenId;             // 화면ID (예: SCR-CMN-LGN-001)
+
     @Column(name = "category", length = 20)
     private String category;            // 분류 (목록/등록/상세/수정/조회)
 

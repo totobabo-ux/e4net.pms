@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${mode == 'create'} ? '통합테스트 등록 - E4NET PMS' : '통합테스트 수정 - E4NET PMS'">통합테스트 폼</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+    <aside th:replace="~{layout/fragments :: sidebar('exec-test-integration')}"></aside>
+
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>사업수행</span>
+            <span class="sep">/</span><span>시험</span>
+            <span class="sep">/</span><a href="/integration-test">통합테스트 목록</a>
+            <span class="sep">/</span>
+            <span class="current" th:text="${mode == 'create'} ? '통합테스트 등록' : '통합테스트 수정'">등록</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title" th:text="${mode == 'create'} ? '통합테스트 등록' : '통합테스트 수정'">통합테스트 등록</div>
+                <div class="btn-group">
+                    <button type="submit" form="integrationTestForm" class="btn btn-primary">
+                        &#10003; <span th:text="${mode == 'create'} ? '등록' : '저장'">등록</span>
+                    </button>
+                    <button type="button" class="btn btn-cancel" onclick="location.href='/integration-test'">&#10005; 취소</button>
+                </div>
+            </div>
+
+            <form id="integrationTestForm"
+                  th:action="${mode == 'create'} ? @{/integration-test} : @{/integration-test/{id}/edit(id=${integrationTest.id})}"
+                  method="post"
+                  enctype="multipart/form-data"
+                  th:object="${integrationTest}">
+
+                <div class="form-card">
+                    <div class="form-card-header">&#128196; 통합테스트 정보</div>
+                    <div class="form-card-body">
+                        <div class="form-grid-2col">
+
+                            <div class="form-cell">
+                                <label class="form-label">사업명</label>
+                                <input type="hidden" th:field="*{projectId}">
+                                <span th:text="${session.selectedProject != null ? session.selectedProject.projectName : ''}"
+                                      style="font-weight:bold; color:#2c3e50;"></span>
+                            </div>
+                            <div class="form-cell">
+                                <label class="form-label">분류</label>
+                                <select class="form-control" th:field="*{category}">
+                                    <option value="">선택</option>
+                                    <option th:each="c : ${codes['INTEGRATION_TEST_CATEGORY']}"
+                                            th:value="${c.code}" th:text="${c.codeName}"></option>
+                                </select>
+                            </div>
+
+                            <div class="form-cell">
+                                <label class="form-label">통합테스트ID</label>
+                                <input type="text" class="form-control" th:field="*{integrationTestId}"
+                                       placeholder="예: TTD-PMS-001">
+                            </div>
+                            <div class="form-cell">
+                                <label class="form-label">통합테스트명<span class="req">※</span></label>
+                                <input type="text" class="form-control" th:field="*{integrationTestName}"
+                                       placeholder="예: 관리자 기능 테스트">
+                            </div>
+
+                            <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                                <label class="form-label">통합테스트 설명</label>
+                                <textarea class="form-control" th:field="*{description}"
+                                          rows="4" placeholder="예: 관리자 기능 전체 테스트"
+                                          style="resize:vertical;"></textarea>
+                            </div>
+
+                            <div class="form-cell" style="grid-column: 1 / -1;">
+                                <label class="form-label">비고</label>
+                                <input type="text" class="form-control" th:field="*{note}"
+                                       placeholder="비고 입력">
+                            </div>
+
+                            <!-- 첨부파일 -->
+                            <div class="form-cell" style="grid-column: 1 / -1; align-items:flex-start;">
+                                <label class="form-label">첨부파일</label>
+                                <div class="attach-zone">
+                                    <div th:if="${integrationTest.attachments != null and not #lists.isEmpty(integrationTest.attachments)}">
+                                        <div class="attach-section-label">기존 첨부파일</div>
+                                        <div th:each="att : ${integrationTest.attachments}" class="attach-row attach-existing">
+                                            <span class="attach-icon">&#128196;</span>
+                                            <span class="attach-name" th:text="${att.fileName}"></span>
+                                            <span class="attach-size" th:text="${att.fileSizeDisplay}"></span>
+                                            <form th:action="@{/integration-test/{id}/attachment/{attId}/delete(id=${integrationTest.id},attId=${att.id})}"
+                                                  method="post" style="margin:0; flex-shrink:0;">
+                                                <button type="submit" class="btn-sm-del"
+                                                        onclick="return confirm('이 첨부파일을 삭제하시겠습니까?')">삭제</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div id="pendingList_label" class="attach-section-label" style="display:none; margin-top:8px;">추가할 파일</div>
+                                    <div id="pendingList"></div>
+                                    <div class="attach-add-area">
+                                        <button type="button" class="btn-attach-add"
+                                                onclick="document.getElementById('attachFileInput').click()">
+                                            &#128206; 파일 추가
+                                        </button>
+                                        <span class="attach-hint">여러 파일 동시 선택 가능</span>
+                                    </div>
+                                    <input type="file" id="attachFileInput" name="attachFiles" multiple style="display:none;">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    initAttachUpload('attachFileInput', 'pendingList', 'integrationTestForm');
+</script>
+</body>
+</html>

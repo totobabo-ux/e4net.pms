@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>권한 관리 - E4NET PMS</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .role-layout {
+            display: flex;
+            gap: 16px;
+            height: calc(100vh - 200px);
+            min-height: 500px;
+        }
+        .role-left {
+            width: 220px;
+            flex-shrink: 0;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .role-left-header {
+            background: #2c3e50;
+            color: #fff;
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .role-list {
+            list-style: none;
+            margin: 0;
+            padding: 8px 0;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .role-list li {
+            padding: 10px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background 0.15s, border-color 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .role-list li:hover { background: #f0f4f8; }
+        .role-list li.active {
+            background: #ebf5fb;
+            border-left-color: #2980b9;
+            color: #1a5276;
+            font-weight: 600;
+        }
+        .role-list li.all-roles {
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 4px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .role-list li.all-roles.active {
+            background: #eaf4fb;
+            border-left-color: #2c3e50;
+            color: #2c3e50;
+        }
+        .role-badge {
+            background: #2980b9;
+            color: #fff;
+            border-radius: 10px;
+            font-size: 11px;
+            padding: 1px 7px;
+            min-width: 20px;
+            text-align: center;
+        }
+        .role-badge.all { background: #718096; }
+
+        .role-right {
+            flex: 1;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .role-right-header {
+            background: #2980b9;
+            color: #fff;
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .role-right-header.all-header { background: #2c3e50; }
+        .role-right-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+        .role-right-footer {
+            padding: 10px 16px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .user-table thead th {
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 9px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #4a5568;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .user-table thead th.role-col { text-align: center; }
+        .user-table tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.1s; }
+        .user-table tbody tr:hover { background: #f8fafc; }
+        .user-table tbody tr.no-role { background: #fff8f0; }
+        .user-table tbody tr.no-role:hover { background: #fef0e0; }
+        .user-table tbody td { padding: 8px 12px; color: #2d3748; }
+        .user-chk, .matrix-chk {
+            width: 15px; height: 15px; cursor: pointer; accent-color: #2980b9;
+        }
+        .role-placeholder {
+            display: flex; align-items: center; justify-content: center;
+            height: 100%; color: #a0aec0; font-size: 13px;
+        }
+        .role-empty { padding: 40px; text-align: center; color: #a0aec0; font-size: 13px; }
+        .chk-all-wrap { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #4a5568; }
+        .selected-count { font-size: 12px; color: #718096; }
+        .unmapped-notice {
+            font-size: 12px; color: #e67e22; font-weight: 600;
+            background: #fff3cd; padding: 2px 10px; border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<header th:replace="~{layout/fragments :: header}"></header>
+
+<div class="body-wrap">
+    <aside th:replace="~{layout/fragments :: sidebar('admin-role')}"></aside>
+
+    <div class="main">
+        <div class="breadcrumb">
+            &#127968; <a href="/home">Home</a>
+            <span class="sep">/</span><span>관리자</span>
+            <span class="sep">/</span><span>시스템 관리</span>
+            <span class="sep">/</span><span class="current">권한 관리</span>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">&#9881; 권한 관리</div>
+            </div>
+
+            <div class="role-layout">
+
+                <!-- 좌측: 권한 목록 -->
+                <div class="role-left">
+                    <div class="role-left-header">&#128274; 권한 목록</div>
+                    <ul class="role-list" id="roleList">
+                        <!-- 권한 전체 (고정 항목) -->
+                        <li class="all-roles" data-code="ALL" data-name="권한 전체" onclick="selectRole(this)">
+                            <span>&#128100; 권한 전체</span>
+                            <span class="role-badge all" id="badge-ALL">0</span>
+                        </li>
+                        <!-- ROLE_CODE 공통코드 -->
+                        <li th:each="r : ${roleCodes}"
+                            th:data-code="${r.code}"
+                            th:data-name="${r.codeName}"
+                            onclick="selectRole(this)">
+                            <span th:text="${r.codeName}">권한명</span>
+                            <span class="role-badge" th:id="'badge-' + ${r.code}">0</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 우측: 사용자 목록 -->
+                <div class="role-right">
+                    <div class="role-right-header" id="rightHeader">
+                        <span id="selectedRoleName">권한을 선택하세요</span>
+                        <span id="unmappedNotice"></span>
+                    </div>
+                    <div class="role-right-body" id="rightBody">
+                        <div class="role-placeholder">
+                            &#8592; 좌측에서 권한을 선택하면 사용자를 관리할 수 있습니다.
+                        </div>
+                    </div>
+                    <div class="role-right-footer" id="rightFooter" style="display:none;">
+                        <div class="chk-all-wrap" id="chkAllWrap">
+                            <input type="checkbox" id="chkAll" onclick="toggleAll(this)">
+                            <label for="chkAll">전체 선택</label>
+                            <span class="selected-count" id="selectedCount"></span>
+                        </div>
+                        <button class="btn btn-primary" onclick="save()">&#10003; 저장</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script>
+    let currentRoleCode = null;
+    let allUsers = [];
+    let roleNameMap = {};   // code -> name
+    let roleCodes = [];     // ordered role code list
+
+    // roleNameMap / roleCodes 는 최초 1회만 구성
+    function initRoleMeta() {
+        roleCodes = [];
+        roleNameMap = {};
+        document.querySelectorAll('#roleList li[data-code]').forEach(li => {
+            if (li.dataset.code !== 'ALL') {
+                roleNameMap[li.dataset.code] = li.dataset.name;
+                roleCodes.push(li.dataset.code);
+            }
+        });
+    }
+
+    async function initBadges() {
+        const resp = await fetch('/admin/roles/all-users');
+        allUsers = await resp.json();
+
+        // 개별 권한 뱃지
+        roleCodes.forEach(code => {
+            const count = allUsers.filter(u => u.role === code).length;
+            const badge = document.getElementById('badge-' + code);
+            if (badge) badge.textContent = count;
+        });
+        // 전체 뱃지 = 전체 사용자 수
+        const badgeAll = document.getElementById('badge-ALL');
+        if (badgeAll) badgeAll.textContent = allUsers.length;
+    }
+
+    function selectRole(el) {
+        document.querySelectorAll('#roleList li').forEach(li => li.classList.remove('active'));
+        el.classList.add('active');
+
+        currentRoleCode = el.dataset.code;
+        const roleName = el.dataset.name;
+
+        const header = document.getElementById('rightHeader');
+        const nameEl = document.getElementById('selectedRoleName');
+
+        if (currentRoleCode === 'ALL') {
+            header.className = 'role-right-header all-header';
+            nameEl.innerHTML = '&#128100; 권한 전체';
+            renderAllMatrix();
+            // 전체 선택 숨김 (매트릭스는 per-row 라디오)
+            document.getElementById('chkAllWrap').style.display = 'none';
+        } else {
+            header.className = 'role-right-header';
+            nameEl.innerHTML = '&#9881; ' + roleName;
+            document.getElementById('chkAllWrap').style.display = 'flex';
+            renderRoleTable();
+        }
+
+        document.getElementById('unmappedNotice').textContent = '';
+        document.getElementById('rightFooter').style.display = 'flex';
+        updateSelectedCount();
+    }
+
+    /* ── 개별 권한 뷰 ─────────────────────────── */
+    function renderRoleTable() {
+        if (allUsers.length === 0) {
+            document.getElementById('rightBody').innerHTML = '<div class="role-empty">등록된 사용자가 없습니다.</div>';
+            return;
+        }
+
+        let html = `<table class="user-table"><thead><tr>
+            <th style="width:40px;text-align:center;">선택</th>
+            <th style="width:80px;">사번</th>
+            <th style="width:100px;">이름</th>
+            <th style="width:120px;">소속회사</th>
+            <th style="width:100px;">소속부서</th>
+            <th style="width:80px;">직위</th>
+            <th>현재 권한</th>
+        </tr></thead><tbody>`;
+
+        allUsers.forEach(u => {
+            const isChecked = u.role === currentRoleCode ? 'checked' : '';
+            const roleLabel = u.role ? (roleNameMap[u.role] || u.role) : '-';
+            const roleDisplay = u.role
+                ? `<span style="background:#ebf5fb;color:#2980b9;border-radius:10px;padding:2px 8px;font-size:11px;">${roleLabel}</span>`
+                : '<span style="color:#a0aec0;">-</span>';
+            html += `<tr>
+                <td style="text-align:center;"><input type="checkbox" class="user-chk" value="${u.id}" ${isChecked} onchange="updateSelectedCount()"></td>
+                <td style="color:#555;font-size:12px;">${u.employeeNo || ''}</td>
+                <td><strong>${u.name || ''}</strong></td>
+                <td style="font-size:12px;">${u.company || '-'}</td>
+                <td style="font-size:12px;">${u.department || '-'}</td>
+                <td style="font-size:12px;">${u.position || '-'}</td>
+                <td>${roleDisplay}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('rightBody').innerHTML = html;
+        updateSelectedCount();
+        syncChkAll();
+    }
+
+    /* ── 권한 전체 매트릭스 뷰 ─────────────────── */
+    function renderAllMatrix() {
+        if (allUsers.length === 0) {
+            document.getElementById('rightBody').innerHTML = '<div class="role-empty">등록된 사용자가 없습니다.</div>';
+            return;
+        }
+
+        const unmapped = allUsers.filter(u => !u.role).length;
+        if (unmapped > 0) {
+            document.getElementById('unmappedNotice').innerHTML =
+                `<span class="unmapped-notice">&#9888; 권한 미매핑 ${unmapped}명</span>`;
+        }
+
+        // 헤더
+        let roleTh = roleCodes.map(code =>
+            `<th class="role-col" style="width:72px;">${roleNameMap[code]}</th>`
+        ).join('');
+
+        let html = `<table class="user-table"><thead><tr>
+            <th style="width:80px;">사번</th>
+            <th style="width:100px;">이름</th>
+            <th style="width:110px;">소속회사</th>
+            <th style="width:100px;">소속부서</th>
+            <th style="width:70px;">직위</th>
+            ${roleTh}
+        </tr></thead><tbody>`;
+
+        allUsers.forEach(u => {
+            const rowClass = !u.role ? 'no-role' : '';
+            let roleTd = roleCodes.map(code => {
+                const isChecked = u.role === code ? 'checked' : '';
+                return `<td style="text-align:center;">
+                    <input type="checkbox" class="matrix-chk"
+                        data-user-id="${u.id}"
+                        data-role-code="${code}"
+                        ${isChecked}
+                        onchange="onMatrixCheck(this)">
+                </td>`;
+            }).join('');
+
+            html += `<tr class="${rowClass}">
+                <td style="color:#555;font-size:12px;">${u.employeeNo || ''}</td>
+                <td><strong>${u.name || ''}</strong>
+                    ${!u.role ? '<span style="color:#e67e22;font-size:10px;margin-left:4px;">미매핑</span>' : ''}
+                </td>
+                <td style="font-size:12px;">${u.company || '-'}</td>
+                <td style="font-size:12px;">${u.department || '-'}</td>
+                <td style="font-size:12px;">${u.position || '-'}</td>
+                ${roleTd}
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('rightBody').innerHTML = html;
+
+        // 전체선택 숨김 / 선택 카운트 초기화
+        const el = document.getElementById('selectedCount');
+        if (el) el.textContent = '';
+    }
+
+    // 매트릭스 체크박스: 같은 행(사용자)에서 하나만 선택 가능
+    function onMatrixCheck(chk) {
+        if (chk.checked) {
+            const row = chk.closest('tr');
+            row.querySelectorAll('.matrix-chk').forEach(c => {
+                if (c !== chk) c.checked = false;
+            });
+        }
+    }
+
+    /* ── 전체선택 / 카운트 ───────────────────── */
+    function toggleAll(chkAll) {
+        document.querySelectorAll('.user-chk').forEach(chk => {
+            chk.checked = chkAll.checked;
+        });
+        updateSelectedCount();
+    }
+
+    function syncChkAll() {
+        const chks = document.querySelectorAll('.user-chk');
+        const allChecked = chks.length > 0 && Array.from(chks).every(c => c.checked);
+        const chkAll = document.getElementById('chkAll');
+        if (chkAll) chkAll.checked = allChecked;
+    }
+
+    function updateSelectedCount() {
+        if (currentRoleCode === 'ALL') return;
+        const checked = document.querySelectorAll('.user-chk:checked').length;
+        const total   = document.querySelectorAll('.user-chk').length;
+        const el = document.getElementById('selectedCount');
+        if (el) el.textContent = `(${checked} / ${total} 명 선택)`;
+        syncChkAll();
+    }
+
+    /* ── 저장 ────────────────────────────────── */
+    async function save() {
+        if (currentRoleCode === 'ALL') {
+            await saveAllMatrix();
+        } else {
+            await saveRoleTable();
+        }
+    }
+
+    // 개별 권한 저장
+    async function saveRoleTable() {
+        const checkedIds = Array.from(document.querySelectorAll('.user-chk:checked'))
+            .map(c => parseInt(c.value));
+
+        const resp = await fetch('/admin/roles/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roleCode: currentRoleCode, userIds: checkedIds })
+        });
+
+        if (resp.ok) {
+            const data = await resp.json();
+            alert(data.result);
+            await initBadges();
+            const activeLi = document.querySelector('#roleList li.active');
+            if (activeLi) renderRoleTable();
+        } else {
+            alert('저장 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 권한 전체 매트릭스 저장
+    async function saveAllMatrix() {
+        // 각 사용자별 선택된 role 수집
+        const userRoles = allUsers.map(u => {
+            const row = document.querySelector(`.matrix-chk[data-user-id="${u.id}"]:checked`);
+            return { userId: u.id, roleCode: row ? row.dataset.roleCode : null };
+        });
+
+        const resp = await fetch('/admin/roles/save-all', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userRoles })
+        });
+
+        if (resp.ok) {
+            const data = await resp.json();
+            alert(data.result);
+            await initBadges();
+            renderAllMatrix();
+        } else {
+            alert('저장 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 초기화
+    initRoleMeta();
+    initBadges();
+</script>
+</body>
+</html>

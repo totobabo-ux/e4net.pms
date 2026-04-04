@@ -5,9 +5,11 @@ import com.e4net.pms.dto.CommunityDto;
 import com.e4net.pms.dto.CommunitySearchDto;
 import com.e4net.pms.entity.AttachFile;
 import com.e4net.pms.entity.Community;
+import com.e4net.pms.entity.Project;
 import com.e4net.pms.repository.AttachFileRepository;
 import com.e4net.pms.repository.CommunityRepository;
 import com.e4net.pms.repository.CommunitySpec;
+import com.e4net.pms.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -33,6 +35,7 @@ public class CommunityService {
 
     private final CommunityRepository communityRepository;
     private final AttachFileRepository attachFileRepository;
+    private final ProjectRepository projectRepository;
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
@@ -101,6 +104,10 @@ public class CommunityService {
     public CommunityDto toDto(Community entity) {
         CommunityDto dto = new CommunityDto();
         dto.setId(entity.getId());
+        if (entity.getProject() != null) {
+            dto.setProjectId(entity.getProject().getId());
+            dto.setProjectName(entity.getProject().getProjectName());
+        }
         dto.setCommunityType(entity.getCommunityType());
         dto.setTitle(entity.getTitle());
         dto.setWriter(entity.getWriter());
@@ -140,6 +147,14 @@ public class CommunityService {
 
     /** DTO → Entity */
     private void mapDtoToEntity(CommunityDto dto, Community entity) {
+        // 사업 연관 설정 (projectId 없으면 null)
+        if (dto.getProjectId() != null) {
+            Project project = projectRepository.findById(dto.getProjectId())
+                    .orElse(null);
+            entity.setProject(project);
+        } else {
+            entity.setProject(null);
+        }
         entity.setCommunityType(dto.getCommunityType());
         entity.setTitle(dto.getTitle());
         entity.setWriter(dto.getWriter());

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>정기보고 관리 - e4net PMS</title>
+    <title>정기보고 관리 - E4NET PMS</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -71,7 +71,7 @@
                     <span class="table-count">총 <span th:text="${page.totalElements}">0</span>건</span>
                 </div>
                 <div class="table-wrap">
-                    <table>
+                    <table data-entity-type="CUSTOMER_REPORT" data-base-url="/regular-report">
                         <thead>
                             <tr>
                                 <th>NO.</th>
@@ -79,12 +79,13 @@
                                 <th style="min-width:250px;">보고서명</th>
                                 <th>보고일자</th>
                                 <th>작성자</th>
+                                <th style="width:80px;">첨부</th>
                                 <th>관리</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr class="empty-row" th:if="${page.content.isEmpty()}">
-                                <td colspan="6">등록된 정기보고가 없습니다.</td>
+                                <td colspan="7">등록된 정기보고가 없습니다.</td>
                             </tr>
                             <tr th:each="r, stat : ${page.content}">
                                 <td th:text="${page.number * page.size + stat.count}"></td>
@@ -102,6 +103,7 @@
                                 </td>
                                 <td th:text="${r.reportDate ?: '-'}"></td>
                                 <td th:text="${r.writer ?: '-'}"></td>
+                                <td class="td-center attach-icons-cell" th:data-entity-id="${r.id}"></td>
                                 <td>
                                     <button class="btn-sm-edit"
                                             th:data-href="@{/regular-report/{id}/edit(id=${r.id})}"

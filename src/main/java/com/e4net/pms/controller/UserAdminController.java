@@ -106,6 +106,57 @@ public class UserAdminController {
         return "redirect:/admin/users";
     }
 
+    /** 내 정보 수정 폼 */
+    @GetMapping("/my-profile")
+    public String myProfileForm(HttpSession session, Model model) {
+        if (isNotLoggedIn(session)) return "redirect:/";
+
+        User loginUser = (User) session.getAttribute("loginUser");
+        User user = userRepository.findById(loginUser.getId())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        model.addAttribute("user", user);
+        return "my-profile";
+    }
+
+    /** 내 정보 수정 처리 */
+    @PostMapping("/my-profile")
+    public String myProfileUpdate(@RequestParam String name,
+                                  @RequestParam(required = false) String company,
+                                  @RequestParam(required = false) String department,
+                                  @RequestParam(required = false) String position,
+                                  @RequestParam(required = false) String phone,
+                                  @RequestParam(required = false) String email,
+                                  @RequestParam(required = false) String newPassword,
+                                  HttpSession session,
+                                  RedirectAttributes ra) {
+        if (isNotLoggedIn(session)) return "redirect:/";
+
+        User loginUser = (User) session.getAttribute("loginUser");
+        User user = userRepository.findById(loginUser.getId())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        user.setName(name);
+        user.setCompany(company);
+        user.setDepartment(department);
+        user.setPosition(position);
+        user.setPhone(phone);
+        user.setEmail(email);
+
+        if (newPassword != null && !newPassword.isBlank()) {
+            user.setPassword(passwordEncoder.encode(newPassword));
+        }
+
+        user.setUpdId(loginUser.getEmployeeNo());
+        User saved = userRepository.save(user);
+
+        // 세션의 사용자 정보도 갱신
+        session.setAttribute("loginUser", saved);
+
+        ra.addFlashAttribute("successMessage", "내 정보가 수정되었습니다.");
+        return "redirect:/home";
+    }
+
     /** 사용자 삭제 */
     @SuppressWarnings("null")
     @PostMapping("/{id}/delete")

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>메뉴구조 - e4net PMS</title>
+    <title>메뉴구조 - E4NET PMS</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <!-- jsTree -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.16/themes/default/style.min.css">
@@ -204,8 +204,13 @@
                 </div>
                 <div class="btn-group">
                     <a class="btn btn-secondary" th:href="@{/menu-structure/excel/download}">&#11015; 엑셀 다운로드</a>
+                    <button type="button" class="btn btn-secondary" onclick="openUploadModal()">&#11014; 엑셀 업로드</button>
                 </div>
             </div>
+
+            <!-- 메시지 -->
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="alert alert-danger"  th:if="${errorMessage}"   th:text="${errorMessage}"></div>
 
             <!-- ── 분할 패널 ───────────────────────────────── -->
             <div class="menu-wrap">
@@ -293,6 +298,32 @@
     </div>
 </div>
 
+<!-- 엑셀 업로드 모달 -->
+<div id="uploadModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <span class="modal-title">&#11014; 엑셀 업로드</span>
+            <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom:12px; color:#4a5568; font-size:13px;">
+                다운로드한 엑셀 파일의 데이터를 수정 후 업로드하세요.<br>
+                <strong style="color:#2980b9;">메뉴코드</strong> 기준으로 기존 데이터는 수정, 신규 데이터는 등록됩니다.
+            </p>
+            <form id="uploadForm" th:action="@{/menu-structure/excel/upload}" method="post" enctype="multipart/form-data">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="file" id="excelFileInput" name="excelFile" accept=".xlsx,.xls"
+                           class="form-control" style="flex:1;">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" form="uploadForm" class="btn btn-primary">업로드</button>
+            <button type="button" class="btn btn-cancel" onclick="closeUploadModal()">취소</button>
+        </div>
+    </div>
+</div>
+
 <!-- jQuery + jsTree CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.16/jstree.min.js"></script>
@@ -301,6 +332,12 @@
 /* ================================================================
    메뉴구조 관리 스크립트
    ================================================================ */
+
+function openUploadModal()  { document.getElementById('uploadModal').classList.add('open'); }
+function closeUploadModal() { document.getElementById('uploadModal').classList.remove('open'); }
+document.getElementById('uploadModal').addEventListener('click', function(e) {
+    if (e.target === this) closeUploadModal();
+});
 
 let selNodeId   = null;   // 현재 선택된 jsTree 노드 ID (string)
 let selNodeData = null;   // 선택된 노드의 data 객체

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>위험관리 - e4net PMS</title>
+    <title>위험관리 - E4NET PMS</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -79,7 +79,7 @@
                     <span class="table-count">총 <span th:text="${page.totalElements}">0</span>건</span>
                 </div>
                 <div class="table-wrap">
-                    <table>
+                    <table data-entity-type="RISK" data-base-url="/risk">
                         <thead>
                             <tr>
                                 <th>NO.</th>
@@ -91,12 +91,13 @@
                                 <th>위험등급</th>
                                 <th>담당자</th>
                                 <th>상태</th>
+                                <th style="width:80px;">첨부</th>
                                 <th>관리</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr class="empty-row" th:if="${page.content.isEmpty()}">
-                                <td colspan="10">등록된 위험이 없습니다.</td>
+                                <td colspan="11">등록된 위험이 없습니다.</td>
                             </tr>
                             <tr th:each="r, stat : ${page.content}">
                                 <td th:text="${page.number * page.size + stat.count}"></td>
@@ -118,6 +119,7 @@
                                           th:classappend="'badge-' + ${r.status}"
                                           th:text="${r.status}"></span>
                                 </td>
+                                <td class="td-center attach-icons-cell" th:data-entity-id="${r.id}"></td>
                                 <td>
                                     <button class="btn-sm-del"
                                             th:data-id="${r.id}"

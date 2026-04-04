@@ -189,11 +189,59 @@ case NUMERIC -> {
 }
 ```
 
-### 엑셀 업로드 — delete-all + insert 패턴 (WBS/이슈/위험 등 순서 의존 데이터)
-기존 upsert 대신 전체 삭제 후 재삽입하는 패턴.
-사용 시점: 행 순서(sortOrder)가 의미 있거나 모든 데이터를 교체해야 할 때.
+### 엑셀 업로드 — 모듈별 전략 정리
+
+| 모듈 | 전략 | 식별키 | 이유 |
+|------|------|--------|------|
+| 위험관리 | **upsert** | `riskCode` | 행 순서 무관, 부분 수정 가능 |
+| 이슈관리 | **upsert** | `issueNo` | 행 순서 무관, 부분 수정 가능 |
+| 요구사항 | **upsert** | `reqCode` | 행 순서 무관, 부분 수정 가능 |
+| 공통코드 | **upsert** | `groupCode + code` | 그룹-코드 복합키 |
+| 산출물 | **upsert** | `deliverableId` | 행 순서 무관 |
+| WBS | **delete-all + insert** | 없음 (순서 중요) | sortOrder 의존, 전체 교체 |
+
+### 엑셀 업로드 — delete-all + insert 패턴 (WBS — 순서 의존 데이터)
+전체 삭제 후 재삽입. **업로드 전 경고 모달 필수** — 되돌릴 수 없는 파괴적 작업.
 
 1. 첨부파일이 있는 경우: `findByEntityTypeAndEntityIdIn` → 물리 파일 삭제 → `deleteByEntityTypeAndEntityIdIn`
 2. 전체 엔티티 삭제: `repository.deleteAll(repository.findAll...)`
 3. 엑셀 행 순서대로 신규 INSERT (`sortOrder = 1`부터 순번 부여)
 4. 반환: `int[]{ inserted, 0, skipped }` (updated 항상 0)
+
+### WBS 업로드 경고 모달 패턴 (파괴적 replace 전 확인)
+```html
+<!-- 경고 모달 (먼저 표시) -->
+<div id="uploadWarnModal" class="modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header red">
+            <span class="modal-title">&#9888; 업로드 주의</span>
+            <button class="modal-close" onclick="document.getElementById('uploadWarnModal').classList.remove('open')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>입력된 전체 사업일정이 제거된 후 업로드된 엑셀 정보로 대체됩니다.</p>
+            <p style="margin-top:8px; color:#e74c3c; font-size:12px;">이 작업은 되돌릴 수 없습니다.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-delete" onclick="confirmUpload()">계속</button>
+            <button type="button" class="btn btn-cancel" onclick="document.getElementById('uploadWarnModal').classList.remove('open')">취소</button>
+        </div>
+    </div>
+</div>
+
+<!-- 파일 선택 모달 (경고 확인 후 표시) -->
+<div id="uploadModal" class="modal-overlay"> ... </div>
+
+<script>
+function openUploadModal() {
+    document.getElementById('uploadWarnModal').classList.add('open');
+}
+function confirmUpload() {
+    document.getElementById('uploadWarnModal').classList.remove('open');
+    document.getElementById('uploadModal').classList.add('open');
+}
+function closeUploadModal() {
+    document.getElementById('uploadModal').classList.remove('open');
+    document.getElementById('uploadForm').reset();
+}
+</script>
+```

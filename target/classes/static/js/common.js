@@ -125,3 +125,124 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+
+/* ── 목록 첨부파일 아이콘 공통 함수 ──────────────────────────
+ * - 첨부파일이 있는 경우에만 아이콘(1개) 표시
+ * - 클릭 시 파일 목록 모달 오픈, 모달에서 다운로드 가능
+ * ────────────────────────────────────────────────────────── */
+(function () {
+
+    /* 공통 첨부 모달 동적 생성 */
+    function createAttachModal() {
+        var modal = document.createElement('div');
+        modal.id = 'attachModal';
+        modal.className = 'modal-overlay';
+        modal.innerHTML =
+            '<div class="modal modal-sm">' +
+                '<div class="modal-header">' +
+                    '<span class="modal-title">&#128206; 첨부파일 목록</span>' +
+                    '<button class="modal-close" onclick="closeAttachModal()">&times;</button>' +
+                '</div>' +
+                '<div class="modal-body" id="attachModalBody"></div>' +
+                '<div class="modal-footer">' +
+                    '<button type="button" class="btn btn-cancel" onclick="closeAttachModal()">닫기</button>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(modal);
+        /* 배경 클릭 시 닫기 */
+        modal.addEventListener('click', function (e) {
+            if (e.target === this) closeAttachModal();
+        });
+    }
+
+    window.openAttachModal = function (files, baseUrl, entityId) {
+        var body = document.getElementById('attachModalBody');
+        if (!body) return;
+        var html = '<ul class="attach-file-list">';
+        files.forEach(function (f) {
+            var url  = baseUrl + '/' + entityId + '/attachment/' + f.id + '/download';
+            var name = escHtml(f.fileName || '파일');
+            var size = formatSize(f.fileSize);
+            html += '<li class="attach-file-item">' +
+                        '<span class="attach-file-icon">&#128206;</span>' +
+                        '<a class="attach-file-name" href="' + url + '" target="_blank">' + name + '</a>' +
+                        '<span class="attach-file-size">' + size + '</span>' +
+                    '</li>';
+        });
+        html += '</ul>';
+        body.innerHTML = html;
+        document.getElementById('attachModal').classList.add('open');
+    };
+
+    window.closeAttachModal = function () {
+        var modal = document.getElementById('attachModal');
+        if (modal) modal.classList.remove('open');
+    };
+
+    function loadAttachIcons() {
+        /* 공통 모달 생성 */
+        if (!document.getElementById('attachModal')) createAttachModal();
+
+        var tables = document.querySelectorAll('table[data-entity-type]');
+        tables.forEach(function (table) {
+            var entityType = table.dataset.entityType;
+            var baseUrl    = table.dataset.baseUrl;
+            if (!entityType || !baseUrl) return;
+
+            var cells = table.querySelectorAll('td.attach-icons-cell[data-entity-id]');
+            if (cells.length === 0) return;
+
+            var ids = Array.from(cells).map(function (c) { return c.dataset.entityId; }).join(',');
+
+            fetch('/api/attachments?entityType=' + encodeURIComponent(entityType) + '&ids=' + ids)
+                .then(function (r) { return r.json(); })
+                .then(function (map) {
+                    cells.forEach(function (cell) {
+                        var entityId = cell.dataset.entityId;
+                        var files    = map[entityId];
+                        /* 첨부파일 없으면 빈 셀 유지 */
+                        if (!files || files.length === 0) return;
+
+                        /* 파일 데이터 JSON 직렬화 후 data 속성으로 전달 */
+                        var btn = document.createElement('button');
+                        btn.className = 'btn-attach-icon';
+                        btn.title = files.length + '개 파일';
+                        btn.innerHTML = '&#128206;';
+                        if (files.length > 1) {
+                            var badge = document.createElement('span');
+                            badge.className = 'attach-badge';
+                            badge.textContent = files.length;
+                            btn.appendChild(badge);
+                        }
+                        /* 클로저로 데이터 캡처 */
+                        (function (f, base, eid) {
+                            btn.addEventListener('click', function (e) {
+                                e.stopPropagation();
+                                openAttachModal(f, base, eid);
+                            });
+                        })(files, baseUrl, entityId);
+
+                        cell.appendChild(btn);
+                    });
+                })
+                .catch(function () {});
+        });
+    }
+
+    function escHtml(s) {
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function formatSize(bytes) {
+        if (!bytes || bytes === 0) return '';
+        if (bytes < 1024)     return bytes + ' B';
+        if (bytes < 1048576)  return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAttachIcons);
+})();

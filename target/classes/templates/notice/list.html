@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>공지사항 - e4net PMS</title>
+    <title>공지사항 - E4NET PMS</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -22,7 +22,12 @@
 
         <div class="content">
             <div class="page-header">
-                <div class="page-title">공지사항</div>
+                <div class="page-title">
+                    공지사항
+                    <span th:if="${selectedProject != null}"
+                          style="font-size:13px;font-weight:normal;color:#2980b9;margin-left:10px;"
+                          th:text="'[ ' + ${selectedProject.projectName} + ' ]'"></span>
+                </div>
                 <div class="btn-group">
                     <button class="btn btn-primary" onclick="location.href='/notice/new'">&#43; 공지사항 등록</button>
                 </div>
@@ -53,14 +58,14 @@
                     <span class="table-card-title">공지사항 목록</span>
                     <span class="table-count">총 <span th:text="${page.totalElements}">0</span>건</span>
                 </div>
-                <table class="table">
+                <table class="table" data-entity-type="COMMUNITY" data-base-url="/notice">
                     <thead>
                         <tr>
                             <th style="width:60px;">번호</th>
-                            <th>제목</th>
+                            <th style="width:340px;">제목</th>
                             <th style="width:100px;">작성자</th>
                             <th style="width:110px;">작성일</th>
-                            <th style="width:60px;">첨부</th>
+                            <th style="width:80px;">첨부</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -74,9 +79,7 @@
                             </td>
                             <td class="td-center" th:text="${item.writer ?: '-'}">-</td>
                             <td class="td-center" th:text="${item.postDate ?: '-'}">-</td>
-                            <td class="td-center">
-                                <span style="color:#2980b9; font-size:13px;">&#128206;</span>
-                            </td>
+                            <td class="td-center attach-icons-cell" th:data-entity-id="${item.id}"></td>
                         </tr>
                     </tbody>
                 </table>

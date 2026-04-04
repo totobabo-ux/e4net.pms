@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title layout:title-pattern="$CONTENT_TITLE - e4net PMS">e4net PMS</title>
+    <title layout:title-pattern="$CONTENT_TITLE - E4NET PMS">E4NET PMS</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <th:block layout:fragment="extra-styles"></th:block>
 </head>
@@ -14,7 +14,7 @@
 <!-- 상단 헤더 -->
 <header class="header">
     <button class="header-hamburger">&#9776;</button>
-    <div class="header-logo">e4net PMS</div>
+    <div class="header-logo">E4NET PMS</div>
     <div class="header-right">
         <!-- 선택된 사업명 표시 -->
         <div class="selected-project" th:if="${session.selectedProject != null}">
@@ -32,7 +32,7 @@
 
     <!-- 좌측 사이드바 -->
     <aside class="sidebar">
-        <div class="sidebar-logo"><a href="/home">e4net PMS</a></div>
+        <div class="sidebar-logo"><a href="/home">E4NET PMS</a></div>
         <ul class="menu-list">
 
             <!-- 사업 Home -->

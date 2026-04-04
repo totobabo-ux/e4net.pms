@@ -4,6 +4,7 @@ import com.e4net.pms.entity.Menu;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MenuRepository extends JpaRepository<Menu, Long> {
 
@@ -18,4 +19,7 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
 
     /** 자식이 있는지 확인 (삭제 전 체크) */
     boolean existsByParentId(Long parentId);
+
+    /** 엑셀 업로드 upsert용 — 메뉴코드 기준 */
+    Optional<Menu> findByProject_IdAndMenuCode(Long projectId, String menuCode);
 }

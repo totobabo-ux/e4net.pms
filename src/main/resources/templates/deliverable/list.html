@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>산출물관리 - e4net PMS</title>
+    <title>산출물관리 - E4NET PMS</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -35,8 +35,8 @@
                 </div>
                 <div class="btn-group">
                     <a class="btn btn-secondary" th:href="@{/deliverable/excel/download}">&#11015; 엑셀 다운로드</a>
-                    <button type="button" class="btn btn-secondary" onclick="openUploadModal()">&#11014; 엑셀 업로드</button>
-                    <button class="btn btn-primary" onclick="location.href='/deliverable/new'">&#43; 산출물 등록</button>
+                    <button type="button" class="btn btn-secondary" th:if="${isPrivileged}" onclick="openUploadModal()">&#11014; 엑셀 업로드</button>
+                    <button class="btn btn-primary" th:if="${isPrivileged}" onclick="location.href='/deliverable/new'">&#43; 산출물 등록</button>
                 </div>
             </div>
 
@@ -91,7 +91,7 @@
                                 <th>단계</th>
                                 <th>작성여부</th>
                                 <th>작성자</th>
-                                <th>관리</th>
+                                <th th:if="${isPrivileged}">관리</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -110,7 +110,7 @@
                                 <td th:text="${d.stage ?: '-'}"></td>
                                 <td th:text="${d.writtenYn ?: '-'}"></td>
                                 <td th:text="${d.writer ?: '-'}"></td>
-                                <td>
+                                <td th:if="${isPrivileged}">
                                     <button class="btn-sm-edit"
                                             th:data-href="@{/deliverable/{id}/edit(id=${d.id})}"
                                             onclick="location.href=this.dataset.href">수정</button>
