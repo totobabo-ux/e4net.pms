@@ -39,76 +39,92 @@
             <div class="alert alert-danger"  th:if="${errorMessage}"   th:text="${errorMessage}"></div>
 
             <!-- 검색 폼 -->
-            <form method="get" action="/business-flow" class="search-bar">
-                <input type="text" name="systemCategory" class="form-control search-input"
-                       placeholder="시스템구분" th:value="${search.systemCategory}">
-                <input type="text" name="bizCategory" class="form-control search-input"
-                       placeholder="업무구분" th:value="${search.bizCategory}">
-                <input type="text" name="processName" class="form-control search-input"
-                       placeholder="프로세스명" th:value="${search.processName}">
-                <button type="submit" class="btn btn-search">&#128269; 검색</button>
-                <a href="/business-flow" class="btn btn-cancel">초기화</a>
+            <form th:action="@{/business-flow}" method="get">
+                <div class="search-box">
+                    <div class="search-row">
+                        <span class="search-label">시스템구분</span>
+                        <input type="text" name="systemCategory" class="search-input w-md"
+                               th:value="${search.systemCategory}" placeholder="시스템구분 검색">
+                        <div class="divider"></div>
+                        <span class="search-label">업무구분</span>
+                        <input type="text" name="bizCategory" class="search-input w-md"
+                               th:value="${search.bizCategory}" placeholder="업무구분 검색">
+                        <div class="divider"></div>
+                        <span class="search-label">프로세스명</span>
+                        <input type="text" name="processName" class="search-input w-lg"
+                               th:value="${search.processName}" placeholder="프로세스명 검색">
+                        <button type="submit" class="btn-search">&#128269; 검색</button>
+                    </div>
+                </div>
             </form>
 
             <!-- 목록 테이블 -->
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th style="width:60px;">No</th>
-                        <th>시스템구분</th>
-                        <th>업무구분</th>
-                        <th>프로세스ID</th>
-                        <th>프로세스명</th>
-                        <th style="width:60px;">첨부</th>
-                        <th style="width:100px;">관리</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:if="${#lists.isEmpty(flowList)}">
-                        <td colspan="7" class="empty-row">등록된 업무흐름이 없습니다.</td>
-                    </tr>
-                    <tr th:each="flow, stat : ${flowList}">
-                        <td th:text="${page.number * page.size + stat.index + 1}"></td>
-                        <td th:text="${flow.systemCategory ?: '-'}"></td>
-                        <td th:text="${flow.bizCategory ?: '-'}"></td>
-                        <td th:text="${flow.processId ?: '-'}"></td>
-                        <td>
-                            <a th:href="@{/business-flow/{id}(id=${flow.id})}"
-                               class="td-link" th:text="${flow.processName}"></a>
-                        </td>
-                        <td style="text-align:center;">
-                            <!-- 첨부파일 유무 표시는 서비스 레이어에서 처리하므로 아이콘 없음 -->
-                            &#128196;
-                        </td>
-                        <td>
-                            <button class="btn-sm-edit"
-                                    th:onclick="|location.href='/business-flow/' + ${flow.id}|">상세</button>
-                            <button class="btn-sm-del"
-                                    th:onclick="|openDeleteModal(${flow.id}, '[[${flow.processName}]]')|">삭제</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="table-card">
+                <div class="table-card-header">
+                    <span class="table-card-title">업무흐름 목록</span>
+                    <span class="table-count">총 <span th:text="${page.totalElements}">0</span>건</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:44px;">No.</th>
+                                <th style="width:120px;">시스템구분</th>
+                                <th style="width:120px;">업무구분</th>
+                                <th style="width:100px;">프로세스ID</th>
+                                <th>프로세스명</th>
+                                <th style="width:50px;">첨부</th>
+                                <th style="width:80px;">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="empty-row" th:if="${page.content.isEmpty()}">
+                                <td colspan="7">등록된 업무흐름이 없습니다.</td>
+                            </tr>
+                            <tr th:each="flow, stat : ${page.content}">
+                                <td th:text="${page.number * page.size + stat.count}"></td>
+                                <td th:text="${flow.systemCategory ?: '-'}"></td>
+                                <td th:text="${flow.bizCategory ?: '-'}"></td>
+                                <td th:text="${flow.processId ?: '-'}"></td>
+                                <td class="td-left">
+                                    <a class="td-link"
+                                       th:href="@{/business-flow/{id}(id=${flow.id})}"
+                                       th:text="${flow.processName}"></a>
+                                </td>
+                                <td style="text-align:center;">&#128196;</td>
+                                <td>
+                                    <button class="btn-sm-edit"
+                                            th:data-href="@{/business-flow/{id}(id=${flow.id})}"
+                                            onclick="location.href=this.dataset.href">상세</button>
+                                    <button class="btn-sm-del"
+                                            th:data-id="${flow.id}"
+                                            th:data-name="${flow.processName}"
+                                            onclick="openDeleteModal(this.dataset.id, this.dataset.name)">삭제</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
             <!-- 페이지네이션 -->
             <div class="pagination" th:if="${page.totalPages > 1}">
                 <a th:if="${!page.first}"
                    th:href="@{/business-flow(page=${page.number - 1}, size=${page.size},
                        systemCategory=${search.systemCategory}, bizCategory=${search.bizCategory},
-                       processName=${search.processName})}"
-                   class="page-btn">&laquo;</a>
-                <span th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}">
-                    <a th:href="@{/business-flow(page=${i}, size=${page.size},
-                        systemCategory=${search.systemCategory}, bizCategory=${search.bizCategory},
-                        processName=${search.processName})}"
-                       class="page-btn" th:classappend="${i == page.number} ? 'active'"
+                       processName=${search.processName})}">&laquo;</a>
+                <th:block th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}">
+                    <span th:if="${i == page.number}" class="active" th:text="${i + 1}"></span>
+                    <a th:unless="${i == page.number}"
+                       th:href="@{/business-flow(page=${i}, size=${page.size},
+                           systemCategory=${search.systemCategory}, bizCategory=${search.bizCategory},
+                           processName=${search.processName})}"
                        th:text="${i + 1}"></a>
-                </span>
+                </th:block>
                 <a th:if="${!page.last}"
                    th:href="@{/business-flow(page=${page.number + 1}, size=${page.size},
                        systemCategory=${search.systemCategory}, bizCategory=${search.bizCategory},
-                       processName=${search.processName})}"
-                   class="page-btn">&raquo;</a>
+                       processName=${search.processName})}">&raquo;</a>
             </div>
 
         </div>

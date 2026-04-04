@@ -65,7 +65,6 @@ public class BusinessFlowController {
                 Sort.by(Sort.Direction.ASC, "systemCategory", "bizCategory", "processId"));
         Page<BusinessFlow> result = businessFlowService.search(search, pageable);
         model.addAttribute("page", result);
-        model.addAttribute("flowList", result.getContent());
         model.addAttribute("selectedProject", getSelectedProject(session));
         return "business-flow/list";
     }

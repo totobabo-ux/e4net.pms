@@ -33,7 +33,7 @@ body {
 .header {
     width: 100%;
     height: 50px;
-    background: #c0392b;
+    background: #ff4444;
     display: flex;
     align-items: center;
     padding: 0 16px;
@@ -141,49 +141,51 @@ body {
 .sidebar-logo { display: none; }
 
 /* 메뉴 리스트 */
-.menu-list { list-style: none; padding: 6px 0; margin: 0; }
+.menu-list { list-style: none; padding: 0; margin: 0; }
 
-.menu-icon { font-size: 7px; color: #a0aec0; }
+.menu-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
 
 /* Home 단일 메뉴 */
 .menu-item > a {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    color: #4a5568;
+    gap: 10px;
+    padding: 11px 16px;
+    color: #2c3e50;
     text-decoration: none;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: bold;
     transition: background 0.15s, color 0.15s;
-    border-left: 3px solid transparent;
+    border-bottom: 1px solid #e8ecf0;
 }
-.menu-item > a:hover { background: #f7f9fc; color: #2980b9; }
-.menu-item.active > a { border-left-color: #2980b9; background: #ebf4ff; color: #2980b9; font-weight: bold; }
+.menu-item > a:hover { background: #f5f7fa; color: #2980b9; }
+.menu-item.active > a { background: #ebf4ff; color: #2980b9; }
 .menu-item.active .menu-icon { color: #2980b9; }
 
 /* 대분류 섹션 헤더 */
 .menu-section-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
+    gap: 10px;
+    padding: 11px 16px;
     color: #fff;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: bold;
     cursor: pointer;
     user-select: none;
-    background: #4a5568;
-    border-top: 1px solid #e2e8f0;
-    letter-spacing: 0.3px;
+    background: #2980b9;
+    border-bottom: 1px solid #2471a3;
+    letter-spacing: 0.2px;
 }
-.menu-section-header:hover { background: #2d3748; }
-.menu-section-header .menu-icon { color: rgba(255,255,255,0.6); }
-.menu-section-header .arrow { margin-left: auto; font-size: 10px; transition: transform 0.2s; color: rgba(255,255,255,0.7); }
+.menu-section-header:hover { background: #2980b9; }
+.menu-section-header .menu-icon { color: rgba(255,255,255,0.8); }
+.menu-section.open > .menu-section-header { background: #2980b9; }
+.menu-section.open > .menu-section-header .menu-icon { color: rgba(255,255,255,0.8); }
+.menu-section-header .arrow { margin-left: auto; font-size: 10px; transition: transform 0.2s; color: #a0aec0; }
 .menu-section.open .menu-section-header .arrow { transform: rotate(180deg); }
 
 /* 섹션 바디 */
-.section-body { display: none; list-style: none; padding: 4px 0; margin: 0; background: #fff; }
+.section-body { display: none; list-style: none; padding: 4px 0; margin: 0; background: #fafbfc; border-top: 1px solid #d0d8e4; border-bottom: 1px solid #d0d8e4; }
 .menu-section.open > .section-body { display: block; }
 
 /* 중분류 그룹 헤더 */
@@ -191,34 +193,32 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 7px 16px 7px 24px;
-    color: #2d3748;
+    padding: 7px 16px 7px 40px;
+    color: #4a5568;
     font-size: 12px;
     font-weight: bold;
     cursor: pointer;
     user-select: none;
     transition: background 0.15s;
-    border-left: 3px solid transparent;
 }
-.menu-group-header:hover { background: #f7f9fc; color: #2980b9; }
-.menu-group.open > .menu-group-header { color: #2980b9; border-left-color: #2980b9; background: #f0f7ff; }
+.menu-group-header:hover { background: #eef2f7; color: #2980b9; }
+.menu-group.open > .menu-group-header { color: #2980b9; background: #e8f2fb; }
 .arrow-sm { font-size: 9px; transition: transform 0.2s; color: #a0aec0; }
 .menu-group.open .arrow-sm { transform: rotate(180deg); }
 
-/* 소분류 링크 */
-.submenu { display: none; list-style: none; padding: 2px 0; margin: 0; }
+/* 소분류 링크 — 세로선 스타일 */
+.submenu { display: none; list-style: none; padding: 4px 0; margin: 0; }
 .menu-group.open > .submenu { display: block; }
 .submenu li a {
     display: block;
-    padding: 6px 16px 6px 36px;
+    padding: 6px 12px 6px 64px;
     color: #718096;
     text-decoration: none;
     font-size: 12px;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-    border-left: 3px solid transparent;
+    transition: background 0.15s, color 0.15s;
 }
-.submenu li a:hover { background: #f7f9fc; color: #2980b9; }
-.submenu li.active a { border-left-color: #2980b9; background: #ebf4ff; color: #2980b9; font-weight: bold; }
+.submenu li a:hover { color: #2980b9; background: #ebf4ff; }
+.submenu li.active a { color: #2980b9; font-weight: bold; background: #ebf4ff; }
 
 /* ── 5. 브레드크럼 ────────────────────────────────────────── */
 .breadcrumb {
@@ -375,9 +375,10 @@ body {
 /* ── 10. 검색 박스 ────────────────────────────────────────── */
 .search-box {
     background: #fff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #c8d0dc;
     border-radius: 6px;
     padding: 14px 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     margin-bottom: 12px;
 }
 
@@ -531,9 +532,10 @@ body {
 /* ── 12. 테이블 카드 ──────────────────────────────────────── */
 .table-card {
     background: #fff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #c8d0dc;
     border-radius: 6px;
     overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .table-card-header {
@@ -558,12 +560,12 @@ body {
 table { width: 100%; border-collapse: collapse; font-size: 12px; }
 
 thead th {
-    background: #f7f8fa;
-    border-bottom: 1px solid #e2e8f0;
-    border-right: 1px solid #e2e8f0;
+    background: #fff;
+    border-bottom: 2px solid #ff4444;
+    border-right: 1px solid #d0d8e4;
     padding: 9px 8px;
     text-align: center;
-    color: #4a5568;
+    color: #2980b9;
     font-weight: bold;
     white-space: nowrap;
 }
@@ -571,8 +573,8 @@ thead th {
 thead th:last-child { border-right: none; }
 
 tbody td {
-    border-bottom: 1px solid #f0f2f5;
-    border-right: 1px solid #f0f2f5;
+    border-bottom: 1px solid #d0d8e4;
+    border-right: 1px solid #d0d8e4;
     padding: 8px;
     text-align: center;
     color: #2d3748;
@@ -583,7 +585,8 @@ tbody td:last-child { border-right: none; }
 tbody td.td-left  { text-align: left; }
 tbody td.td-right { text-align: right; }
 
-tbody tr:hover { background: #f7f9fc; }
+tbody tr:nth-child(even) { background: #f5f7fa; }
+tbody tr:hover { background: #ebf4ff; }
 
 .td-link {
     color: #2980b9;
@@ -602,7 +605,7 @@ tbody tr:hover { background: #f7f9fc; }
 /* ── 13. 폼 카드 ──────────────────────────────────────────── */
 .form-card {
     background: #fff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #c8d0dc;
     border-radius: 6px;
     margin-bottom: 16px;
 }
@@ -627,11 +630,11 @@ tbody tr:hover { background: #f7f9fc; }
 .form-cell {
     display: flex;
     align-items: stretch;
-    border-bottom: 1px solid #f0f2f5;
+    border-bottom: 1px solid #d0d8e4;
     min-height: 44px;
 }
 
-.form-cell:nth-child(odd)  { border-right: 1px solid #f0f2f5; }
+.form-cell:nth-child(odd)  { border-right: 1px solid #d0d8e4; }
 .form-cell.full-width      { grid-column: 1 / -1; border-right: none; }
 
 /* textarea 행은 레이블을 상단 정렬 */
@@ -647,11 +650,11 @@ tbody tr:hover { background: #f7f9fc; }
     width: 110px;
     min-width: 110px;
     flex-shrink: 0;
-    background: #f7f8fa;
-    border-right: 1px solid #e2e8f0;
+    background: #e8edf4;
+    border-right: 1px solid #c8d0dc;
     padding: 0 12px;
     font-size: 12px;
-    color: #4a5568;
+    color: #3d4f66;
     font-weight: bold;
     display: flex;
     align-items: center;
@@ -904,7 +907,7 @@ textarea.form-control { height: auto; padding: 8px 10px; resize: vertical; }
     width: 30px;
     height: 30px;
     border: 1px solid #e2e8f0;
-    border-radius: 3px;
+    border-radius: 50%;
     font-size: 12px;
     text-decoration: none;
     color: #4a5568;
@@ -912,8 +915,8 @@ textarea.form-control { height: auto; padding: 8px 10px; resize: vertical; }
     transition: all 0.15s;
 }
 
-.pagination a:hover { background: #ebf4ff; border-color: #2980b9; color: #2980b9; }
-.pagination .active { background: #2980b9; color: #fff; border-color: #2980b9; font-weight: bold; }
+.pagination a:hover { background: #fff0f0; border-color: #ff4444; color: #ff4444; }
+.pagination .active { background: #ff4444; color: #fff; border-color: #ff4444; font-weight: bold; }
 .pagination .disabled { color: #cbd5e0; cursor: default; }
 
 /* ── 17. 모달 ─────────────────────────────────────────────── */
@@ -1023,11 +1026,11 @@ textarea.form-control { height: auto; padding: 8px 10px; resize: vertical; }
 .modal-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 
 .modal-table thead th {
-    background: #f7f8fa;
-    border-bottom: 1px solid #e2e8f0;
+    background: #fff;
+    border-bottom: 2px solid #ff4444;
     padding: 8px 10px;
     text-align: center;
-    color: #4a5568;
+    color: #2980b9;
     font-weight: bold;
 }
 

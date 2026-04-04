@@ -45,14 +45,14 @@
 
         <!-- 사업 Home -->
         <li class="menu-item" th:classappend="${activePage == 'home'} ? 'active'">
-            <a href="/home"><span class="menu-icon">&#9632;</span> 사업 Home</a>
+            <a href="/home"><span class="menu-icon">&#127968;</span> 사업 Home</a>
         </li>
 
         <!-- ── 사업관리 ─────────────────────────────── -->
         <li class="menu-section"
             th:classappend="${activePage != null and activePage.startsWith('biz-')} ? 'open'">
             <div class="menu-section-header">
-                <span class="menu-icon">&#9632;</span> 사업관리
+                <span class="menu-icon">&#128203;</span> 사업관리
                 <span class="arrow">&#9660;</span>
             </div>
             <ul class="section-body">
@@ -122,7 +122,7 @@
         <li class="menu-section"
             th:classappend="${activePage != null and activePage.startsWith('exec-')} ? 'open'">
             <div class="menu-section-header">
-                <span class="menu-icon">&#9632;</span> 사업수행
+                <span class="menu-icon">&#128187;</span> 사업수행
                 <span class="arrow">&#9660;</span>
             </div>
             <ul class="section-body">
@@ -174,7 +174,7 @@
         <li class="menu-section"
             th:classappend="${activePage != null and activePage.startsWith('community-')} ? 'open'">
             <div class="menu-section-header">
-                <span class="menu-icon">&#9632;</span> 커뮤니티
+                <span class="menu-icon">&#128172;</span> 커뮤니티
                 <span class="arrow">&#9660;</span>
             </div>
             <ul class="section-body">
@@ -204,7 +204,7 @@
         <li class="menu-section"
             th:classappend="${activePage != null and activePage.startsWith('admin-')} ? 'open'">
             <div class="menu-section-header">
-                <span class="menu-icon">&#9632;</span> 관리자
+                <span class="menu-icon">&#9881;</span> 관리자
                 <span class="arrow">&#9660;</span>
             </div>
             <ul class="section-body">
